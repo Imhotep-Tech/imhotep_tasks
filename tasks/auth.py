@@ -167,3 +167,162 @@ def user_logout(request):
     logout(request)
     messages.success(request, "You have been logged out.")
     return redirect("login")
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'password_reset.html'
+    form_class = PasswordResetForm
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
+    
+    # Override this method to use SITE_DOMAIN instead of the Sites framework
+    def get_extra_email_context(self):
+        context = super().get_extra_email_context() or {}
+        context['domain'] = SITE_DOMAIN.replace('http://', '').replace('https://', '')
+        context['site_name'] = 'Imhotep Tasks'
+        context['protocol'] = 'https' if 'https://' in SITE_DOMAIN else 'http'
+        return context
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'password_reset_confirm.html'
+    form_class = SetPasswordForm
+
+    def form_invalid(self, form):
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, error)
+        return super().form_invalid(form)
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'password_reset_complete.html'
+
+
+GOOGLE_CLIENT_ID = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
+GOOGLE_CLIENT_SECRET = settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['secret']
+GOOGLE_REDIRECT_URI = settings.SOCIALACCOUNT_PROVIDERS['google']['REDIRECT_URI']
+
+def google_login(request):
+    """Initiates the Google OAuth2 login flow"""
+    oauth2_url = (
+        'https://accounts.google.com/o/oauth2/v2/auth?'
+        f'client_id={GOOGLE_CLIENT_ID}&'
+        f'redirect_uri={SITE_DOMAIN}/google/callback/&'
+        'response_type=code&'
+        'scope=openid email profile'
+    )
+    return redirect(oauth2_url)
+
+def google_callback(request):
+    """Handles the callback from Google OAuth2"""
+    code = request.GET.get('code')
+    
+    if not code:
+        messages.error(request, "Google login was canceled. Please try again.")
+        return redirect('login')
+
+    # Exchange code for access token
+    token_url = 'https://oauth2.googleapis.com/token'
+    token_payload = {
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
+        'code': code,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'grant_type': 'authorization_code'
+    }
+
+    try:
+        token_response = requests.post(token_url, data=token_payload)
+        token_data = token_response.json()
+
+        # Get user info using access token
+        userinfo_url = 'https://www.googleapis.com/oauth2/v3/userinfo'
+        headers = {'Authorization': f'Bearer {token_data["access_token"]}'}
+        userinfo_response = requests.get(userinfo_url, headers=headers)
+        user_info = userinfo_response.json()
+
+        email = user_info['email']
+        username = email.split('@')[0]
+        
+        # Check if user exists
+        user = User.objects.filter(email=email).first()
+        
+        if user:
+            # Set the backend attribute on the user
+            backend = get_backends()[0]
+            user.backend = f'{backend.__module__}.{backend.__class__.__name__}'
+            # User exists, log them in
+            login(request, user)
+            messages.success(request, "Login successful!")
+            return redirect('dashboard')
+        
+        # Check if username exists
+        if User.objects.filter(username=username).exists():
+            # Store info in session and ask for new username
+            request.session['google_user_info'] = {
+                'email': email,
+                'need_username': True
+            }
+            return render(request, 'add_username_google.html')
+
+        # Create new user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=make_password(None),  # Random password since using OAuth
+            email_verify=True  # Google accounts are pre-verified
+        )
+
+        backend = get_backends()[0]
+        user.backend = f'{backend.__module__}.{backend.__class__.__name__}'
+
+        # Log user in
+        login(request, user)
+        messages.success(request, "Account created successfully!")
+        return redirect('dashboard')
+
+    except Exception as e:
+        messages.error(request, f"An error occurred during Google login. Please try again. {e}")
+        return redirect('login')
+
+def add_username_google_login(request):
+    
+    if request.method != "POST":
+        return redirect('login')
+
+    user_info = request.session.get('google_user_info', {})
+    if not user_info:
+        messages.error(request, "Session expired. Please try again.")
+        return redirect('login')
+
+    new_username = request.POST.get('username')
+
+    # Validate username
+    if User.objects.filter(username=new_username).exists():
+        messages.error(request, "Username already taken. Please choose another one.")
+        return render(request, 'add_username_google.html')
+
+    # Create user with new username
+    user = User.objects.create_user(
+        username=new_username,
+        email=user_info['email'],
+        password=make_password(None),
+        email_verify=True
+    )
+
+    # Set the backend attribute on the user
+    backend = get_backends()[0]
+    user.backend = f'{backend.__module__}.{backend.__class__.__name__}'
+
+    # Clean up session
+    del request.session['google_user_info']
+
+    # Log user in
+    login(request, user)
+    messages.success(request, "Account created successfully!")
+    return redirect('dashboard')
