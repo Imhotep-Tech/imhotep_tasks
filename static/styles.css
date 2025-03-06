@@ -1,0 +1,178 @@
+body {
+    padding-top: 80px; /* Adjust this value based on the height of your fixed navbar */
+}
+
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Ensure it's on top */
+}
+
+.loading-spinner {
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.google-link {
+    color: black; /* Default for light mode */
+  }
+  
+/* Continue with the other styles */
+.google-login-button {
+border: 2px solid #747474;
+border-radius: 20px;
+box-sizing: border-box;
+padding: 10px 15px;
+box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+cursor: pointer;
+display: flex;
+justify-content: center;
+align-items: center;
+font-family: "Lucida Sans", Geneva, Verdana, sans-serif;
+font-size: 11px;
+gap: 5px;
+}
+
+.signup-link {
+    color: #007bff; /* Optional: Customize the link color */
+    text-decoration: none; /* Remove underline */
+    font-size: 14px; /* Ensure consistent font size */
+}
+
+.signup-link:hover {
+    text-decoration: underline; /* Underline link on hover */
+}
+
+.navbar {
+    background-color: #104c92;
+    color: white;
+  }
+  
+  .navbar a {
+    color: #000; /* Dark link color */
+  }
+  
+  .navbar a:hover {
+    color: #0056b3; /* Hover color */
+  }
+
+  .nav-item .dropdown-menu {
+    border: none;
+    box-shadow: none;
+    padding: 0; /* Optional: Remove padding if needed */
+}
+
+#pollResultsChart {
+  max-width: 400px;
+  max-height: 400px;
+  width: 100%;
+  height: auto;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Custom styles for alert messages */
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+.alert-dismissible .btn-close {
+  color: inherit;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #007BFF, #00BFFF);
+  color: white;
+  padding: 100px 0;
+  text-align: center;
+  }
+  
+  .hero-section h1 {
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  animation: fadeInDown 1s;
+  }
+  
+  .hero-section p {
+  font-size: 1.5rem;
+  margin-bottom: 40px;
+  animation: fadeInUp 1s;
+  }
+  
+  .hero-section .btn {
+  font-size: 1.2rem;
+  padding: 10px 30px;
+  margin: 10px;
+  animation: fadeIn 2s;
+  }
+  
+  .features-section {
+  padding: 80px 0;
+  background-color: #f8f9fa;
+  }
+  
+  .features-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 60px;
+  text-align: center;
+  animation: fadeInDown 1s;
+  }
+  
+  .feature-card {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease;
+  }
+  
+  .feature-card:hover {
+  transform: translateY(-10px);
+  }
+  
+  .feature-card i {
+  font-size: 3rem;
+  color: #007BFF;
+  margin-bottom: 20px;
+  }
+  
+  .feature-card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  }
+  
+  .feature-card p {
+  font-size: 1rem;
+  color: #666;
+  }

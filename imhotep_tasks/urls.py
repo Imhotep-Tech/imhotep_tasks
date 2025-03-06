@@ -20,3 +20,16 @@ from django.urls import path
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
+
+from django.contrib import admin
+from django.urls import path, include
+
+# handler404 = 'polls_app.error_handle.handler404'
+# handler500 = 'polls_app.error_handle.handler500'
+# handler403 = 'polls_app.error_handle.handler403'
+# handler400 = 'polls_app.error_handle.handler400'
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('tasks.urls')),
+]

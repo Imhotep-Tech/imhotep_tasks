@@ -27,8 +27,13 @@ SECRET_KEY = 'django-insecure-4e)v&!g*&3d%&269pcc@joj1x3i7$c@43d!lu31*-tuduw=)@1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+if DEBUG:
+    # Add this to your settings
+    SITE_DOMAIN = 'http://127.0.0.1:8000'  # Replace with your actual domain
+else:
+    SITE_DOMAIN = 'https://imhoteptasks.pythonanywhere.com' 
 
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -69,6 +74,18 @@ TEMPLATES = [
         },
     },
 ]
+
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_LOGIN_METHODS = {'email', 'username'}
+ACCOUNT_UNIQUE_EMAIL = True
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'imhoteptech1@gmail.com'
+EMAIL_HOST_PASSWORD =  config('MAIL_PASSWORD')
 
 WSGI_APPLICATION = 'imhotep_tasks.wsgi.application'
 
@@ -131,8 +148,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
+# This is the simple configuration - no compression or manifest
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
