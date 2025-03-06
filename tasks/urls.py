@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import views, auth
+from . import views, auth, user
 
 # This block of code defines the URL patterns for your Django web application. Each `path` function
 # call represents a URL pattern that maps a specific URL to a corresponding view function within your
@@ -27,4 +27,6 @@ urlpatterns = [
     path('google/login/', auth.google_login, name='google_login'),
     path('google/callback/', auth.google_callback, name='google_callback'),
     path('google/handle-username/', auth.add_username_google_login, name='add_username_google_login'),
+
+    path('today_tasks/', user.today_tasks, name='today_tasks'),
 ]

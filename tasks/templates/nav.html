@@ -1,0 +1,218 @@
+<nav id="sidebar" class="bg-indigo-800 text-white fixed h-full z-50 flex flex-col shadow-lg transition-all duration-300 ease-in-out">
+  <!-- Brand Header -->
+  <div class="p-4 border-b border-indigo-700">
+    <a href="/" class="flex items-center space-x-3">
+      <div class="bg-white p-2 rounded-lg rotate-12 hover:rotate-0 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <div class="font-bold text-xl">Imhotep Tasks</div>
+    </a>
+  </div>
+  
+  <!-- User Profile -->
+  <div class="p-4 border-b border-indigo-700">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
+        <span class="font-bold">{{ user.username|first|upper }}</span>
+      </div>
+      <div>
+        <div class="font-medium">{{ user.username }}</div>
+        <div class="text-xs text-indigo-300">{{ user.email }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Links - Main -->
+  <div class="py-4 flex-1 overflow-y-auto">
+    <div class="px-4 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+      Tasks
+    </div>
+    <ul>
+      <li>
+        <a href="{% url 'today_tasks' %}" class="flex items-center px-4 py-3 hover:bg-indigo-700 transition-colors {% if request.path == '/today_tasks/' %}bg-indigo-900{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>Today</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex items-center px-4 py-3 hover:bg-indigo-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M7 3m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z"></path>
+            <path d="M12 6h4l-2 8"></path>
+            <path d="M17 17v2a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2"></path>
+          </svg>
+          <span>Next 7 Days</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex items-center px-4 py-3 hover:bg-indigo-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          <span>All Tasks</span>
+        </a>
+      </li>
+    </ul>
+    
+    <div class="px-4 mt-6 mb-2 text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+      Account
+    </div>
+    <ul>
+      <li>
+        <a href="#" class="flex items-center px-4 py-3 hover:bg-indigo-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span>Profile</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex items-center px-4 py-3 hover:bg-indigo-700 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          <span>Change Password</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  
+  <!-- Sidebar Toggle Button (Desktop) -->
+  <div class="hidden md:block border-t border-indigo-700 p-3">
+    <button id="desktopSidebarToggle" class="w-full rounded-md bg-indigo-700 hover:bg-indigo-600 py-2 px-4 flex items-center justify-center transition-colors">
+      <svg id="collapseIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+      </svg>
+      <span id="collapseText" class="ml-2">Hide Sidebar</span>
+    </button>
+  </div>
+  
+  <!-- Logout Option -->
+  <div class="p-4 border-t border-indigo-700">
+    <a href="{% url 'logout' %}" class="flex items-center px-4 py-3 text-indigo-300 hover:bg-indigo-700 hover:text-white transition-colors rounded-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+      <span>Logout</span>
+    </a>
+  </div>
+</nav>
+
+<!-- Backdrop overlay for mobile menu -->
+<div id="sidebar-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity duration-300"></div>
+
+<!-- Mobile Toggle Button -->
+<button id="mobileSidebarToggle" class="md:hidden fixed top-4 left-4 z-50 bg-indigo-800 p-2 rounded-lg text-white shadow-lg">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+</button>
+
+<!-- Add this script for improved sidebar toggling -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+    const desktopSidebarToggle = document.getElementById('desktopSidebarToggle');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const collapseIcon = document.getElementById('collapseIcon');
+    const collapseText = document.getElementById('collapseText');
+    const content = document.getElementById('content');
+    
+    let isSidebarCollapsed = false;
+    
+    // Set initial state based on screen size
+    if (window.innerWidth >= 768) {
+      // Desktop - show sidebar
+      sidebar.style.width = '16rem';
+      sidebar.style.transform = 'translateX(0)';
+      content.style.marginLeft = '16rem';
+    } else {
+      // Mobile - hide sidebar
+      sidebar.style.width = '16rem';
+      sidebar.style.transform = 'translateX(-100%)';
+      content.style.marginLeft = '0';
+    }
+    
+    // Mobile toggle functionality
+    if (mobileSidebarToggle && sidebarBackdrop) {
+      mobileSidebarToggle.addEventListener('click', function() {
+        sidebar.style.transform = 'translateX(0)';
+        sidebarBackdrop.classList.remove('hidden');
+        sidebarBackdrop.classList.add('block');
+      });
+      
+      sidebarBackdrop.addEventListener('click', function() {
+        sidebar.style.transform = 'translateX(-100%)';
+        sidebarBackdrop.classList.add('hidden');
+        sidebarBackdrop.classList.remove('block');
+      });
+    }
+    
+    // Desktop toggle functionality
+    if (desktopSidebarToggle) {
+      desktopSidebarToggle.addEventListener('click', function() {
+        isSidebarCollapsed = !isSidebarCollapsed;
+        
+        if (isSidebarCollapsed) {
+          // Hide sidebar completely
+          sidebar.style.transform = 'translateX(-100%)';
+          content.style.marginLeft = '0';
+          collapseText.textContent = 'Show Sidebar';
+          
+          // Add a fixed button to show sidebar again
+          let showBtn = document.createElement('button');
+          showBtn.id = 'showSidebarBtn';
+          showBtn.className = 'fixed top-4 left-4 bg-indigo-800 p-2 rounded-lg text-white shadow-lg z-40';
+          showBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          `;
+          document.body.appendChild(showBtn);
+          
+          showBtn.addEventListener('click', function() {
+            sidebar.style.transform = 'translateX(0)';
+            content.style.marginLeft = '16rem';
+            isSidebarCollapsed = false;
+            collapseText.textContent = 'Hide Sidebar';
+            showBtn.remove();
+          });
+        } else {
+          // Show sidebar
+          sidebar.style.transform = 'translateX(0)';
+          content.style.marginLeft = '16rem';
+          collapseText.textContent = 'Hide Sidebar';
+          
+          // Remove show button if it exists
+          const showBtn = document.getElementById('showSidebarBtn');
+          if (showBtn) showBtn.remove();
+        }
+      });
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth >= 768) {
+        // Desktop view
+        if (!isSidebarCollapsed) {
+          sidebar.style.transform = 'translateX(0)';
+          sidebar.style.width = '16rem';
+          content.style.marginLeft = '16rem';
+        }
+        
+        // Hide mobile elements
+        sidebarBackdrop.classList.add('hidden');
+      } else {
+        // Mobile view - make sure sidebar is hidden initially
+        sidebar.style.transform = 'translateX(-100%)';
+        content.style.marginLeft = '0';
+      }
+    });
+  });
+</script>

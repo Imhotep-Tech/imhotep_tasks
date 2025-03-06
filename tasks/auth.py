@@ -110,7 +110,7 @@ def user_login(request):
                 if user.email_verify == True:
                     login(request, user)
                     messages.success(request, "Login successful!")
-                    return redirect("dashboard")
+                    return redirect("today_tasks")
                 else:
                     # Send verification email
                     mail_subject = 'Activate your account.'
@@ -138,7 +138,7 @@ def user_login(request):
                     if user.email_verify == True:
                         login(request, user)
                         messages.success(request, "Login successful!")
-                        return redirect("dashboard")
+                        return redirect("today_tasks")
                     else:
                         # Send verification email
                         mail_subject = 'Activate your account.'
@@ -259,7 +259,7 @@ def google_callback(request):
             # User exists, log them in
             login(request, user)
             messages.success(request, "Login successful!")
-            return redirect('dashboard')
+            return redirect('today_tasks')
         
         # Check if username exists
         if User.objects.filter(username=username).exists():
@@ -284,7 +284,7 @@ def google_callback(request):
         # Log user in
         login(request, user)
         messages.success(request, "Account created successfully!")
-        return redirect('dashboard')
+        return redirect('today_tasks')
 
     except Exception as e:
         messages.error(request, f"An error occurred during Google login. Please try again. {e}")
@@ -325,4 +325,4 @@ def add_username_google_login(request):
     # Log user in
     login(request, user)
     messages.success(request, "Account created successfully!")
-    return redirect('dashboard')
+    return redirect('today_tasks')
