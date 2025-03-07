@@ -39,7 +39,7 @@
         </a>
       </li>
       <li>
-        <a href="#" class="flex items-center px-4 py-3 hover:bg-indigo-700 transition-colors">
+        <a href="{% url 'next_week_tasks' %}" class="flex items-center px-4 py-3 hover:bg-indigo-700 transition-colors {% if request.path == '/next_week_tasks/' %}bg-indigo-900{% endif %}">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
             <path d="M7 3m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z"></path>

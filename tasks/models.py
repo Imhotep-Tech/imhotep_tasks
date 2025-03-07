@@ -11,7 +11,7 @@ class Tasks(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     # the task details with max 2000 char (optional)
-    task_details = models.CharField(max_length=2000)
+    task_details = models.CharField(max_length=2000, null=True, blank=True, default=None)
 
     # the date where this poll was created
     creation_date = models.DateTimeField(auto_now_add=True)

@@ -75,9 +75,9 @@
       <h2 class="text-lg font-semibold text-gray-800">Today's Tasks</h2>
     </div>
     
-    {% if user_tasks_today %}
+    {% if user_tasks %}
       <ul class="divide-y divide-gray-200">
-        {% for task in user_tasks_today %}
+        {% for task in user_tasks %}
           <li class="p-4 hover:bg-gray-50 transition-all {% if task.status %}bg-gray-50{% endif %}">
             <div class="flex items-center justify-between">
               <div class="flex items-center">
