@@ -21,6 +21,10 @@ from imhotep_tasks.settings import SITE_DOMAIN
 
 #the register route
 def register(request):
+
+    if request.user.is_authenticated:
+        return redirect("today_tasks")
+
     if request.method == "POST":
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -98,6 +102,10 @@ def activate(request, uidb64, token):
 
 #the login route
 def user_login(request):
+
+    if request.user.is_authenticated:
+        return redirect("today_tasks")
+
     if request.method == "POST":
         user_username_mail = request.POST.get('user_username_mail')
         password = request.POST.get('password')
