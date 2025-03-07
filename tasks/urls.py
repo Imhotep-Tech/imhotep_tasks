@@ -29,4 +29,5 @@ urlpatterns = [
     path('google/handle-username/', auth.add_username_google_login, name='add_username_google_login'),
 
     path('today_tasks/', user.today_tasks, name='today_tasks'),
+    path('all_tasks/', user.all_tasks, name='all_tasks'),
 ]
