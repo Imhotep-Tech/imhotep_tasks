@@ -118,7 +118,6 @@ def add_task(request):
             task = Tasks.objects.create(
                 task_title=task_title,
                 task_details=task_details,
-                due_date=today,
                 created_by=request.user
             )
 
@@ -164,10 +163,6 @@ def update_task(request, task_id):
                 return redirect('next_week_tasks')
             else:
                 return redirect('all_tasks')
-            
-        else:
-            task.due_date = None
-            task.save()
 
         # Redirect to the today tasks with a success message
         messages.success(request, "Task updated successfully!")
