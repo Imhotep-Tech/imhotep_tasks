@@ -204,3 +204,34 @@ def delete_task(request, task_id):
     else:
         messages.error(request, "Method not allowed!")
         return redirect("today_tasks")
+
+@login_required
+def task_complete(request, task_id):
+    task = get_object_or_404(Tasks, id=task_id, created_by= request.user)
+
+    if request.method == 'POST':
+        
+        today = timezone.now().date()
+
+        due_date = task.due_date.date()
+
+        if task.status:
+            task.status = False
+            task.done_date = None
+        else:
+            task.status = True
+            task.done_date = today
+
+        task.save()
+
+        # Determine which page to redirect to
+        if due_date == today:
+            return redirect('today_tasks')
+        elif today < due_date <= today + timedelta(days=7):
+            return redirect('next_week_tasks')
+        else:
+            return redirect('all_tasks')
+        
+    else:
+        messages.error(request, "Method not allowed!")
+        return redirect("today_tasks")

@@ -82,7 +82,7 @@
           <li class="p-4 hover:bg-gray-50 transition-all {% if task.status %}bg-gray-50{% endif %}">
             <div class="flex items-center justify-between">
               <div class="flex items-center">
-                <form method="post" action="#" class="mr-3">
+                <form method="post" action="{% url 'task_complete' task.id %}" class="mr-3">
                   {% csrf_token %}
                   <input type="hidden" name="task_id" value="{{ task.id }}">
                   <input type="hidden" name="action" value="toggle_status">

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.utils import timezone
 
 #a class to define a table to save the poll questions in them
 class Tasks(models.Model):
@@ -17,7 +18,7 @@ class Tasks(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
 
     # the date where this tasks is due by (optional)
-    due_date = models.DateTimeField(null=True, blank=True, default=None)
+    due_date = models.DateTimeField(default=timezone.now)
 
     #to set the current status of the poll if active or not
     status = models.BooleanField(default=False)
