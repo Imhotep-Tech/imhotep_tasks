@@ -33,4 +33,6 @@ urlpatterns = [
     path('next_week_tasks/', user.next_week_tasks, name='next_week_tasks'),
 
     path('add_task/', user.add_task, name='add_task'),
+    path('update_task/<int:task_id>/', user.update_task, name='update_task'),
+    path('delete_task/<int:task_id>/', user.delete_task, name='delete_task'),
 ]
