@@ -6,6 +6,8 @@ from django.db import IntegrityError
 from datetime import date, timedelta
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.dateparse import parse_datetime
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 #the user today_tasks function
 @login_required
@@ -13,14 +15,27 @@ def today_tasks(request):
     #get user tasks for today
     today = date.today()
 
-    user_tasks = Tasks.objects.filter(
+    user_tasks_all = Tasks.objects.filter(
         created_by=request.user,
         due_date__date=today
-    ).order_by('id')
+    ).order_by('status', 'due_date').all()
     
-    completed_tasks_count = user_tasks.filter(status=True).count()
+    # Set up pagination - 20 tasks per page
+    paginator = Paginator(user_tasks_all, 20)
+    page = request.GET.get('page', 1)
 
-    total_number_tasks = user_tasks.count()
+    try:
+        user_tasks = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        user_tasks = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        user_tasks = paginator.page(paginator.num_pages)
+
+    completed_tasks_count = user_tasks_all.filter(status=True).count()
+
+    total_number_tasks = user_tasks_all.count()
 
     #create the context data that will be sent
     context = {
@@ -37,13 +52,26 @@ def today_tasks(request):
 @login_required
 def all_tasks(request):
 
-    user_tasks = Tasks.objects.filter(
+    user_tasks_all = Tasks.objects.filter(
         created_by=request.user,
-    ).order_by('id')
+    ).order_by('status', 'due_date').all()
     
-    completed_tasks_count = user_tasks.filter(status=True).count()
+    # Set up pagination - 20 tasks per page
+    paginator = Paginator(user_tasks_all, 20)
+    page = request.GET.get('page', 1)
 
-    total_number_tasks = user_tasks.count()
+    try:
+        user_tasks = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        user_tasks = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        user_tasks = paginator.page(paginator.num_pages)
+
+    completed_tasks_count = user_tasks_all.filter(status=True).count()
+
+    total_number_tasks = user_tasks_all.count()
 
     #create the context data that will be sent
     context = {
@@ -67,15 +95,28 @@ def next_week_tasks(request):
     week_later = today + timedelta(days=7)
     
     # Filter tasks between today and next 7 days
-    user_tasks = Tasks.objects.filter(
+    user_tasks_all = Tasks.objects.filter(
         created_by=request.user,
         due_date__date__gte=today,  # greater than or equal to today
         due_date__date__lte=week_later  # less than or equal to a week from today
-    ).order_by('id')
+    ).order_by('status', 'due_date').all()
     
-    completed_tasks_count = user_tasks.filter(status=True).count()
+    # Set up pagination - 20 tasks per page
+    paginator = Paginator(user_tasks_all, 20)
+    page = request.GET.get('page', 1)
 
-    total_number_tasks = user_tasks.count()
+    try:
+        user_tasks = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page
+        user_tasks = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results
+        user_tasks = paginator.page(paginator.num_pages)
+
+    completed_tasks_count = user_tasks_all.filter(status=True).count()
+
+    total_number_tasks = user_tasks_all.count()
 
     #create the context data that will be sent
     context = {
