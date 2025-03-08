@@ -1,14 +1,66 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="{% static 'styles.css' %}">
-    <link rel="shortcut icon" type="image/png" href="{% static 'imhotep_tasks.png' %}">
-    <title>Imhotep Tasks</title>
-</head>
+    <head>
+        <!-- Primary Meta Tags -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>{% block title %}Imhotep Tasks - Manage Your Daily Tasks Efficiently{% endblock %}</title>
+        <meta name="description" content="{% block meta_description %}Imhotep Tasks helps you organize, prioritize, and track your tasks with an easy-to-use interface. Stay productive and never miss a deadline.{% endblock %}">
+        <meta name="keywords" content="task management, productivity tool, to-do list, task organizer, project management">
+        <meta name="author" content="Imhotep Tech">
+        
+        <!-- Canonical URL -->
+        <link rel="canonical" href="{{ request.build_absolute_uri }}">
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ request.build_absolute_uri }}">
+        <meta property="og:title" content="{% block og_title %}Imhotep Tasks - Manage Your Daily Tasks Efficiently{% endblock %}">
+        <meta property="og:description" content="{% block og_description %}Imhotep Tasks helps you organize, prioritize, and track your tasks with an easy-to-use interface. Stay productive and never miss a deadline.{% endblock %}">
+        <meta property="og:image" content="{% block og_image %}{% static 'imhotep_tasks.png' %}{% endblock %}">
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+        <meta property="twitter:title" content="{% block twitter_title %}Imhotep Tasks - Manage Your Daily Tasks Efficiently{% endblock %}">
+        <meta property="twitter:description" content="{% block twitter_description %}Imhotep Tasks helps you organize, prioritize, and track your tasks with an easy-to-use interface. Stay productive and never miss a deadline.{% endblock %}">
+        <meta property="twitter:image" content="{% block twitter_image %}{% static 'imhotep_tasks_social.png' %}{% endblock %}">
+        
+        <!-- Favicon and App Icons -->
+        <link rel="shortcut icon" type="image/png" href="{% static 'imhotep_tasks.png' %}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}">
+        <link rel="manifest" href="{% static 'site.webmanifest' %}">
+        
+        <!-- Stylesheets -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="{% static 'styles.css' %}">
+        
+        <!-- Preload critical resources -->
+        <link rel="preconnect" href="https://cdn.tailwindcss.com">
+        
+        <!-- Structured Data - Organization -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Imhotep Tasks",
+          "applicationCategory": "ProductivityApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "description": "A task management application to help you stay organized and productive."
+        }
+        </script>
+        
+        {% block extra_head %}{% endblock %}
+    </head>
 <body class="bg-gray-100">
     <div class="flex min-h-screen">
         <!-- Sidebar Navigation Container -->
