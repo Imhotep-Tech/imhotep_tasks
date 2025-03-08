@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% load task_tags %}
 {% block content %}
 
 <div class="container mx-auto px-4 py-8 max-w-5xl">
@@ -10,12 +11,12 @@
         <p class="text-gray-600 mt-1">Hello, {{ username }}!</p>
       </div>
       <div class="mt-4 md:mt-0">
-        <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-all">
+        <a href="{% url 'add_task' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
           </svg>
           Add New Task
-        </button>
+        </a>
       </div>
     </div>
   </div>
@@ -106,11 +107,16 @@
               </div>
               
               <div class="flex items-center">
+
                 <span class="text-sm text-gray-500 mr-4">
                   {% if task.due_date %}
-                    Due: {{ task.due_date|date:"g:i A" }}
+
+                    {% due_date_display task.due_date task.status as due_date_text %}
+                    {{ due_date_text|safe }}
+
                   {% endif %}
                 </span>
+
                 <div class="flex space-x-2">
                   <form method="post" action="#" class="inline">
                     {% csrf_token %}
@@ -147,7 +153,7 @@
         </div>
         <h3 class="mt-4 text-lg font-medium text-gray-900">No tasks for today</h3>
         <p class="mt-2 text-gray-500">You don't have any tasks scheduled for today. Enjoy your free time or create a new task!</p>
-        <a href="#" class="mt-4 inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+        <a href="{% url 'add_task' %}" class="mt-4 inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
           </svg>

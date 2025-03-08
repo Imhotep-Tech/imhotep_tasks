@@ -85,3 +85,34 @@ def next_week_tasks(request):
         "tasks_title":"Next 7 days Tasks"
     }
     return render(request, "show_tasks.html", context)
+
+@login_required
+def add_task(request):
+    if request.method == 'POST':
+
+        today = date.today()
+        task_title = request.POST.get("task_title")
+        task_details = request.POST.get("task_details")
+        due_date = request.POST.get("due_date")
+
+        if due_date:
+            task = Tasks.objects.create(
+                task_title=task_title,
+                task_details=task_details,
+                due_date=due_date,
+                created_by=request.user
+            )
+        else:
+            task = Tasks.objects.create(
+                task_title=task_title,
+                task_details=task_details,
+                due_date=today,
+                created_by=request.user
+            )
+
+        messages.success(request, "Task added successfully!")
+        return redirect('today_tasks')
+    context = {
+        "username": request.user.username,
+    }
+    return render(request, 'add_task.html', context=context)

@@ -31,4 +31,6 @@ urlpatterns = [
     path('today_tasks/', user.today_tasks, name='today_tasks'),
     path('all_tasks/', user.all_tasks, name='all_tasks'),
     path('next_week_tasks/', user.next_week_tasks, name='next_week_tasks'),
+
+    path('add_task/', user.add_task, name='add_task'),
 ]

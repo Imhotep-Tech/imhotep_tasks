@@ -22,6 +22,8 @@ class Tasks(models.Model):
     #to set the current status of the poll if active or not
     status = models.BooleanField(default=False)
 
+    done_date = models.DateTimeField(null=True, blank=True, default=None)
+
     def __str__(self):
         return self.question
 
