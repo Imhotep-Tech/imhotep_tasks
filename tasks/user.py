@@ -271,3 +271,51 @@ def task_complete(request, task_id):
     else:
         messages.error(request, "Method not allowed!")
         return redirect("today_tasks")
+
+@login_required
+def search_task(request):
+    if request.method == 'GET':
+        task_title = request.GET.get('task_title', '')
+
+        if task_title:
+            user_tasks_all = Tasks.objects.filter(
+                created_by=request.user,
+                task_title__icontains=task_title
+            ).order_by('status', 'due_date').all()
+
+            # Set up pagination - 20 tasks per page
+            paginator = Paginator(user_tasks_all, 20)
+            page = request.GET.get('page', 1)
+
+            try:
+                user_tasks = paginator.page(page)
+            except PageNotAnInteger:
+                # If page is not an integer, deliver first page
+                user_tasks = paginator.page(1)
+            except EmptyPage:
+                # If page is out of range, deliver last page of results
+                user_tasks = paginator.page(paginator.num_pages)
+
+            completed_tasks_count = user_tasks_all.filter(status=True).count()
+
+            total_number_tasks = user_tasks_all.count()
+
+            #create the context data that will be sent
+            context = {
+                "username": request.user.username,
+                "user_tasks": user_tasks,
+                "total_number_tasks":total_number_tasks,
+                "completed_tasks_count" :completed_tasks_count,
+                "pending_tasks":total_number_tasks-completed_tasks_count,
+                "tasks_title": f"Search Results for '{task_title}'",
+                "search_term": task_title
+            }
+            return render(request, "show_tasks.html", context)
+        
+        else:
+            # If no search term is provided, redirect to all tasks
+            return redirect('all_tasks')
+
+    else:
+        messages.error(request, "Method not allowed!")
+        return redirect("today_tasks")
