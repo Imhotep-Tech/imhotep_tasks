@@ -7,7 +7,7 @@ from . import task_managment, views, auth, user_profile
 #the urls of the app
 urlpatterns = [
     #the main url
-    # path('', views.index, name="index"),
+    path('', views.index, name="index"),
     #the register url
     path("register/", auth.register, name="register"),
     #login url
@@ -44,4 +44,8 @@ urlpatterns = [
     path("update_profile/<int:user_id>",user_profile.update_profile , name="update_profile"),
     path('activate/<uidb64>/<token>/<new_email>/', user_profile.activate_profile_update, name='activate_profile_update'),
 
+    path('privacy/', views.privacy, name='privacy'),
+    path('terms/', views.terms, name='terms'),
+    path('landing_page/', views.landing_page, name='landing_page'),
 ]
+
