@@ -1,11 +1,10 @@
+{% load static %}
 <nav id="sidebar" class="bg-indigo-800 text-white fixed h-full z-50 flex flex-col shadow-lg transition-all duration-300 ease-in-out">
   <!-- Brand Header -->
   <div class="p-4 border-b border-indigo-700">
     <a href="{% url 'landing_page' %}" class="flex items-center space-x-3">
       <div class="bg-white p-2 rounded-lg rotate-12 hover:rotate-0 transition-transform">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
+        <img src="{% static 'imhotep_tasks.png' %}" alt="Imhotep Tasks Logo" class="h-6 w-6">
       </div>
       <div class="font-bold text-xl">Imhotep Tasks</div>
     </a>

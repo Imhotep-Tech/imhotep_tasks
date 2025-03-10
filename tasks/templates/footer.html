@@ -1,11 +1,10 @@
+{% load static %}
 <footer class="bg-indigo-900 text-white py-8 mt-auto">
     <div class="container max-w-4xl mx-auto px-4">
         <!-- Logo and Copyright -->
         <div class="flex flex-col items-center mb-6">
             <div class="bg-white p-2 rounded-lg mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+                <img src="{% static 'imhotep_tasks.png' %}" alt="Imhotep Tasks Logo" class="h-8 w-8">
             </div>
             <p class="text-indigo-200 text-center">&copy; {% now "Y" %} Imhotep Tasks Manager. All rights reserved.</p>
         </div>
