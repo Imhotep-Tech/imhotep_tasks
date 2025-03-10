@@ -25,6 +25,9 @@ def terms(request):
 def privacy(request):
     return render(request, 'privacy.html')
 
+def version(request):
+    return render(request, 'version.html')
+
 def get_url_pattern(pattern):
     """Helper function to get the URL pattern string"""
     if hasattr(pattern, 'pattern'):

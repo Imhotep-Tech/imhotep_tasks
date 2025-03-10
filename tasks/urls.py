@@ -46,6 +46,7 @@ urlpatterns = [
 
     path('privacy/', views.privacy, name='privacy'),
     path('terms/', views.terms, name='terms'),
+    path('version/', views.version, name='version'),
     path('landing_page/', views.landing_page, name='landing_page'),
 ]
 
