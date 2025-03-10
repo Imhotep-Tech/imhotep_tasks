@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from django.utils import timezone
 from tasks.models import Tasks
 
-from tasks.user import (
+from tasks.task_managment import (
     add_task, update_task, delete_task, task_complete
 )
 

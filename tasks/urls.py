@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import views, auth, user
+from . import task_managment, views, auth, user_profile
 
 # This block of code defines the URL patterns for your Django web application. Each `path` function
 # call represents a URL pattern that maps a specific URL to a corresponding view function within your
@@ -28,14 +28,20 @@ urlpatterns = [
     path('google/callback/', auth.google_callback, name='google_callback'),
     path('google/handle-username/', auth.add_username_google_login, name='add_username_google_login'),
 
-    path('today_tasks/', user.today_tasks, name='today_tasks'),
-    path('all_tasks/', user.all_tasks, name='all_tasks'),
-    path('next_week_tasks/', user.next_week_tasks, name='next_week_tasks'),
+    path('today_tasks/', task_managment.today_tasks, name='today_tasks'),
+    path('all_tasks/', task_managment.all_tasks, name='all_tasks'),
+    path('next_week_tasks/', task_managment.next_week_tasks, name='next_week_tasks'),
 
-    path('add_task/', user.add_task, name='add_task'),
-    path('update_task/<int:task_id>/', user.update_task, name='update_task'),
-    path('delete_task/<int:task_id>/', user.delete_task, name='delete_task'),
-    path('task_complete/<int:task_id>/', user.task_complete, name='task_complete'),
-    path('search/', user.search_task, name='search_task'),
+    path('add_task/', task_managment.add_task, name='add_task'),
+    path('update_task/<int:task_id>/', task_managment.update_task, name='update_task'),
+    path('delete_task/<int:task_id>/', task_managment.delete_task, name='delete_task'),
+    path('task_complete/<int:task_id>/', task_managment.task_complete, name='task_complete'),
+    path('search/', task_managment.search_task, name='search_task'),
+
+    path('password_change/', user_profile.CustomPasswordChangeView.as_view(template_name='password_change.html'), name='password_change'),
+    path('password_change/done/', user_profile.CustomPasswordChangeDoneView.as_view(template_name='password_change_done.html'), name='password_change_done'),
+
+    path("update_profile/<int:user_id>",user_profile.update_profile , name="update_profile"),
+    path('activate/<uidb64>/<token>/<new_email>/', user_profile.activate_profile_update, name='activate_profile_update'),
 
 ]
