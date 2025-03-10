@@ -179,6 +179,8 @@ def user_logout(request):
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'password_reset.html'
     form_class = PasswordResetForm
+    email_template_name = 'password_reset_email.html'
+    html_email_template_name = 'password_reset_email.html'
 
     def form_invalid(self, form):
         for field, errors in form.errors.items():
@@ -193,6 +195,17 @@ class CustomPasswordResetView(PasswordResetView):
         context['site_name'] = 'Imhotep Tasks'
         context['protocol'] = 'https' if 'https://' in SITE_DOMAIN else 'http'
         return context
+    
+    def send_mail(self, subject_template_name, email_template_name,
+                context, from_email, to_email, html_email_template_name=None):
+        """
+        Override to use a custom subject
+        """
+        subject = "Reset your Imhotep Tasks password"
+        return super().send_mail(
+            subject_template_name, email_template_name, context, from_email,
+            to_email, html_email_template_name
+        )
 
 class CustomPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'password_reset_done.html'
