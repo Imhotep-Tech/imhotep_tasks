@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from .models import User
 from django.contrib import messages
 
-from django.contrib.auth import authenticate, login, logout, get_backends
+from django.contrib.auth import authenticate, login, get_backends
 from django.contrib.auth.views import PasswordChangeView, PasswordChangeDoneView
 from django.core.mail import send_mail
 from django.contrib.auth.forms import PasswordChangeForm
@@ -50,38 +50,7 @@ def update_profile(request, user_id):
             messages.error(request, "Email must include @!")
             return redirect("update_profile", user_id=user_id)
 
-        if user.email != user_email and user.username != user_username:
-
-            # Check if username already exists
-            if User.objects.filter(username=user_username).exists():
-                messages.error(request, 'Username already taken, please choose another one!')
-                return redirect("update_profile", user_id=user_id)
-            
-            # Check if email already exists
-            if User.objects.filter(email=user_email).exists():
-                messages.error(request, 'Email already taken, please choose another one!')
-                return redirect("update_profile", user_id=user_id)
-
-            # Send verification email
-            current_site = get_current_site(request)
-            mail_subject = 'Activate your account.'
-            message = render_to_string('activate_mail_send.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': default_token_generator.make_token(user),
-                'new_email': urlsafe_base64_encode(force_bytes(user_email)),
-                'activate':'activate_profile_update'
-            })
-            send_mail(mail_subject, message, 'imhoteptech1@gmail.com', [user_email], html_message=message)
-
-            messages.success(request, "Email submitted successfully! Please check your email to verify your Email.")
-
-            user.username = user_username
-            logout(user)
-            return redirect("update_profile", user_id=user_id)
-
-        elif user.username != user_username:
+        if user_username and user.username != user_username:
 
             # Check if username already exists
             if User.objects.filter(username=user_username).exists():
@@ -89,11 +58,8 @@ def update_profile(request, user_id):
                 return redirect("update_profile", user_id=user_id)
             
             user.username = user_username
-            user.save()
-            messages.success(request, "Username Updated successfully!")
-            return redirect("update_profile", user_id=user_id)
         
-        else:
+        if user_email and user_email != user.email:
             # Check if email already exists
             if User.objects.filter(email=user_email).exists():
                 messages.error(request, 'Email already taken, please choose another one!')
@@ -115,7 +81,10 @@ def update_profile(request, user_id):
             messages.success(request, "Email submitted successfully! Please check your email to verify your Email.")
             return redirect("update_profile", user_id=user_id)
 
-    # If the request wasn't POST, then redirect to the update poll page with the poll data
+        user.save()
+        messages.success(request, 'Your profile was successfully updated!')
+        return redirect('update_profile', user_id=user.id)
+    # If the request wasn't POST, then redirect to the update user data page with the user data
     context = {
         "username": request.user.username,
         "user":user
