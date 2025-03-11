@@ -23,13 +23,19 @@ urlpatterns = [
 
 from django.contrib import admin
 from django.urls import path, include
+from tasks.views import sitemap
+from tasks import views
 
-# handler404 = 'polls_app.error_handle.handler404'
-# handler500 = 'polls_app.error_handle.handler500'
-# handler403 = 'polls_app.error_handle.handler403'
-# handler400 = 'polls_app.error_handle.handler400'
+handler401 = 'tasks.error_handle.handler401'
+handler405 = 'tasks.error_handle.handler405'
+handler408 = 'tasks.error_handle.handler408'
+handler429 = 'tasks.error_handle.handler429'
+handler502 = 'tasks.error_handle.handler502'
+handler503 = 'tasks.error_handle.handler503'
+handler504 = 'tasks.error_handle.handler504'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('tasks.urls')),
+    path('sitemap.xml', sitemap, name='sitemap'),
 ]
