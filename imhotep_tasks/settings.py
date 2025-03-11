@@ -84,6 +84,9 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
 ]
 
+#add that to the MIDDLEWARE in production
+#'whitenoise.middleware.WhiteNoiseMiddleware',
+
 ROOT_URLCONF = 'imhotep_tasks.urls'
 
 TEMPLATES = [
