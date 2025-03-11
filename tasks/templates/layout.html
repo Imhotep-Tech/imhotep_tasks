@@ -30,10 +30,17 @@
         
         <!-- Favicon and App Icons -->
         <link rel="shortcut icon" type="image/png" href="{% static 'imhotep_tasks.png' %}">
-        <!-- <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
-        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}">
-        <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}"> -->
-        <link rel="manifest" href="{% static 'site.webmanifest' %}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'imhotep_tasks.png' %}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'imhotep_tasks.png' %}">
+        <link rel="manifest" href="{% static 'manifest.json' %}">
+        <script src="{% static 'service-worker.js' %}"></script>
+
+        <!-- Add PWA meta tags -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-title" content="Imhotep Tasks">
+        <link rel="apple-touch-icon" href="{% static 'imhotep_tasks.png' %}">
+        <meta name="theme-color" content="#007bff">
         
         <!-- Stylesheets -->
         <script src="https://cdn.tailwindcss.com"></script>
@@ -101,6 +108,7 @@
 
     <!-- Add main.js at the end of body for better performance -->
     <script src="{% static 'main.js' %}"></script>
+    <script src="/static/js/register-sw.js"></script>
 </body>
 {% include 'footer.html' %}
 </html>

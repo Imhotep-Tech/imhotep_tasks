@@ -15,15 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-]
-
-from django.contrib import admin
 from django.urls import path, include
-from tasks.views import sitemap
+from tasks.views import sitemap, service_worker, offline
 from tasks import views
 
 handler401 = 'tasks.error_handle.handler401'
@@ -38,4 +31,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('tasks.urls')),
     path('sitemap.xml', sitemap, name='sitemap'),
+    path('service-worker.js', service_worker, name='service-worker'),
+    path('offline.html', offline, name='offline'),
 ]

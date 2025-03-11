@@ -4,6 +4,8 @@ from django.urls import URLResolver, URLPattern
 from django.urls import get_resolver
 import datetime
 from django.conf import settings
+import os
+from django.views.decorators.cache import cache_control
 
 # Create your views here.
 
@@ -86,3 +88,14 @@ def sitemap(request):
     
     # Return with correct content type
     return HttpResponse(sitemap_xml, content_type='application/xml')
+
+@cache_control(max_age=0)
+def service_worker(request):
+    response = HttpResponse(
+        open(os.path.join(settings.STATIC_ROOT, 'service-worker.js')).read(),
+        content_type='application/javascript'
+    )
+    return response
+
+def offline(request):
+    return render(request, 'offline.html')
