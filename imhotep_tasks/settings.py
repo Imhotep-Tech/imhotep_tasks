@@ -22,18 +22,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY', default='+)#=j8tkch25z^on!=567&^6eyqyn9fgg3mbzypay+g^18vh)5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = config('DEBUG', default='False') == 'True'
 
+# Site domain configuration
 if DEBUG:
-    # Add this to your settings
-    SITE_DOMAIN = 'http://127.0.0.1:8000'  # Replace with your actual domain
+    SITE_DOMAIN = config('SITE_DOMAIN', default='http://127.0.0.1:8000')
 else:
-    SITE_DOMAIN = 'https://imhoteptasks.pythonanywhere.com' 
+    SITE_DOMAIN = config('SITE_DOMAIN', default='https://imhotep-tasks.azurewebsites.net')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'imhoteptasks.pythonanywhere.com'] 
+ALLOWED_HOSTS = ['.azurewebsites.net', 'localhost', '127.0.0.1', 'imhoteptasks.pythonanywhere.com']
 
 if DEBUG == False:
     # Security settings - keep these as they are
@@ -63,7 +64,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'debug_toolbar',
+    'whitenoise.runserver_nostatic',
 ]
 
 #added those to the Google login and sending emails
@@ -76,6 +77,7 @@ AUTHENTICATION_BACKENDS = (
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Uncommented this line for production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -83,33 +85,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware', 
 ]
-
-if DEBUG == True:
-    INTERNAL_IPS = [
-        '127.0.0.1',
-    ]
-
-    # Optional: Configure which panels to display
-    DEBUG_TOOLBAR_PANELS = [
-        'debug_toolbar.panels.versions.VersionsPanel',
-        'debug_toolbar.panels.timer.TimerPanel',
-        'debug_toolbar.panels.settings.SettingsPanel',
-        'debug_toolbar.panels.headers.HeadersPanel',
-        'debug_toolbar.panels.request.RequestPanel',
-        'debug_toolbar.panels.sql.SQLPanel',
-        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
-        'debug_toolbar.panels.templates.TemplatesPanel',
-        'debug_toolbar.panels.cache.CachePanel',
-        'debug_toolbar.panels.signals.SignalsPanel',
-        'debug_toolbar.panels.logging.LoggingPanel',
-        'debug_toolbar.panels.redirects.RedirectsPanel',
-        'debug_toolbar.panels.profiling.ProfilingPanel',
-    ]
-
-#add that to the MIDDLEWARE in production
-#'whitenoise.middleware.WhiteNoiseMiddleware',
 
 ROOT_URLCONF = 'imhotep_tasks.urls'
 
@@ -138,8 +114,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'imhoteptech1@gmail.com'
-EMAIL_HOST_PASSWORD =  config('MAIL_PASSWORD')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='imhoteptech1@gmail.com')
+EMAIL_HOST_PASSWORD = config('MAIL_PASSWORD', default='')
 
 WSGI_APPLICATION = 'imhotep_tasks.wsgi.application'
 
@@ -147,21 +123,15 @@ WSGI_APPLICATION = 'imhotep_tasks.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
+# Default to SQLite for local development if no database URL is configured
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DATABASE_NAME'),
-        'USER': config('DATABASE_USER'),
-        'PASSWORD': config('DATABASE_PASSWORD'),
-        'HOST': config('DATABASE_HOST'), 
-        'PORT': '5432',
+        'NAME': config('DATABASE_NAME', default='imhotep_tasks'),
+        'USER': config('DATABASE_USER', default='postgres'),
+        'PASSWORD': config('DATABASE_PASSWORD', default='1234'),
+        'HOST': config('DATABASE_HOST', default='localhost'),
+        'PORT': config('DATABASE_PORT', default='5432'),
     }
 }
 
@@ -210,6 +180,7 @@ STATICFILES_DIRS = [
 
 # This is the simple configuration - no compression or manifest
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -219,8 +190,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': config('GOOGLE_CLIENT_ID', ''),
-            'secret': config('GOOGLE_CLIENT_SECRET', ''),
+            'client_id': config('GOOGLE_CLIENT_ID', default=''),
+            'secret': config('GOOGLE_CLIENT_SECRET', default=''),
         },
         'REDIRECT_URI': f"{SITE_DOMAIN}/google/callback/",
         'SCOPE': ['profile', 'email'],
