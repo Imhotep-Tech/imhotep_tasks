@@ -202,6 +202,13 @@ class CustomPasswordResetView(PasswordResetView):
         Override to use a custom subject
         """
         subject = "Reset your Imhotep Tasks password"
+        
+        # Ensure the domain is set correctly before sending the email
+        if 'domain' not in context:
+            context['domain'] = SITE_DOMAIN.replace('http://', '').replace('https://', '')
+            context['site_name'] = 'Imhotep Tasks'
+            context['protocol'] = 'https' if 'https://' in SITE_DOMAIN else 'http'
+            
         return super().send_mail(
             subject_template_name, email_template_name, context, from_email,
             to_email, html_email_template_name
