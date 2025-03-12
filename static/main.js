@@ -88,9 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Task completion animation
     initializeTaskCompletionAnimation();
-    
-    // Initialize download page if it exists
-    setupDownloadPage();
 });
 
 function initializeSidebar() {
@@ -215,57 +212,4 @@ function initializeTaskCompletionAnimation() {
             }
         });
     });
-}
-
-// Download page functionality
-function setupDownloadPage() {
-    // PWA installation prompt
-    let deferredPrompt;
-    const pwaInstallCard = document.getElementById('pwaInstallCard');
-    const installButton = document.getElementById('installButton');
-    
-    // Hide the install card by default
-    if (pwaInstallCard) {
-        pwaInstallCard.style.display = 'none';
-    }
-    
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        // Show the install card
-        if (pwaInstallCard) {
-            pwaInstallCard.style.display = 'block';
-        }
-
-        if (installButton) {
-            installButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the A2HS prompt');
-                    } else {
-                        console.log('User dismissed the A2HS prompt');
-                    }
-                    deferredPrompt = null;
-                });
-            });
-        }
-    });
-
-    // iOS installation instructions toggle
-    const iosInstall = document.getElementById('iosInstall');
-    if (iosInstall) {
-        iosInstall.addEventListener('click', (e) => {
-            e.preventDefault();
-            $('#iosInstructions').collapse('toggle');
-        });
-    }
-}
-
-// Loading indicator for downloads
-function startDownload() {
-    showLoadingScreen();
-    setTimeout(hideLoadingScreen, 2000); // Hide after 2 seconds
 }
