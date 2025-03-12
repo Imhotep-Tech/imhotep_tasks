@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from tasks.views import sitemap, service_worker, offline
 from tasks import views
+from imhotep_tasks.settings import DEBUG
 
 handler401 = 'tasks.error_handle.handler401'
 handler405 = 'tasks.error_handle.handler405'
@@ -33,4 +34,11 @@ urlpatterns = [
     path('sitemap.xml', sitemap, name='sitemap'),
     path('service-worker.js', service_worker, name='service-worker'),
     path('offline.html', offline, name='offline'),
+
 ]
+
+if DEBUG:
+    import debug_toolbar
+    urlpatterns += [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ]
