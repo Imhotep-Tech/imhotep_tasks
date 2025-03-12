@@ -1,3 +1,4 @@
 .env
 migrations/
 imhotep-tasks-twa/
+__pycache__/

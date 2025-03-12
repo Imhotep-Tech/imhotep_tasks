@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-# from django.db.models import Q
+from django.db.models import Q
 
 #the user today_tasks function
 @login_required
@@ -18,7 +18,10 @@ def today_tasks(request):
 
     user_tasks_all = Tasks.objects.filter(
         created_by=request.user
-        ).filter(due_date__date=today).order_by('status', 'due_date').all()
+        ).filter(
+            Q(due_date__date=today) | 
+            Q(due_date__date__lt=today, status=False)
+        ).order_by('status', 'due_date').all()
     
     # Set up pagination - 20 tasks per page
     paginator = Paginator(user_tasks_all, 20)
