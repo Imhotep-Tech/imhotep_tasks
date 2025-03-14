@@ -1,0 +1,36 @@
+name: imhotep-tasks
+version: '1.0.0'
+summary: Task management application
+description: |
+  Imhotep Tasks is a modern, intuitive task management system 
+  designed to help individuals organize, prioritize, and track 
+  their daily tasks with ease.
+
+base: core22
+confinement: strict
+grade: stable
+
+apps:
+  imhotep-tasks:
+    command: imhotep-tasks
+    desktop: usr/share/applications/imhotep-tasks.desktop
+    extensions: [gnome]
+    plugs:
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - unity7
+      - browser-support
+      - network
+      - opengl
+
+parts:
+  imhotep-tasks:
+    plugin: dump
+    source: .
+    override-build: |
+      npm install
+      npm run build
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/applications
+      cp imhotep-tasks.desktop $SNAPCRAFT_PART_INSTALL/usr/share/applications/

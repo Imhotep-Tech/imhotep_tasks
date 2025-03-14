@@ -1,0 +1,21 @@
+app-id: com.imhoteptech.imhotep_tasks
+runtime: org.freedesktop.Platform
+runtime-version: '22.08'
+sdk: org.freedesktop.Sdk
+command: imhotep-tasks
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --share=network
+  - --device=dri
+modules:
+  - name: imhotep-tasks
+    buildsystem: simple
+    build-commands:
+      - install -D imhotep-tasks /app/bin/imhotep-tasks
+      - install -D icon.png /app/share/icons/hicolor/128x128/apps/com.imhoteptech.imhotep_tasks.png
+      - install -D imhotep-tasks.desktop /app/share/applications/com.imhoteptech.imhotep_tasks.desktop
+    sources:
+      - type: dir
+        path: .
