@@ -16,13 +16,12 @@ Imhotep Tasks is a modern, intuitive task management system designed to help ind
 - **Deadline Management** - Set due dates and never miss important deadlines 
 - **User Authentication** - Secure account system with customizable user profiles
 - **Responsive Design** - Seamless experience across all devices and screen sizes
-- **Progressive Web App** - Install on your device and access offline
 - **Background Sync** - Create tasks offline that automatically sync when you're back online
 
 ## 🖥️ Platform Support
 
 ### Web Application
-Access Imhotep Tasks from any modern browser at [imhoteptasks.com](https://imhoteptasks.pythonanywhere.com)
+Access Imhotep Tasks from any modern browser at [Imhotep Tasks](https://imhoteptasks.pythonanywhere.com)
 
 ### Desktop Applications (Coming Soon)
 Native desktop applications built with Electron:
@@ -37,13 +36,6 @@ Native desktop applications built with Electron:
 - **Database**: Relational Database System
 - **PWA Features**: Service Workers, IndexedDB
 - **Desktop Apps**: Electron
-
-## 📸 Screenshots
-
-<div align="center">
-  <img src="./static/screenshots/dashboard.png" alt="Dashboard" width="80%">
-  <p><i>Main Dashboard View</i></p>
-</div>
 
 ## 🚀 Getting Started
 
