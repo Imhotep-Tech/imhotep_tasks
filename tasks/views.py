@@ -30,6 +30,9 @@ def privacy(request):
 def version(request):
     return render(request, 'version.html')
 
+def download(request):
+    return render(request, 'download.html')
+
 def get_url_pattern(pattern):
     """Helper function to get the URL pattern string"""
     if hasattr(pattern, 'pattern'):
