@@ -22,7 +22,7 @@ Imhotep Tasks is a modern, intuitive task management system designed to help ind
 ## 🖥️ Platform Support
 
 ### Web Application
-Access Imhotep Tasks from any modern browser at [imhoteptasks.com](https://imhoteptasks.com)
+Access Imhotep Tasks from any modern browser at [imhoteptasks.com](https://imhoteptasks.pythonanywhere.com)
 
 ### Desktop Applications (Coming Soon)
 Native desktop applications built with Electron:
