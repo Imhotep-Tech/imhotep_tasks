@@ -181,39 +181,59 @@ class CustomPasswordResetView(PasswordResetView):
     form_class = PasswordResetForm
     email_template_name = 'password_reset_email.html'
     html_email_template_name = 'password_reset_email.html'
-
+    
     def form_invalid(self, form):
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, error)
         return super().form_invalid(form)
-    
-    # Override this method to use SITE_DOMAIN instead of the Sites framework
+
     def get_extra_email_context(self):
-        context = super().get_extra_email_context() or {}
+        context = {}
         context['domain'] = SITE_DOMAIN.replace('http://', '').replace('https://', '')
         context['site_name'] = 'Imhotep Tasks'
         context['protocol'] = 'https' if 'https://' in SITE_DOMAIN else 'http'
         return context
-    
-    def send_mail(self, subject_template_name, email_template_name,
-                context, from_email, to_email, html_email_template_name=None):
-        """
-        Override to use a custom subject
-        """
-        subject = "Reset your Imhotep Tasks password"
-        
-        # Ensure the domain is set correctly before sending the email
-        if 'domain' not in context:
-            context['domain'] = SITE_DOMAIN.replace('http://', '').replace('https://', '')
-            context['site_name'] = 'Imhotep Tasks'
-            context['protocol'] = 'https' if 'https://' in SITE_DOMAIN else 'http'
-            
-        return super().send_mail(
-            subject_template_name, email_template_name, context, from_email,
-            to_email, html_email_template_name
-        )
 
+    def form_valid(self, form):
+        """
+        Override form_valid to handle email sending ourselves rather than 
+        letting Django's built-in functionality handle it.
+        """
+        # Get user email
+        email = form.cleaned_data["email"]
+        # Get associated users
+        active_users = form.get_users(email)
+        
+        for user in active_users:
+            # Generate token and context
+            context = {
+                'email': email,
+                'domain': SITE_DOMAIN.replace('http://', '').replace('https://', ''),
+                'site_name': 'Imhotep Tasks',
+                'protocol': 'https' if 'https://' in SITE_DOMAIN else 'http',
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'user': user,
+                'token': self.token_generator.make_token(user),
+            }
+            
+            # Render email
+            subject = "Reset your Imhotep Tasks password"
+            email_message = render_to_string(self.email_template_name, context)
+            html_email = render_to_string(self.html_email_template_name, context)
+            
+            # Send email
+            send_mail(
+                subject,
+                email_message,
+                self.from_email or 'imhoteptech1@gmail.com',
+                [user.email],
+                html_message=html_email,
+            )
+            
+        # Return success response
+        return super().form_valid(form)
+    
 class CustomPasswordResetDoneView(PasswordResetDoneView):
     template_name = 'password_reset_done.html'
 
