@@ -23,11 +23,25 @@ Imhotep Tasks is a modern, intuitive task management system designed to help ind
 ### Web Application
 Access Imhotep Tasks from any modern browser at [Imhotep Tasks](https://imhoteptasks.pythonanywhere.com)
 
-### Desktop Applications (Coming Soon)
+### Desktop Applications
 Native desktop applications built with Electron:
-- 🪟 Windows
-- 🍎 macOS
-- 🐧 Linux
+- 🪟 [Windows](https://github.com/Imhotep-Tech/imhotep_tasks/releases/download/1.0.0/Imhotep.Tasks.Setup.1.0.0.exe)
+- 🍎 [macOS](https://github.com/Imhotep-Tech/imhotep_tasks/releases/download/1.0.0/Imhotep.Tasks-1.0.0.dmg) 
+- 🐧 [Linux](https://github.com/Imhotep-Tech/imhotep_tasks/releases/download/1.0.0/imhotep-tasks_1.0.0_amd64.snap)
+
+### Mobile Applications
+- 📱 [Android APK](https://github.com/Imhotep-Tech/imhotep_tasks/releases/latest/download/imhotep-tasks.apk)
+- 📱 iOS: Use as PWA (Progressive Web App) by following [these instructions](https://imhoteptasks.pythonanywhere.com/download)
+
+All versions can be found on our [releases page](https://github.com/Imhotep-Tech/imhotep_tasks/releases).
+
+## 📦 Downloads
+
+For the latest releases and downloads:
+
+- **Web App**: [https://imhoteptasks.pythonanywhere.com](https://imhoteptasks.pythonanywhere.com)
+- **All Platforms**: Visit our [Downloads Page](https://imhoteptasks.pythonanywhere.com/download) for detailed installation instructions
+- **Release History**: Check our [Version History](https://imhoteptasks.pythonanywhere.com/version) for updates and changes
 
 ## 🛠️ Tech Stack
 
@@ -68,7 +82,7 @@ Visit `http://localhost:8000` in your browser to access the application.
 
 ## 📱 Progressive Web App
 
-Imhotep Tasks is available as a Progressive Web App. When visiting the application in a supported browser, you'll be prompted to install it on your device for offline access.
+Imhotep Tasks is available as a Progressive Web App. When visiting the application in a supported browser, you'll be prompted to install it on your device for offline access. For detailed installation instructions, visit our [download page](https://imhoteptasks.pythonanywhere.com/download).
 
 ## 🔮 Future Plans
 
@@ -82,9 +96,15 @@ Imhotep Tasks is available as a Progressive Web App. When visiting the applicati
 
 Contributions are welcome! Feel free to submit issues or pull requests.
 
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md) before contributing to the project.
+
 ## 📄 License
 
-Imhotep Tasks is licensed under the MIT License. See the LICENSE file for more information.
+Imhotep Tasks is licensed under the AGPL-3.0 License for non-commercial use and contributions. For commercial use, a separate license is required. See the [LICENSE](LICENSE) file for more information.
+
+## 🔒 Security
+
+We take security seriously. If you discover a security vulnerability, please follow the guidelines in our [Security Policy](SECURITY.md).
 
 ## 👥 About Imhotep Tech
 
