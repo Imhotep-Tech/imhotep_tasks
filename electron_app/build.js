@@ -16,7 +16,8 @@ module.exports = {
   ],
   "win": {
     "target": "nsis",
-    "icon": "icon1.ico"
+    "icon": "icon1.ico",
+    "artifactName": "${productName}_Setup_${version}.${ext}"
   },
   "mac": {
     "target": "dmg",
