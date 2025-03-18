@@ -32,22 +32,24 @@
 
 ## Linux Installation
 
-### Snap Package (Manual Installation)
-1. **Download the Snap Package:**
-   - Go to the [Releases](https://github.com/Imhotep-Tech/imhotep_tasks/releases) page.
-   - Download the latest `imhotep-tasks_<version>_amd64.snap` file.
+### Install from Snap Store
+1. **Option 1: Install from the Snap Store:**
+   - Click on the button below to get Imhotep Tasks from the Snap Store:
+   
+   <a href="https://snapcraft.io/imhoteptasks">
+     <img alt="Get it from the Snap Store" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" />
+   </a>
 
-2. **Install the Snap Package:**
-   - Open a terminal in the directory containing the downloaded file.
-   - Install using the --dangerous flag (required for non-Store snaps):
+2. **Option 2: Install via Command Line:**
+   - Open a terminal and run:
    ```sh
-   sudo snap install --dangerous imhotep-tasks_<version>_amd64.snap
+   sudo snap install imhoteptasks
    ```
 
 3. **Launch the Application:**
    - Open Imhotep Tasks from your application launcher or run:
    ```sh
-   imhotep-tasks
+   imhoteptasks
    ```
 
 ## Android Installation
