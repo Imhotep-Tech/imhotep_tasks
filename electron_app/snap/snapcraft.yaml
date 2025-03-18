@@ -1,4 +1,4 @@
-name: imhotep-tasks
+name: imhoteptasks
 version: '1.0.0'
 summary: Task management application
 description: |
@@ -11,8 +11,8 @@ confinement: strict
 grade: stable
 
 apps:
-  imhotep-tasks:
-    command: imhotep-tasks
+  imhoteptasks:
+    command: imhoteptasks
     desktop: usr/share/applications/imhotep-tasks.desktop
     extensions: [gnome]
     plugs:
@@ -26,7 +26,7 @@ apps:
       - opengl
 
 parts:
-  imhotep-tasks:
+  imhoteptasks:
     plugin: dump
     source: .
     override-build: |
