@@ -5,3 +5,4 @@ __pycache__/
 # electron_app/
 dist/
 node_modules/
+tauri_app/
