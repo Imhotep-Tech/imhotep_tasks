@@ -17,7 +17,7 @@ def index(request):
     #if he is not logged in redirect to the login page
     else:
         return redirect('landing_page')
-    
+
 def landing_page(request):
     return render(request, 'landing.html')
 
@@ -46,7 +46,7 @@ def get_all_urls(resolver=None, prefix=''):
     """Recursively get all URLs from URL patterns"""
     if resolver is None:
         resolver = get_resolver()
-    
+
     urls = []
     for pattern in resolver.url_patterns:
         if isinstance(pattern, URLResolver):
@@ -63,10 +63,10 @@ def sitemap(request):
     pages = []
     domain = settings.SITE_DOMAIN.rstrip('/')  # Remove trailing slash if present
     ten_days_ago = (datetime.datetime.now() - datetime.timedelta(days=10)).date().isoformat()
-    
+
     # Get all URLs
     urls = get_all_urls()
-    
+
     # Add URLs to pages list
     for url in urls:
         if url.startswith('/'):
@@ -81,14 +81,14 @@ def sitemap(request):
         '/contact/',
         # Add more static URLs as needed
     ]
-    
+
     for url in static_urls:
         full_url = domain + url
         pages.append([full_url, ten_days_ago])
 
     # Render the sitemap
     sitemap_xml = render(request, 'sitemap.xml', {'pages': pages})
-    
+
     # Return with correct content type
     return HttpResponse(sitemap_xml, content_type='application/xml')
 
