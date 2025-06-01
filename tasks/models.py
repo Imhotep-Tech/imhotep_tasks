@@ -26,7 +26,7 @@ class Tasks(models.Model):
     done_date = models.DateTimeField(null=True, blank=True, default=None)
 
     def __str__(self):
-        return self.question
+        return self.task_title
 
 #inherate from the User class and add the email verify
 class User(AbstractUser):
@@ -36,3 +36,20 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
     
+class Routines(models.Model):
+    # the title it self with max 200 char
+    routines_title = models.CharField(max_length=200)
+
+    # the user that created this task
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    # the dates that this routine will be added on
+    routines_dates = models.CharField(max_length=200, default="all_days")
+
+    #to set the current status of the routine if active or not
+    status = models.BooleanField(default=True)
+
+    last_applied = models.DateTimeField(null=True, blank=True, default=None)
+
+    def __str__(self):
+        return self.routines_title

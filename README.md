@@ -13,6 +13,7 @@ Imhotep Tasks is a modern, intuitive task management system designed to help ind
 ## ✨ Features
 
 - **Task Management** - Create, organize, and track tasks with custom categories and priorities
+- **Routine Management** - Build healthy habits with automated routine-based task creation
 - **Deadline Management** - Set due dates and never miss important deadlines 
 - **User Authentication** - Secure account system with customizable user profiles
 - **Responsive Design** - Seamless experience across all devices and screen sizes

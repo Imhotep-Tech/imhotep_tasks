@@ -1,5 +1,5 @@
 from django.urls import path, include
-from . import task_managment, views, auth, user_profile
+from . import task_managment, views, auth, user_profile, routine_managment
 
 # This block of code defines the URL patterns for your Django web application. Each `path` function
 # call represents a URL pattern that maps a specific URL to a corresponding view function within your
@@ -37,6 +37,14 @@ urlpatterns = [
     path('delete_task/<int:task_id>/', task_managment.delete_task, name='delete_task'),
     path('task_complete/<int:task_id>/', task_managment.task_complete, name='task_complete'),
     path('search/', task_managment.search_task, name='search_task'),
+
+    # Routine management URLs
+    path('routines/', routine_managment.show_routines, name='show_routines'),
+    path('add_routine/', routine_managment.add_routine, name='add_routine'),
+    path('update_routine/<int:routine_id>/', routine_managment.update_routine, name='update_routine'),
+    path('delete_routine/<int:routine_id>/', routine_managment.delete_routine, name='delete_routine'),
+    path('update_routine_status/<int:routine_id>/', routine_managment.update_routine_status, name='update_routine_status'),
+    path('apply_routines/', routine_managment.apply_routines_view, name='apply_routines'),
 
     path('password_change/', user_profile.CustomPasswordChangeView.as_view(template_name='password_change.html'), name='password_change'),
     path('password_change/done/', user_profile.CustomPasswordChangeDoneView.as_view(template_name='password_change_done.html'), name='password_change_done'),

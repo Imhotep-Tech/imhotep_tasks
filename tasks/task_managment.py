@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Tasks
+from .models import Tasks, Routines
 from django.contrib import messages
 from django.db import IntegrityError
 from datetime import date, timedelta
@@ -9,12 +9,15 @@ from django.utils.dateparse import parse_datetime
 from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
+from .utils.apply_routines import apply_routines
 
 #the user today_tasks function
 @login_required
 def today_tasks(request):
     #get user tasks for today
     today = date.today()
+    
+    apply_routines(request, today)
 
     user_tasks_all = Tasks.objects.filter(
         created_by=request.user
