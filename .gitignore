@@ -1,8 +1,0 @@
-.env
-migrations/
-imhotep-tasks-twa/
-__pycache__/
-# electron_app/
-dist/
-node_modules/
-tauri_app/
