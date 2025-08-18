@@ -16,7 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from tasks.views import sitemap, service_worker, offline
 from tasks import views
 from imhotep_tasks.settings import DEBUG
 
@@ -30,9 +29,6 @@ handler504 = 'tasks.error_handle.handler504'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('tasks.urls')),
-    path('sitemap.xml', sitemap, name='sitemap'),
-    path('service-worker.js', service_worker, name='service-worker'),
-    path('offline.html', offline, name='offline'),
+    path('api/', include('tasks.urls')),
 
 ]

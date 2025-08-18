@@ -1,33 +1,45 @@
 from django.urls import path, include
-from . import task_managment, views, auth, user_profile, routine_managment
+from . import task_managment, views, routine_managment
+from .auth import login, register, logout, google_auth, forget_password, profile
+
+from rest_framework_simplejwt.views import (
+    TokenRefreshView,
+    TokenVerifyView,
+)
 
 # This block of code defines the URL patterns for your Django web application. Each `path` function
 # call represents a URL pattern that maps a specific URL to a corresponding view function within your
 # Django app. Here's a breakdown of what each URL pattern is doing:
 #the urls of the app
 urlpatterns = [
-    #the main url
-    path('', views.index, name="index"),
-    #the register url
-    path("register/", auth.register, name="register"),
-    #login url
-    path("login/", auth.user_login, name="login"),
-    #logout url
-    path("logout/", auth.user_logout, name="logout"),
     
-    #URL to activate the users account with the Email
-    path('activate/<uidb64>/<token>/', auth.activate, name='activate'),
+    path('user-data/', views.user_view, name='user_data'),
+    
+    # Authentication endpoints
+    path('auth/login/', login.login_view, name='login'),
+    path('auth/logout/', logout.logout_view, name='logout'),
+    path('auth/register/', register.register_view, name='register'),
+    path('auth/verify-email/', register.verify_email, name='verify_email'),
+    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    
+    #Password Reset endpoints
+    path('auth/password-reset/', forget_password.password_reset_request, name='password_reset_request'),
+    path('auth/password-reset/confirm/', forget_password.password_reset_confirm, name='password_reset_confirm'),
+    path('auth/password-reset/validate/', forget_password.password_reset_validate, name='password_reset_validate'),
 
-    #URLs for the forget password
-    path('password_reset/', auth.CustomPasswordResetView.as_view(), name='password_reset'),
-    path('password_reset/done/', auth.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('reset/done/', auth.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    #Google OAuth endpoints
+    path('auth/google/url/', google_auth.google_login_url, name='google_login_url'),
+    path('auth/google/authenticate/', google_auth.google_auth, name='google_auth'),
+    path('auth/google/callback/', google_auth.google_callback, name='google_callback'),
 
-    path('google/login/', auth.google_login, name='google_login'),
-    path('google/callback/', auth.google_callback, name='google_callback'),
-    path('google/handle-username/', auth.add_username_google_login, name='add_username_google_login'),
+    #Profile endpoints
+    path('profile/', profile.get_profile, name='get_profile'),
+    path('profile/update/', profile.update_profile, name='update_profile'),
+    path('profile/change-password/', profile.change_password, name='change_password'),
+    path('profile/verify-email-change/', profile.verify_email_change, name='verify_email_change'),
 
+    #Tasks management URLs
     path('today_tasks/', task_managment.today_tasks, name='today_tasks'),
     path('all_tasks/', task_managment.all_tasks, name='all_tasks'),
     path('next_week_tasks/', task_managment.next_week_tasks, name='next_week_tasks'),
@@ -46,17 +58,5 @@ urlpatterns = [
     path('update_routine_status/<int:routine_id>/', routine_managment.update_routine_status, name='update_routine_status'),
     path('apply_routines/', routine_managment.apply_routines_view, name='apply_routines'),
 
-    path('password_change/', user_profile.CustomPasswordChangeView.as_view(template_name='password_change.html'), name='password_change'),
-    path('password_change/done/', user_profile.CustomPasswordChangeDoneView.as_view(template_name='password_change_done.html'), name='password_change_done'),
-
-    path("update_profile/<int:user_id>",user_profile.update_profile , name="update_profile"),
-    path('activate/<uidb64>/<token>/<new_email>/', user_profile.activate_profile_update, name='activate_profile_update'),
-
-    path('privacy/', views.privacy, name='privacy'),
-    path('terms/', views.terms, name='terms'),
-    path('version/', views.version, name='version'),
-    path('landing_page/', views.landing_page, name='landing_page'),
-
-    path('download/', views.download, name='download'),
 ]
 

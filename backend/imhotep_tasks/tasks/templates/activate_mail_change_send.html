@@ -41,13 +41,15 @@
                                 </tr>
                                 <tr>
                                     <td align="center" style="padding: 16px 0 32px 0;">
-                                        <a href="{{ domain }}{% url 'activate_profile_update' uidb64=uid token=token new_email=new_email %}" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; display: inline-block; font-size: 16px;">Confirm Email Change</a>
+                                        <a href="{{ verification_url }}" class="button">
+                                            📧 Verify New Email Address
+                                        </a>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 0; color: #6b7280; font-size: 14px; line-height: 20px;">
                                         <p style="margin: 0 0 16px 0;">If the button above doesn't work, you can also copy and paste the following link into your browser:</p>
-                                        <p style="margin: 0; word-break: break-all; color: #2563eb;">{{ domain }}{% url 'activate_profile_update' uidb64=uid token=token new_email=new_email %}</p>
+                                        <p style="margin: 0; word-break: break-all; color: #2563eb;">{{ verification_url }}</p>
                                     </td>
                                 </tr>
                                 <tr>
