@@ -41,13 +41,15 @@
                                 </tr>
                                 <tr>
                                     <td align="center" style="padding: 16px 0 32px 0;">
-                                        <a href="{{ domain }}{% url 'activate' uidb64=uid token=token %}" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; display: inline-block; font-size: 16px;">Activate Account</a>
+                                        <a href="{{ frontend_url }}/verify-email/{{ uid }}/{{ token }}/" class="button">
+                                            ✨ Verify Email Address
+                                        </a>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 0; color: #6b7280; font-size: 14px; line-height: 20px;">
                                         <p style="margin: 0 0 16px 0;">If the button above doesn't work, you can also copy and paste the following link into your browser:</p>
-                                        <p style="margin: 0; word-break: break-all; color: #2563eb;">{{ domain }}{% url 'activate' uidb64=uid token=token %}</p>
+                                        <p style="margin: 0; word-break: break-all; color: #2563eb;">{{ frontend_url }}/verify-email/{{ uid }}/{{ token }}</p>
                                     </td>
                                 </tr>
                             </table>

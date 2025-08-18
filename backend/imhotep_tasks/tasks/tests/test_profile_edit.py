@@ -12,10 +12,6 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from tasks.models import User
-from tasks.user_profile import (
-    update_profile, activate_profile_update,
-    CustomPasswordChangeView, CustomPasswordChangeDoneView
-)
 
 class UserProfileTestCase(TestCase):
     def setUp(self):

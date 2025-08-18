@@ -35,7 +35,6 @@ ALLOWED_HOSTS = [
     'imhoteptasks.pythonanywhere.com',
     ]
 
-
 if DEBUG:
     # Add this to your settings
     SITE_DOMAIN = 'http://127.0.0.1:8000'
@@ -153,9 +152,9 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'imhoteptech1@gmail.com'
 EMAIL_HOST_PASSWORD = config('MAIL_PASSWORD')
 
-WSGI_APPLICATION = 'Pharaohfolio.wsgi.application'
+WSGI_APPLICATION = 'imhotep_tasks.wsgi.application'
 
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = 'tasks.User'
 
 
 # Database
