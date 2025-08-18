@@ -2,42 +2,40 @@
 
 ## Our Pledge
 
-We as contributors and maintainers of Imhotep Tasks pledge to make participation in our project and community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity,level of experience, nationality, personal appearance, race, religion.
+We as contributors and maintainers of Imhotep Tasks pledge to make participation in our project and community a harassment-free experience for everyone.
 
-## Our Standards
+## Expected Behavior
 
-Examples of behavior that contributes to creating a positive environment include:
+- Use welcoming and inclusive language
+- Be respectful of differing viewpoints and experiences
+- Gracefully accept constructive criticism
+- Focus on what is best for the community
+- Show empathy towards other community members
 
-* Using welcoming and inclusive language
-* Being respectful of differing viewpoints and experiences
-* Gracefully accepting constructive criticism
-* Focusing on what is best for the community
-* Showing empathy towards other community members
+## Unacceptable Behavior
 
-Examples of unacceptable behavior include:
+Examples include, but are not limited to:
 
-* The use of sexualized language or imagery and unwelcome sexual attention or advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or electronic address, without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a professional setting
+- Harassment, hate speech, or personal attacks
+- Unwanted sexual attention or sexualized language
+- Trolling, insults, or derogatory comments
+- Publishing others' private information without consent
+- Other conduct considered inappropriate in a professional setting
 
-## Our Responsibilities
+## Reporting and Enforcement
 
-Project maintainers are responsible for clarifying the standards of acceptable behavior and are expected to take appropriate and fair corrective action in response to any instances of unacceptable behavior.
+If you experience or witness behavior that violates this Code of Conduct, please report it by emailing the project maintainers at imhoteptech@outlook.com. Reports will be handled confidentially.
 
-Project maintainers have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, or to ban temporarily or permanently any contributor for other behaviors that they deem inappropriate, threatening, offensive, or harmful.
+Maintainers will review reports and take action as appropriate, which may include:
+
+- A private warning to the offender
+- Temporary or permanent ban from project spaces
+- Removal of offending content
 
 ## Scope
 
-This Code of Conduct applies both within project spaces and in public spaces when an individual is representing the project or its community. Examples of representing a project or community include using an official project e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event.
-
-## Enforcement
-
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at imhoteptech@outlook.com. All complaints will be reviewed and investigated and will result in a response that is deemed necessary and appropriate to the circumstances. The project team is obligated to maintain confidentiality with regard to the reporter of an incident. Further details of specific enforcement policies may be posted separately.
-
-Project maintainers who do not follow or enforce the Code of Conduct in good faith may face temporary or permanent repercussions as determined by other members of the project's leadership.
+This Code of Conduct applies to all project spaces, including GitHub issues, pull requests, mailing lists, chat channels, and public events where an individual is representing the project.
 
 ## Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 1.4, available at [https://www.contributor-covenant.org/version/1/4/code-of-conduct.html](https://www.contributor-covenant.org/version/1/4/code-of-conduct.html)
+This Code of Conduct is adapted from the Contributor Covenant, version 2.1. See: https://www.contributor-covenant.org/version/2/1/code_of_conduct/
