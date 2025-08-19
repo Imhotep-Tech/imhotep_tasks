@@ -404,7 +404,7 @@ const Profile = () => {
                 )}
 
                 <p className="mt-6 text-center text-sm text-gray-600">
-                  <Link to="/dashboard" className="font-medium text-blue-600 hover:text-blue-500">Back to Dashboard</Link> • <button onClick={logout} className="text-red-600">Logout</button>
+                  <Link to="/today-tasks" className="font-medium text-blue-600 hover:text-blue-500">Back to Today Tasks</Link> • <button onClick={logout} className="text-red-600">Logout</button>
                 </p>
               </div>
             </div>

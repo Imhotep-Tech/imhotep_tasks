@@ -6,7 +6,7 @@ import Login from './components/auth/Login'
 import Register from './components/auth/Register'
 import ForgotPassword from './components/auth/ForgotPassword'
 import ResetPassword from './components/auth/ResetPassword'
-import Dashboard from './components/main/Dashboard'
+import TodayTasks from './components/main/TodayTasks'
 import LandingPage from './components/main/LandingPage'
 import EmailVerification from './components/auth/EmailVerification'
 import GoogleCallback from './components/auth/GoogleCallback'
@@ -60,10 +60,10 @@ function App() {
             <Route path="/verify-email/:uid/:token" element={<EmailVerification />} />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route 
-              path="/dashboard" 
+              path="/today-tasks" 
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <TodayTasks />
                 </ProtectedRoute>
               } 
             />

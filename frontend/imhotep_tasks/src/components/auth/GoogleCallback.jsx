@@ -78,7 +78,7 @@ const GoogleCallback = () => {
           } else {
             setMessage('Login successful! Redirecting to dashboard...');
           }
-          setTimeout(() => navigate('/dashboard'), 2000);
+          setTimeout(() => navigate('/today-tasks'), 2000);
         } else {
           setStatus('error');
           setMessage(result.error || 'Google authentication failed.');

@@ -76,7 +76,7 @@ const Login = () => {
     
     if (result.success) {
       login(result.data);
-      navigate('/dashboard');
+      navigate('/today-tasks');
     } else {
       setError(result.error);
       if (result.info) {

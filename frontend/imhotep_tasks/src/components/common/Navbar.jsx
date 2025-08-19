@@ -148,16 +148,16 @@ const Navbar = ({ onToggle }) => {
               {/* Navigation Links */}
               <div className="space-y-2 mb-8">
                 <Link 
-                  to="/dashboard" 
+                  to="/today-tasks" 
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
-                    isActive('/dashboard') 
+                    isActive('/today-tasks') 
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105' 
                       : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 transition-colors duration-300 ${
-                    isActive('/dashboard') 
+                    isActive('/today-tasks') 
                       ? 'bg-white/20' 
                       : 'bg-blue-100 group-hover:bg-blue-200'
                   }`}>
@@ -165,14 +165,14 @@ const Navbar = ({ onToggle }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                   </div>
-                  <span className="font-semibold">Dashboard</span>
+                  <span className="font-semibold">Today Tasks</span>
                 </Link>
 
                 <Link 
                   to="/profile" 
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
                     isActive('/profile') 
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105' 
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg transform scale-105' 
                       : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
@@ -193,7 +193,7 @@ const Navbar = ({ onToggle }) => {
                   to="/prompts"
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
                     isActive('/prompts') 
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105' 
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg transform scale-105' 
                       : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
@@ -227,7 +227,7 @@ const Navbar = ({ onToggle }) => {
               </button>
               <div className="text-center">
                 <p className="text-gray-500 text-xs font-medium">
-                  👑 Pharaohfolio – Simple Hosting for Single-Page Portfolios 👑
+                   Organize Your Productivity
                 </p>
               </div>
             </div>

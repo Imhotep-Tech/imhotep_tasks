@@ -1,5 +1,9 @@
 from django.urls import path, include
-from . import task_managment, views, routine_managment
+
+from .main import routine_managment
+
+from .main import task_managment
+from . import views
 from .auth import login, register, logout, google_auth, forget_password, profile
 
 from rest_framework_simplejwt.views import (
@@ -40,15 +44,14 @@ urlpatterns = [
     path('profile/verify-email-change/', profile.verify_email_change, name='verify_email_change'),
 
     #Tasks management URLs
-    path('today_tasks/', task_managment.today_tasks, name='today_tasks'),
-    path('all_tasks/', task_managment.all_tasks, name='all_tasks'),
-    path('next_week_tasks/', task_managment.next_week_tasks, name='next_week_tasks'),
+    path('tasks/today_tasks/', task_managment.today_tasks, name='today_tasks'),
+    path('tasks/all_tasks/', task_managment.all_tasks, name='all_tasks'),
+    path('tasks/next_week_tasks/', task_managment.next_week_tasks, name='next_week_tasks'),
 
-    path('add_task/', task_managment.add_task, name='add_task'),
-    path('update_task/<int:task_id>/', task_managment.update_task, name='update_task'),
-    path('delete_task/<int:task_id>/', task_managment.delete_task, name='delete_task'),
-    path('task_complete/<int:task_id>/', task_managment.task_complete, name='task_complete'),
-    path('search/', task_managment.search_task, name='search_task'),
+    path('tasks/add_task/', task_managment.add_task, name='add_task'),
+    path('tasks/update_task/<int:task_id>/', task_managment.update_task, name='update_task'),
+    path('tasks/delete_task/<int:task_id>/', task_managment.delete_task, name='delete_task'),
+    path('tasks/task_complete/<int:task_id>/', task_managment.task_complete, name='task_complete'),
 
     # Routine management URLs
     path('routines/', routine_managment.show_routines, name='show_routines'),

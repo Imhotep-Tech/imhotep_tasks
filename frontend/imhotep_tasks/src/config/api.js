@@ -1,4 +1,6 @@
 // API configuration
+import axios from 'axios';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Remove trailing slash if present to avoid double slashes in URLs
@@ -14,3 +16,13 @@ if (import.meta.env.DEV) {
     NODE_ENV: import.meta.env.MODE
   });
 }
+
+// Create a configured axios instance and export as default
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export default api;
