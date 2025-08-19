@@ -16,9 +16,8 @@ const AddTask = ({ onClose, onCreate }) => {
     setError('');
 
     try {
-      const payload = { task_title, task_description, due_date };
-      const res = await axios.post('/api/tasks/add_task/', payload);
-      // call parent to add task optimistically
+      const payload = { task_title, task_details: task_description, due_date };
+      const res = await axios.post('api/tasks/add_task/', payload);
       onCreate && onCreate(res.data);
       // reset fields
       setTitle('');

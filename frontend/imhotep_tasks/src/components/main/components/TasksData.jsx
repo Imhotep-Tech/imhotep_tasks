@@ -1,58 +1,122 @@
 import React from "react";
-import AddTask from "./AddTask";
 
-const TaskRow = ({ task, onComplete, onEdit, onDelete, onOpenDetails }) => {
+const formatDate = (iso) => {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString();
+  } catch {
+    return iso;
+  }
+};
+
+const TaskRow = ({ task, onComplete, onEdit, onDelete }) => {
   return (
-    <div className="flex items-start sm:items-center justify-between gap-3 p-3 border-b last:border-b-0">
-      <div className="flex items-start gap-3 flex-1">
-        <input
-          type="checkbox"
-          checked={!!task.completed}
-          onChange={() => onComplete(task.id)}
-          className="w-5 h-5 mt-1"
-          aria-label={`Mark ${task.title} as complete`}
-        />
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div
+    <li
+      key={task.id}
+      className={`p-4 hover:bg-gray-50 transition-all ${
+        task.status ? "bg-gray-50" : ""
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <button
+            onClick={() => onComplete(task.id)}
+            className={`w-6 h-6 rounded-full border ${
+              task.status
+                ? "bg-green-500 border-green-500 text-white"
+                : "border-gray-300 hover:border-gray-400"
+            } mr-3 flex items-center justify-center transition-colors`}
+            title={task.status ? "Mark as pending" : "Mark as complete"}
+          >
+            {task.status && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+          </button>
+
+          <div>
+            <p
               className={`font-medium text-gray-800 ${
-                task.completed ? "line-through text-gray-400" : ""
+                task.status ? "line-through text-gray-500" : ""
               }`}
             >
-              {task.title}
-            </div>
-            <div className="text-xs text-gray-500">
-              {task.due_date
-                ? new Date(task.due_date).toLocaleDateString()
-                : ""}
-            </div>
+              {task.task_title}
+            </p>
+            {task.task_details && (
+              <p
+                className={`text-sm text-gray-500 mt-1 ${
+                  task.status ? "line-through" : ""
+                }`}
+              >
+                {task.task_details}
+              </p>
+            )}
           </div>
-          <div className="text-sm text-gray-600 mt-1">
-            {task.description || "No description provided."}
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <button
-              onClick={() => onOpenDetails(task)}
-              className="text-sm text-indigo-600 hover:underline"
-            >
-              Details
-            </button>
+        </div>
+
+        <div className="flex items-center">
+          <span className="text-sm text-gray-500 mr-4">
+            {task.due_date ? formatDate(task.due_date) : ""}
+          </span>
+          <div className="flex space-x-2">
             <button
               onClick={() => onEdit(task)}
-              className="text-sm text-gray-600 hover:text-gray-800"
+              className="p-1.5 text-blue-500 hover:bg-blue-100 rounded transition-colors"
+              title="Edit"
             >
-              Edit
+              {/* Edit icon */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
             </button>
             <button
               onClick={() => onDelete(task.id)}
-              className="text-sm text-red-600 hover:underline"
+              className="p-1.5 text-red-500 hover:bg-red-100 rounded transition-colors"
+              title="Delete"
             >
-              Delete
+              {/* Delete icon */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </li>
   );
 };
 
@@ -66,31 +130,60 @@ const TasksData = ({
   onOpenDetails,
 }) => {
   if (loading) {
-    return (
-      <div className="py-10 flex items-center justify-center">
-        <div className="text-gray-600">Loading tasks...</div>
-      </div>
-    );
+    return <div className="p-6 text-center">Loading...</div>;
   }
 
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="py-12 text-center">
-        <div className="text-gray-600 mb-4">You have no tasks yet.</div>
-        <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={onOpenAdd}
-            className="chef-button bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded"
+      <div className="p-8 text-center">
+        <div className="inline-flex rounded-full bg-yellow-100 p-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-8 w-8 text-yellow-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            + Add your first task
-          </button>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
         </div>
+        <h3 className="mt-4 text-lg font-medium text-gray-900">
+          No tasks for today
+        </h3>
+        <p className="mt-2 text-gray-500">
+          You don't have any tasks scheduled for today. Enjoy your free time or
+          create a new task!
+        </p>
+        <button
+          onClick={onOpenAdd}
+          className="mt-4 inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          {/* Plus icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 mr-2"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Create New Task
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="divide-y rounded-lg overflow-hidden">
+    <ul className="divide-y divide-gray-200">
       {tasks.map((task) => (
         <TaskRow
           key={task.id}
@@ -98,10 +191,9 @@ const TasksData = ({
           onComplete={onComplete}
           onEdit={onEdit}
           onDelete={onDelete}
-          onOpenDetails={onOpenDetails}
         />
       ))}
-    </div>
+    </ul>
   );
 };
 

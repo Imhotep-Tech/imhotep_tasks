@@ -5,44 +5,35 @@ import Footer from '../common/Footer';
 import AddTask from './components/AddTask';
 import TasksInfo from './components/TasksInfo';
 import TasksData from './components/TasksData';
-import SeeMoreDetails from './components/SeeMoreDetails';
-import UpdateTask from './components/UpdateTask';
 
 const TodayTasks = () => {
   const { user } = useAuth();
+
+  // state
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [numPages, setNumPages] = useState(1);
+  const [totalTasks, setTotalTasks] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   const [error, setError] = useState('');
 
-  // Modal state
-  const [showAdd, setShowAdd] = useState(false);
-  const [showUpdate, setShowUpdate] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-
-  useEffect(() => {
-    fetchTasks();
-    // eslint-disable-next-line
-  }, []);
-
-  const fetchTasks = async () => {
+  // fetch tasks
+  const fetchTasks = async (pageNum = 1) => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get('/api/tasks/today_tasks/');
-      // Backend may return an array or an object with tasks/results — normalize to an array
-      const payload = res.data;
-      let items = [];
-      if (Array.isArray(payload)) {
-        items = payload;
-      } else if (payload) {
-        if (Array.isArray(payload.tasks)) items = payload.tasks;
-        else if (Array.isArray(payload.results)) items = payload.results;
-        else if (Array.isArray(payload.data)) items = payload.data;
-        else items = [];
-      }
-
-      setTasks(items);
+      // axios baseURL is expected to be configured (e.g. '/api')
+      const res = await axios.get(`api/tasks/today_tasks/?page=${pageNum}`);
+      const data = res.data;
+      setTasks(data.user_tasks || []);
+      setPage(data.pagination?.page || 1);
+      setNumPages(data.pagination?.num_pages || 1);
+      setTotalTasks(data.total_number_tasks ?? 0);
+      setCompletedCount(data.completed_tasks_count ?? 0);
+      setPendingCount(data.pending_tasks ?? 0);
     } catch (err) {
       console.error(err);
       setError('Failed to load tasks.');
@@ -51,128 +42,131 @@ const TodayTasks = () => {
     }
   };
 
-  const handleCreate = (newTask) => {
-    // Optimistic update: prepend task
-    setTasks(prev => [newTask, ...prev]);
-    setShowAdd(false);
+  useEffect(() => {
+    fetchTasks(page);
+  }, []);
+
+  const changePage = (newPage) => {
+    if (newPage < 1 || newPage > numPages) return;
+    fetchTasks(newPage);
   };
 
-  const handleOpenAdd = () => setShowAdd(true);
-
-  const handleOpenDetails = (task) => {
-    setSelectedTask(task);
-    setShowDetails(true);
-  };
-
-  const handleOpenEdit = (task) => {
-    setSelectedTask(task);
-    setShowUpdate(true);
-  };
-
-  const handleUpdate = (updatedTask) => {
-    setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
-    setShowUpdate(false);
-    setSelectedTask(null);
-  };
-
-  const handleDelete = async (taskId) => {
-    try {
-      await axios.delete(`/api/tasks/delete_task/${taskId}/`);
-      setTasks(prev => prev.filter(t => t.id !== taskId));
-    } catch (err) {
-      console.error(err);
-      setError('Failed to delete task.');
+  const handleCreate = (serverResponse) => {
+    const created = serverResponse.task ?? serverResponse;
+    if (page === 1) {
+      setTasks((prev) => [created, ...prev]);
     }
+    // update counts
+    setTotalTasks((prev) => (serverResponse.total_number_tasks ?? prev));
+    setCompletedCount((prev) => (serverResponse.completed_tasks_count ?? prev));
+    setPendingCount((prev) => (serverResponse.pending_tasks ?? prev));
   };
 
-  const handleComplete = async (taskId) => {
-    // toggle complete
+  const toggleComplete = async (taskId) => {
     try {
-      const res = await axios.post(`/api/tasks/task_complete/${taskId}/`);
-      const updated = res.data;
-      setTasks(prev => prev.map(t => (t.id === updated.id ? updated : t)));
+      const res = await axios.post(`api/tasks/task_complete/${taskId}/`);
+      const updated = res.data.task;
+      setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      setTotalTasks(res.data.total_number_tasks ?? totalTasks);
+      setCompletedCount(res.data.completed_tasks_count ?? completedCount);
+      setPendingCount(res.data.pending_tasks ?? pendingCount);
     } catch (err) {
       console.error(err);
       setError('Failed to update task status.');
     }
   };
 
-  // compute counts defensively in case tasks is not an array
-  const total = Array.isArray(tasks) ? tasks.length : 0;
-  const done = Array.isArray(tasks) ? tasks.filter(t => t.completed).length : 0;
-  const pending = Array.isArray(tasks) ? tasks.filter(t => !t.completed).length : 0;
+  const deleteTask = async (taskId) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    try {
+      const res = await axios.delete(`api/tasks/delete_task/${taskId}/`);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      setTotalTasks(res.data.total_number_tasks ?? Math.max(0, totalTasks - 1));
+      setCompletedCount(res.data.completed_tasks_count ?? completedCount);
+      setPendingCount(res.data.pending_tasks ?? Math.max(0, pendingCount - 1));
+    } catch (err) {
+      console.error(err);
+      setError('Failed to delete task.');
+    }
+  };
 
-  const counts = { total, done, pending };
+  const formatDate = (iso) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString();
+    } catch {
+      return iso;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-indigo-100 to-blue-100 bg-chef-pattern">
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+    <>
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-center">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Tasks</h1>
-            <p className="text-sm text-gray-600">Manage your tasks — create, edit, complete and track progress.</p>
+            <h1 className="text-3xl font-bold text-gray-800">Today's Tasks</h1>
+            <p className="text-gray-600 mt-1">Hello, {user?.username || 'User'}!</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="mt-4 md:mt-0">
             <button
-              className="chef-button bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg shadow"
-              onClick={handleOpenAdd}
+              onClick={() => setShowAdd(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-all"
             >
-              + New Task
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Add New Task
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <TasksInfo counts={counts} />
+        <TasksInfo pendingCount={pendingCount} completedCount={completedCount} totalTasks={totalTasks}/>
+
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="p-4 bg-gray-50 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-800">Today's Tasks</h2>
           </div>
 
-          <div className="lg:col-span-2">
-            <div className="chef-card rounded-2xl p-4 shadow-lg border border-white/30 backdrop-blur-2xl bg-white/90">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-800">Your Tasks</h2>
-                <div className="text-sm text-gray-500">{counts.total} total</div>
-              </div>
+          <TasksData
+            tasks={tasks}
+            loading={loading}
+            onComplete={toggleComplete}
+            onDelete={deleteTask}
+            onEdit={(task) => window.location.href = `/tasks/update_task/${task.id}/`}
+            onOpenAdd={() => setShowAdd(true)}
+            onOpenDetails={() => {}}
+          />
 
-              <TasksData
-                tasks={tasks}
-                loading={loading}
-                onComplete={handleComplete}
-                onEdit={handleOpenEdit}
-                onDelete={handleDelete}
-                onOpenAdd={handleOpenAdd}
-                onOpenDetails={handleOpenDetails}
-              />
-
-            </div>
-          </div>
         </div>
+
+        {/* Pagination */}
+        {numPages > 1 && (
+          <div className="px-4 py-5 bg-gray-50 border-t border-gray-200">
+            <nav className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <button onClick={() => changePage(page - 1)} disabled={page <= 1} className="px-3 py-2 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50">
+                  Previous
+                </button>
+
+                <span className="text-sm text-gray-700">Page {page} of {numPages}</span>
+
+                <button onClick={() => changePage(page + 1)} disabled={page >= numPages} className="px-3 py-2 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50">
+                  Next
+                </button>
+              </div>
+              <p className="mt-3 text-sm text-gray-500">
+                Showing page {page} — {totalTasks} tasks
+              </p>
+            </nav>
+          </div>
+        )}
+
+        {showAdd && <AddTask onClose={() => setShowAdd(false)} onCreate={handleCreate} />}
+
       </div>
-
-      {showAdd && (
-        <AddTask
-          onClose={() => setShowAdd(false)}
-          onCreate={handleCreate}
-        />
-      )}
-
-      {showUpdate && selectedTask && (
-        <UpdateTask
-          task={selectedTask}
-          onClose={() => setShowUpdate(false)}
-          onUpdate={handleUpdate}
-        />
-      )}
-
-      {showDetails && selectedTask && (
-        <SeeMoreDetails
-          task={selectedTask}
-          onClose={() => setShowDetails(false)}
-        />
-      )}
-
       <Footer />
-    </div>
+    </>
   );
 };
 
