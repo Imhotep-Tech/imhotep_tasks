@@ -177,7 +177,7 @@ const GoogleCallback = () => {
       case 'processing':
         return 'Connecting with Google...';
       case 'success':
-        return isNewUser ? 'Welcome to the Pharaohfolio!' : 'Welcome Back!';
+        return isNewUser ? 'Welcome to Imhotep Tasks!' : 'Welcome Back!';
       case 'error':
         return 'Authentication Failed';
       default:
@@ -188,11 +188,11 @@ const GoogleCallback = () => {
   const getSubtitle = () => {
     switch (status) {
       case 'processing':
-        return 'Please wait while we securely authenticate you with Google and prepare your chef station...';
+        return 'Please wait while we securely authenticate you with Google and prepare your tasks...';
       case 'success':
         return isNewUser 
-          ? 'Your Google account has been successfully connected and your chef profile has been created. Get ready to start cooking!'
-          : 'Successfully authenticated with Google! Redirecting you to your culinary dashboard...';
+          ? 'Your Google account has been successfully connected and your Imhotep Tasks profile has been created.'
+          : 'Successfully authenticated with Google! Redirecting you to your dashboard...';
       case 'error':
         return message;
       default:
@@ -205,7 +205,7 @@ const GoogleCallback = () => {
       case 'processing':
         return '🔐 Securing your Google connection 🔐';
       case 'success':
-        return isNewUser ? '🎉 Your culinary journey begins now! 🎉' : '👨‍🍳 Ready to create amazing recipes! 👩‍🍳';
+        return isNewUser ? '🎉 Your Tasks journey begins now! 🎉' : 'Ready to create amazing recipes!';
       case 'error':
         return '💡 Try logging in with Google again 💡';
       default:
@@ -257,9 +257,6 @@ const GoogleCallback = () => {
                 </svg>
                 <div className="text-left">
                   <p className="text-green-700 font-medium text-sm">Account Created Successfully!</p>
-                  <p className="text-green-600 text-sm mt-1">
-                    Your chef profile is ready. You can now start creating amazing recipes with AI assistance!
-                  </p>
                 </div>
               </div>
             </div>

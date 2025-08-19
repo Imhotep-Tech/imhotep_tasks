@@ -1,66 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../common/Footer';
-import PharaohfolioLogo from '../../assets/PharaohfolioLogo.png';
+import Logo from '../../assets/imhotep_tasks.png';
 
 function LandingPage() {
   const [currentFeature, setCurrentFeature] = useState(0);
 
-  // Features from README
+  // Replace feature set with concise features that match the Django template
   const features = [
     {
-      icon: "🤖",
-      title: "AI-Generated Code Support",
-      description: "Works with any AI assistant (ChatGPT, Claude, Gemini, etc.)"
-    },
-    {
       icon: "📋",
-      title: "Simple Paste & Deploy",
-      description: "Just paste your HTML/CSS/JS code and get a live link instantly"
+      title: "Task Organization",
+      description: "Create, organize and track tasks with ease. Set priorities and deadlines to keep everything in order."
     },
     {
-      icon: "🌐",
-      title: "Instant Hosting",
-      description: "Your portfolio goes live at pharaohfolio.vercel.app/u/username immediately"
+      icon: "⏰",
+      title: "Routine Management",
+      description: "Build healthy habits with automated routine-based task creation for daily, weekly, or custom schedules."
     },
     {
-      icon: "💻",
-      title: "Built-in Code Editor",
-      description: "Monaco editor for quick tweaks and customizations"
+      icon: "📅",
+      title: "Deadline Management",
+      description: "Never miss a deadline with our intuitive calendar view and reminder system built to keep you on track."
     },
     {
-      icon: "👁️",
-      title: "Live Preview",
-      description: "See your portfolio in real-time as you edit"
-    },
-    {
-      icon: "🔐",
-      title: "Secure Authentication",
-      description: "Email/password and Google OAuth for account management"
-    },
-    {
-      icon: "📱",
-      title: "Mobile-Optimized",
-      description: "All hosted portfolios work perfectly on mobile devices"
-    },
-    {
-      icon: "🛡️",
-      title: "Safe Code Execution",
-      description: "HTML/CSS/JS sanitization to prevent malicious code"
+      icon: "⚙️",
+      title: "Customizable Workflows",
+      description: "Tailor your task management process with flexible workflows that adapt to your needs."
     },
     {
       icon: "📊",
-      title: "Simple Analytics",
-      description: "Basic visit tracking for your portfolio"
+      title: "Analytics & Insights",
+      description: "Gain valuable insights into your productivity patterns and task completion rates."
     },
     {
-      icon: "⚡",
-      title: "Lightning Fast",
-      description: "Instant deployment with global CDN delivery"
+      icon: "🔔",
+      title: "Real-time Notifications",
+      description: "Stay updated with instant notifications for task reminders, updates, and deadlines."
+    },
+    {
+      icon: "🤝",
+      title: "Collaboration Tools",
+      description: "Easily share tasks and collaborate with others in real-time for seamless teamwork."
+    },
+    {
+      icon: "🔒",
+      title: "Secure & Private",
+      description: "Your data security is our priority. Enjoy peace of mind with our robust security measures."
+    },
+    {
+      icon: "📱",
+      title: "Mobile Friendly",
+      description: "Access and manage your tasks on the go with our fully responsive mobile-friendly design."
+    },
+    {
+      icon: "🎯",
+      title: "Goal Setting & Tracking",
+      description: "Set, track, and achieve your personal and professional goals with our goal management features."
     },
   ];
 
-  // Auto-rotate features every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentFeature((prev) => (prev + 1) % features.length);
@@ -70,224 +69,106 @@ function LandingPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 via-indigo-100 to-blue-100 bg-chef-pattern relative overflow-hidden">
-        {/* Floating background elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float"></div>
-          <div className="absolute top-40 right-20 w-24 h-24 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{animationDelay: '2s'}}></div>
-          <div className="absolute bottom-20 left-40 w-40 h-40 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-float" style={{animationDelay: '4s'}}></div>
-        </div>
-
-        {/* Hero Section */}
-        <section className="relative z-10 pt-16 pb-20 lg:pt-24 lg:pb-32">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            <div className="text-center mb-16">
-              <div className="inline-block p-4 bg-white rounded-full mb-6 shadow-2xl border border-gray-100">
-                <img 
-                  src={PharaohfolioLogo} 
-                  alt="Pharaohfolio Logo" 
-                  className="w-16 h-16 object-contain"
-                />
+      <div className="min-h-screen relative overflow-hidden bg-gray-50">
+        {/* Hero Section - dark indigo like Django template */}
+        <section className="bg-gradient-to-br from-indigo-900 to-indigo-800 text-white">
+          <div className="container mx-auto px-4 py-16 md:py-24 max-w-7xl">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8">
+                <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">Manage Tasks, Boost Productivity</h1>
+                <p className="text-xl md:text-2xl text-indigo-200 mb-8">Streamline your workflow with our intuitive task management system built for individuals.</p>
+                <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                  <Link
+                    to="/register"
+                    className="inline-block bg-white text-indigo-800 px-6 py-3 rounded-lg font-medium text-lg shadow-lg hover:scale-105 transition-transform"
+                  >
+                    Get Started
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="inline-block bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-medium text-lg hover:bg-white/5 transition-all"
+                  >
+                    Sign In
+                  </Link>
+                </div>
               </div>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-                <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 bg-clip-text text-transparent">
-                  Pharaohfolio
-                </span>
-              </h1>
-              <h2 className="text-xl sm:text-2xl lg:text-3xl text-gray-700 mb-8 font-medium max-w-4xl mx-auto leading-relaxed">
-                Simple Hosting for AI-Generated Single-Page Portfolios
-              </h2>
-              <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-                Instantly deploy your AI-generated HTML/CSS/JS portfolio. No technical skills required. Paste your code, get your live link, and share your work with the world!
-              </p>
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                <Link
-                  to="/register"
-                  className="chef-button bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 min-w-48"
-                >
-                  🚀 Get Started Free
-                </Link>
-                <Link
-                  to="/login"
-                  className="chef-button-secondary bg-white text-purple-700 px-8 py-4 rounded-xl font-semibold text-lg border-2 border-purple-500 hover:bg-purple-50 transform hover:scale-105 transition-all duration-300 min-w-48"
-                >
-                  🔓 Sign In
-                </Link>
+
+              <div className="md:w-1/2 relative">
+                <div className="bg-white p-4 rounded-lg shadow-2xl transform rotate-1 inline-block">
+                  <img src={Logo} alt="Imhotep Tasks preview" className="rounded-md w-72 h-auto" />
+                </div>
+                <div className="absolute -bottom-4 -left-4 bg-indigo-500 w-16 h-16 rounded-full flex items-center justify-center shadow-lg">
+                  <img src={Logo} alt="logo" className="h-10 w-10" />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Features Showcase */}
-        <section className="relative z-10 py-20 bg-white/80 backdrop-blur-sm">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-                Why Choose <span className="text-purple-600">Pharaohfolio</span>?
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                The easiest way to host your AI-generated portfolio. No servers, no deployment headaches, no technical knowledge required.
-              </p>
-            </div>
-            {/* Interactive Feature Display */}
-            <div className="max-w-6xl mx-auto">
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                {/* Feature Description */}
-                <div className="order-2 lg:order-1">
-                  <div className="chef-card bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-white/30">
-                    <div className="text-6xl mb-4">{features[currentFeature].icon}</div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">{features[currentFeature].title}</h3>
-                    <p className="text-gray-600 text-lg leading-relaxed mb-6">{features[currentFeature].description}</p>
-                    {/* Feature indicators */}
-                    <div className="flex space-x-2">
-                      {features.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setCurrentFeature(index)}
-                          className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                            index === currentFeature 
-                              ? 'bg-purple-500 w-8' 
-                              : 'bg-gray-300 hover:bg-purple-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
+        {/* Features Section - mirrors Django features area */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12">Features That Empower Your Workflow</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto max-w-5xl">
+              {features.slice(0,3).map((f, idx) => (
+                <div key={idx} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
+                  <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                    <span className="text-2xl">{f.icon}</span>
                   </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">{f.title}</h3>
+                  <p className="text-gray-600">{f.description}</p>
                 </div>
-                {/* Feature Grid */}
-                <div className="order-1 lg:order-2 grid grid-cols-2 gap-4">
-                  {features.map((feature, index) => (
-                    <div
-                      key={index}
-                      onClick={() => setCurrentFeature(index)}
-                      className={`cursor-pointer transition-all duration-300 p-4 rounded-xl ${
-                        index === currentFeature
-                          ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xl scale-105'
-                          : 'bg-white/80 hover:bg-white text-gray-800 hover:shadow-lg hover:scale-102'
-                      }`}
-                    >
-                      <div className="text-3xl mb-2">{feature.icon}</div>
-                      <h4 className="font-semibold text-sm">{feature.title}</h4>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* How It Works Section */}
-        <section className="relative z-10 py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-                How <span className="text-purple-600">Pharaohfolio</span> Works
-              </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Go live in three simple steps
-              </p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {/* How It Works (3 steps) */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12">How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                {
-                  step: "1",
-                  icon: "🤖",
-                  title: "Generate with AI",
-                  description: "Ask any AI assistant to create your portfolio code (HTML/CSS/JS in one file)."
-                },
-                {
-                  step: "2",
-                  icon: "📋",
-                  title: "Paste & Deploy",
-                  description: "Paste the code into Pharaohfolio's editor and hit Save & Deploy."
-                },
-                {
-                  step: "3",
-                  icon: "🌐",
-                  title: "Get Your Link",
-                  description: "Your portfolio is live at pharaohfolio.com/u/yourusername. Share it instantly!"
-                }
+                { step: "1", icon: "🤖", title: "Create an Account", description: "Sign up for free and set up your personalized dashboard in just minutes." },
+                { step: "2", icon: "📋", title: "Add Your Tasks", description: "Create tasks, set priorities and deadlines." },
+                { step: "3", icon: "🚀", title: "Boost Productivity", description: "Track progress, and celebrate completing your tasks." }
               ].map((item, index) => (
-                <div key={index} className="text-center">
-                  <div className="relative inline-block mb-6">
-                    <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-4xl shadow-xl">
-                      {item.icon}
-                    </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                      {item.step}
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{item.description}</p>
+                <div key={index} className="flex flex-col items-center text-center">
+                  <div className="bg-indigo-800 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-6">{item.step}</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">{item.title}</h3>
+                  <p className="text-gray-600">{item.description}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Benefits Section */}
-        <section className="relative z-10 py-20 bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-                Who Is Pharaohfolio For?
-              </h2>
-              <p className="text-xl opacity-90 max-w-3xl mx-auto">
-                Perfect for anyone who wants a professional web presence without the hassle.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { icon: "🎨", title: "Artists & Designers", description: "Showcase your creative work without coding" },
-                { icon: "💼", title: "Freelancers", description: "Professional portfolios that convert clients" },
-                { icon: "🎓", title: "Students", description: "Academic projects and resume portfolios" },
-                { icon: "🚀", title: "Entrepreneurs", description: "Quick business and startup showcases" }
-              ].map((benefit, index) => (
-                <div key={index} className="text-center p-6 bg-white/10 backdrop-blur-sm rounded-xl">
-                  <div className="text-4xl mb-4">{benefit.icon}</div>
-                  <h3 className="font-bold text-lg mb-2">{benefit.title}</h3>
-                  <p className="text-sm opacity-90">{benefit.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA Section */}
-        <section className="relative z-10 py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center">
-            <div className="chef-card bg-white/90 backdrop-blur-sm p-12 rounded-3xl shadow-2xl border border-white/30">
+        {/* Final CTA */}
+        <section className="py-16 bg-gradient-to-br from-indigo-800 to-indigo-900 text-white">
+          <div className="container mx-auto px-4 max-w-4xl text-center">
+            <div className="bg-white/5 p-10 rounded-3xl shadow-2xl border border-white/10">
               <div className="flex justify-center mb-6">
-                <img 
-                  src={PharaohfolioLogo} 
-                  alt="Pharaohfolio Logo" 
-                  className="w-20 h-20 object-contain"
-                />
+                <img src={Logo} alt="Logo" className="w-20 h-20 object-contain" />
               </div>
-              <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-                Ready to Share Your Portfolio with the World?
-              </h2>
-              <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                Join Pharaohfolio today and get your AI-generated portfolio online in minutes.
-              </p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Boost Your Productivity?</h2>
+              <p className="text-lg text-indigo-200 mb-6">Join thousands of users who are already managing their tasks more effectively.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link
                   to="/register"
-                  className="chef-button bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-10 py-4 rounded-xl font-semibold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                  className="inline-block bg-white text-indigo-800 px-8 py-3 rounded-lg font-medium text-lg shadow-lg hover:scale-105 transition-transform"
                 >
-                  🚀 Get Started for Free
+                  Start For Free
                 </Link>
-                <p className="text-sm text-gray-500">
-                  No credit card required • Start in minutes
-                </p>
+                <p className="text-sm text-indigo-200">No credit card required • Start in minutes</p>
               </div>
             </div>
           </div>
         </section>
+
         <Footer />
       </div>
     </>
   );
 }
-export default LandingPage
+export default LandingPage;
