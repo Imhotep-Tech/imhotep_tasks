@@ -16,6 +16,7 @@ import PublicPortfolio from './components/main/PublicPortfolio'
 import PromptExamples from './components/main/PromptExamples'
 import Next7DaysTasks from './components/main/Next7DaysTasks'
 import AllTasks from './components/main/AllTasks'
+import Routines from './components/main/Routines'
 
 function App() {
   return (
@@ -103,6 +104,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AllTasks />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/routines" 
+              element={
+                <ProtectedRoute>
+                  <Routines />
                 </ProtectedRoute>
               } 
             />
