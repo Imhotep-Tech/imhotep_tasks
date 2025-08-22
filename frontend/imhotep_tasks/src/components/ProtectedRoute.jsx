@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children }) => {
                 </div>
               </div>
 
-              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">Pharaohfolio</h1>
+              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">Imhotep Tasks</h1>
               <p className="mt-2 text-center text-sm text-gray-600">Loading your workspace...</p>
 
               <div className="mt-6 flex justify-center">

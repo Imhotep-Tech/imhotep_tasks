@@ -12,8 +12,6 @@ import EmailVerification from './components/auth/EmailVerification'
 import GoogleCallback from './components/auth/GoogleCallback'
 import Profile from './components/profile/Profile'
 import EmailChangeVerification from './components/profile/EmailChangeVerification'
-import PublicPortfolio from './components/main/PublicPortfolio'
-import PromptExamples from './components/main/PromptExamples'
 import Next7DaysTasks from './components/main/Next7DaysTasks'
 import AllTasks from './components/main/AllTasks'
 import Routines from './components/main/Routines'
@@ -86,19 +84,10 @@ function App() {
                 </ProtectedRoute>
               } 
             />
-            <Route
-             path="/prompts"
-              element={
-                <ProtectedRoute>
-                  <PromptExamples />
-                </ProtectedRoute>
-            }
-            />
             <Route 
               path="/verify-email-change/:uid/:token/:new_email" 
               element={<EmailChangeVerification />} 
             />
-            <Route path="/u/:username" element={<PublicPortfolio />} />
             <Route 
               path="/all-tasks" 
               element={

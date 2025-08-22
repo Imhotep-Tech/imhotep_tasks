@@ -108,10 +108,10 @@ const Navbar = ({ onToggle }) => {
                     textShadow: '0 2px 8px rgba(124,58,237,0.12)'
                   }}
                 >
-                  Pharaohfolio
+                  Imhotep Tasks
                 </div>
                 <p className="text-center text-gray-500 text-sm font-medium mt-1">
-                  Simple Hosting for Single-Page Portfolios
+                  Manage Your Daily Tasks Efficiently
                 </p>
               </div>
 

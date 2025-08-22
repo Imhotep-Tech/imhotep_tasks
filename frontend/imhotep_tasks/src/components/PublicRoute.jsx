@@ -25,9 +25,9 @@ const PublicRoute = ({ children }) => {
                   lineHeight: '1.1',
                 }}
               >
-                Pharaohfolio
+                Imhotep Tasks
               </div>
-              <p className="text-gray-500 text-sm mb-2 text-center">Simple Hosting for Single-Page Portfolios</p>
+              <p className="text-gray-500 text-sm mb-2 text-center">Manage Your Daily Tasks Efficiently</p>
               <h2 className="text-2xl font-bold font-chef text-gray-800 mb-3 text-center">
                 Welcome!
               </h2>
