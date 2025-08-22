@@ -2,7 +2,7 @@
 <browserconfig>
     <msapplication>
         <tile>
-            <square150x150logo src="/ms-icon-144x144.png"/>
+            <square150x150logo src="/imhotep_tasks.png"/>
             <TileColor>#007bff</TileColor>
         </tile>
     </msapplication>

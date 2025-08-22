@@ -16,6 +16,7 @@ const STATIC_CACHE_URLS = [
 const RUNTIME_CACHE = 'imhotep-tasks-runtime-v1';
 const API_CACHE = 'imhotep-tasks-api-v1';
 
+
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -283,7 +284,7 @@ function generateOfflinePage() {
             transform: translateY(-1px);
           }
           
-          .tasks-logo {
+          .chef-logo {
             width: 64px;
             height: 64px;
             margin: 0 auto 24px;
@@ -313,13 +314,14 @@ function generateOfflinePage() {
       </head>
       <body>
         <div class="offline-container">
-          <div class="tasks-logo">📝</div>
+          <div class="chef-logo">👨‍🍳</div>
           <div class="offline-icon">🔌</div>
           <h1 class="offline-title">You're Offline</h1>
           <h2 class="offline-subtitle">No Internet Connection</h2>
           <p class="offline-message">
-            It looks like you're not connected to the internet.<br>
-            Imhotep Tasks needs an active connection to sync your tasks, but you can still browse your cached content.
+            It looks like you're not connected to the internet. 
+            Imhotep Tasks needs an active connection to get your tasks, 
+            but you can still browse your cached content.
           </p>
           <div class="button-group">
             <button class="retry-button" onclick="window.location.reload()">
@@ -348,9 +350,9 @@ self.addEventListener('sync', (event) => {
 // Push notification handler (for future use)
 self.addEventListener('push', (event) => {
   const options = {
-    body: event.data ? event.data.text() : 'You have new tasks or updates!',
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
+    body: event.data ? event.data.text() : 'New recipe suggestion available!',
+    icon: '/imhotep_tasks.png',
+    badge: '/imhotep_tasks.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -359,19 +361,19 @@ self.addEventListener('push', (event) => {
     actions: [
       {
         action: 'explore',
-        title: 'View Tasks',
-        icon: '/pwa-192x192.png'
+        title: 'View Recipe',
+        icon: '/imhotep_tasks.png'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/pwa-192x192.png'
+        icon: '/imhotep_tasks.png'
       }
     ]
   };
 
   event.waitUntil(
-    self.registration.showNotification('Imhotep Tasks', options)
+    self.registration.showNotification('imhotep_tasks', options)
   );
 });
 
@@ -381,7 +383,7 @@ self.addEventListener('notificationclick', (event) => {
 
   if (event.action === 'explore') {
     event.waitUntil(
-      clients.openWindow('/today-tasks')
+      clients.openWindow('/dashboard')
     );
   }
 });

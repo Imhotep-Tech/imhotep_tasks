@@ -19,7 +19,7 @@ const UpdatePrompt = () => {
               Update Available
             </h3>
             <p className="text-xs text-blue-700 mb-3">
-              A new version of Imhotep tasks is available.
+              A new version of Imhotep Tasks is available.
             </p>
             <button
               onClick={reloadApp}

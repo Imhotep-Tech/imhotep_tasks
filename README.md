@@ -1,7 +1,7 @@
 # Imhotep Tasks ✅
 
 <div align="center">
-  <img src="./static/imhotep_tasks.png" alt="Imhotep Tasks Logo" width="120">
+  <img src="./frontend/imhotep_tasks/public/imhotep_tasks.png" alt="Imhotep Tasks Logo" width="120">
   <br>
   <h3>Streamline Your Productivity, Simplify Your Life</h3>
 </div>

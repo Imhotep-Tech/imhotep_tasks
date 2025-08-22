@@ -263,9 +263,6 @@ const Routines = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-gray-800">{routine.routines_title}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {routine.routines_dates ? routine.routines_dates.split(' ').map(d => <span key={d} className="mr-2 capitalize">{d}</span>) : 'No days selected'}
-                      </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
