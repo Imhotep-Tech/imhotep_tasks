@@ -15,9 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.shortcuts import redirect
 from tasks import views
-from imhotep_tasks.settings import DEBUG
+from imhotep_tasks.settings import DEBUG, frontend_url
 
 handler401 = 'tasks.error_handle.handler401'
 handler405 = 'tasks.error_handle.handler405'
@@ -30,5 +31,5 @@ handler504 = 'tasks.error_handle.handler504'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('tasks.urls')),
-
+    re_path(r'^.*$', lambda request: redirect(f'{frontend_url}', permanent=False)),
 ]
