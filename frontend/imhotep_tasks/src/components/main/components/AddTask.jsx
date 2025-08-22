@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import axios from '../../../config/api';
 
-const AddTask = ({ onClose, onCreate }) => {
+const AddTask = ({ onClose, onCreate, url_call }) => {
   const { user } = useAuth();
   const [task_title, setTitle] = useState('');
   const [task_description, setDescription] = useState('');
@@ -16,7 +16,7 @@ const AddTask = ({ onClose, onCreate }) => {
     setError('');
 
     try {
-      const payload = { task_title, task_details: task_description, due_date };
+      const payload = { task_title, task_details: task_description, due_date, url_call};
       const res = await axios.post('api/tasks/add_task/', payload);
       onCreate && onCreate(res.data);
       // reset fields

@@ -25,7 +25,6 @@ const TodayTasks = () => {
     setLoading(true);
     setError('');
     try {
-      // axios baseURL is expected to be configured (e.g. '/api')
       const res = await axios.get(`api/tasks/today_tasks/?page=${pageNum}`);
       const data = res.data;
       setTasks(data.user_tasks || []);
@@ -62,32 +61,24 @@ const TodayTasks = () => {
     setPendingCount((prev) => (serverResponse.pending_tasks ?? prev));
   };
 
-  const toggleComplete = async (taskId) => {
-    try {
-      const res = await axios.post(`api/tasks/task_complete/${taskId}/`);
-      const updated = res.data.task;
-      setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
-      setTotalTasks(res.data.total_number_tasks ?? totalTasks);
-      setCompletedCount(res.data.completed_tasks_count ?? completedCount);
-      setPendingCount(res.data.pending_tasks ?? pendingCount);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to update task status.');
-    }
+  // Only update state, API calls are handled in button components
+  const handleComplete = (updatedTask, counts) => {
+    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+    setTotalTasks(counts.total_number_tasks ?? totalTasks);
+    setCompletedCount(counts.completed_tasks_count ?? completedCount);
+    setPendingCount(counts.pending_tasks ?? pendingCount);
   };
 
-  const deleteTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
-    try {
-      const res = await axios.delete(`api/tasks/delete_task/${taskId}/`);
-      setTasks((prev) => prev.filter((t) => t.id !== taskId));
-      setTotalTasks(res.data.total_number_tasks ?? Math.max(0, totalTasks - 1));
-      setCompletedCount(res.data.completed_tasks_count ?? completedCount);
-      setPendingCount(res.data.pending_tasks ?? Math.max(0, pendingCount - 1));
-    } catch (err) {
-      console.error(err);
-      setError('Failed to delete task.');
-    }
+  const handleDelete = (deletedId, counts) => {
+    setTasks((prev) => prev.filter((t) => t.id !== deletedId));
+    setTotalTasks(counts.total_number_tasks ?? Math.max(0, totalTasks - 1));
+    setCompletedCount(counts.completed_tasks_count ?? completedCount);
+    setPendingCount(counts.pending_tasks ?? Math.max(0, pendingCount - 1));
+  };
+
+  // Add this handler for update
+  const handleUpdate = () => {
+    fetchTasks(page);
   };
 
   const formatDate = (iso) => {
@@ -131,11 +122,13 @@ const TodayTasks = () => {
           <TasksData
             tasks={tasks}
             loading={loading}
-            onComplete={toggleComplete}
-            onDelete={deleteTask}
             onEdit={(task) => window.location.href = `/tasks/update_task/${task.id}/`}
             onOpenAdd={() => setShowAdd(true)}
             onOpenDetails={() => {}}
+            url_call="today-tasks"
+            onCompleteTask={handleComplete}
+            onDeleteTask={handleDelete}
+            onUpdateTask={handleUpdate}
           />
 
         </div>
@@ -162,7 +155,7 @@ const TodayTasks = () => {
           </div>
         )}
 
-        {showAdd && <AddTask onClose={() => setShowAdd(false)} onCreate={handleCreate} />}
+        {showAdd && <AddTask onClose={() => setShowAdd(false)} onCreate={handleCreate} url_call="today-tasks" />}
 
       </div>
       <Footer />

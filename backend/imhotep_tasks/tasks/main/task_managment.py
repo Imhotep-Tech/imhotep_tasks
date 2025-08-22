@@ -1,8 +1,6 @@
 from django.shortcuts import get_object_or_404
-#from django.contrib import messages
 from datetime import date, timedelta, datetime as _datetime
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from tasks.utils.apply_routines import apply_routines
@@ -11,38 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from ..models import User, Tasks
-
-# Helper serializer for Tasks
-def serialize_task(task):
-    return {
-        "id": task.id,
-        "task_title": task.task_title,
-        "task_details": getattr(task, "task_details", None),
-        "due_date": task.due_date.isoformat() if getattr(task, "due_date", None) else None,
-        "status": bool(task.status),
-        "done_date": task.done_date.isoformat() if getattr(task, "done_date", None) else None,
-        "created_by": getattr(task.created_by, "id", None),
-    }
-
-# Helper: parse date-like input to date
-def _parse_date_input(value):
-    if not value:
-        return None
-    # Accept date strings like "2025-08-17" or datetimes
-    try:
-        # If it's already a date/datetime
-        if hasattr(value, 'date'):
-            return value.date()
-        # Try ISO date
-        return date.fromisoformat(value)
-    except Exception:
-        try:
-            dt = parse_datetime(value)
-            if dt:
-                return dt.date()
-        except Exception:
-            pass
-    return None
+from ..utils import tasks_managements_utils
 
 #the user today_tasks function
 @api_view(['GET'])
@@ -65,7 +32,7 @@ def today_tasks(request):
     except (PageNotAnInteger, EmptyPage):
         page_obj = paginator.page(1)
 
-    tasks_list = [serialize_task(t) for t in page_obj.object_list]
+    tasks_list = [tasks_managements_utils.serialize_task(t) for t in page_obj.object_list]
     completed_tasks_count = user_tasks_qs.filter(status=True).count()
     total_number_tasks = user_tasks_qs.count()
 
@@ -98,7 +65,7 @@ def all_tasks(request):
     except (PageNotAnInteger, EmptyPage):
         page_obj = paginator.page(1)
 
-    tasks_list = [serialize_task(t) for t in page_obj.object_list]
+    tasks_list = [tasks_managements_utils.serialize_task(t) for t in page_obj.object_list]
     completed_tasks_count = user_tasks_qs.filter(status=True).count()
     total_number_tasks = user_tasks_qs.count()
 
@@ -137,7 +104,7 @@ def next_week_tasks(request):
     except (PageNotAnInteger, EmptyPage):
         page_obj = paginator.page(1)
 
-    tasks_list = [serialize_task(t) for t in page_obj.object_list]
+    tasks_list = [tasks_managements_utils.serialize_task(t) for t in page_obj.object_list]
     completed_tasks_count = user_tasks_qs.filter(status=True).count()
     total_number_tasks = user_tasks_qs.count()
 
@@ -160,11 +127,12 @@ def next_week_tasks(request):
 @permission_classes([IsAuthenticated])
 def add_task(request):
     try:
+        url_call = request.data.get("url_call", "all")
         today = timezone.now().date()
         task_title = request.data.get("task_title")
         task_details = request.data.get("task_details")
         due_date_raw = request.data.get("due_date")
-        due_date = _parse_date_input(due_date_raw) or today
+        due_date = tasks_managements_utils._parse_date_input(due_date_raw) or today
 
         task = Tasks.objects.create(
             task_title=task_title,
@@ -173,13 +141,9 @@ def add_task(request):
             created_by=request.user
         )
 
-        task_data = serialize_task(task)
+        task_data = tasks_managements_utils.serialize_task(task)
 
-        # updated counts
-        qs = Tasks.objects.filter(created_by=request.user)
-        completed = qs.filter(status=True).count()
-        total = qs.count()
-        pending = total - completed
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
 
         return Response({
             "success": True,
@@ -203,6 +167,7 @@ def add_task(request):
 @permission_classes([IsAuthenticated])
 def update_task(request, task_id):
     try:
+        url_call = request.data.get("url_call", "all")
         task = get_object_or_404(Tasks, id=task_id, created_by=request.user)
 
         task_title = request.data.get("task_title", task.task_title)
@@ -212,15 +177,13 @@ def update_task(request, task_id):
         task.task_title = task_title
         task.task_details = task_details
         if due_date_raw is not None:
-            parsed = _parse_date_input(due_date_raw)
+            parsed = tasks_managements_utils._parse_date_input(due_date_raw)
             task.due_date = parsed
         task.save()
-        task_data = serialize_task(task)
 
-        qs = Tasks.objects.filter(created_by=request.user)
-        completed = qs.filter(status=True).count()
-        total = qs.count()
-        pending = total - completed
+        task_data = tasks_managements_utils.serialize_task(task)
+
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
 
         return Response({
             "success": True,
@@ -245,16 +208,14 @@ def update_task(request, task_id):
 def delete_task(request, task_id):
     try:
         task = get_object_or_404(Tasks, id=task_id, created_by=request.user)
-        # preserve due_date for hint
+        url_call = request.data.get("url_call", "all")
+
         due_date = getattr(task.due_date, "date", task.due_date)
         if hasattr(due_date, "date"):
             due_date = due_date.date()
         task.delete()
 
-        qs = Tasks.objects.filter(created_by=request.user)
-        completed = qs.filter(status=True).count()
-        total = qs.count()
-        pending = total - completed
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
 
         return Response({
             "success": True,
@@ -278,6 +239,7 @@ def delete_task(request, task_id):
 @permission_classes([IsAuthenticated])
 def task_complete(request, task_id):
     try:
+        url_call = request.data.get("url_call", "all")
         task = get_object_or_404(Tasks, id=task_id, created_by=request.user)
 
         if task.status:
@@ -288,12 +250,9 @@ def task_complete(request, task_id):
             task.done_date = timezone.now().date()
 
         task.save()
-        task_data = serialize_task(task)
+        task_data = tasks_managements_utils.serialize_task(task)
 
-        qs = Tasks.objects.filter(created_by=request.user)
-        completed = qs.filter(status=True).count()
-        total = qs.count()
-        pending = total - completed
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
 
         return Response({
             "success": True,
@@ -312,4 +271,3 @@ def task_complete(request, task_id):
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    

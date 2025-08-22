@@ -1,4 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
+import TaskCompleteButton from './TaskCompleteButton';
+import TaskDeleteButton from './TaskDeleteButton';
+import UpdateTask from './UpdateTask';
+import DetailsModal from './DetailsModal';
 
 const formatDate = (iso) => {
   if (!iso) return "";
@@ -9,126 +13,104 @@ const formatDate = (iso) => {
   }
 };
 
-const TaskRow = ({ task, onComplete, onEdit, onDelete }) => {
-  return (
-    <li
-      key={task.id}
-      className={`p-4 hover:bg-gray-50 transition-all ${
-        task.status ? "bg-gray-50" : ""
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <button
-            onClick={() => onComplete(task.id)}
-            className={`w-6 h-6 rounded-full border ${
-              task.status
-                ? "bg-green-500 border-green-500 text-white"
-                : "border-gray-300 hover:border-gray-400"
-            } mr-3 flex items-center justify-center transition-colors`}
-            title={task.status ? "Mark as pending" : "Mark as complete"}
-          >
-            {task.status && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            )}
-          </button>
-
-          <div>
+const TaskRow = ({
+  task,
+  onEdit,
+  url_call,
+  onCompleteTask,
+  onDeleteTask,
+  onOpenDetails,
+  onOpenUpdate,
+}) => (
+  <li
+    key={task.id}
+    className={`p-4 hover:bg-gray-50 transition-all ${task.status ? "bg-gray-50" : ""}`}
+  >
+    <div className="flex items-center justify-between">
+      <div className="flex items-center">
+        <TaskCompleteButton
+          task={task}
+          url_call={url_call}
+          onCompleteTask={onCompleteTask}
+        />
+        <div>
+          <div className="flex items-center gap-2">
             <p
-              className={`font-medium text-gray-800 ${
-                task.status ? "line-through text-gray-500" : ""
-              }`}
+              className={`font-medium text-gray-800 ${task.status ? "line-through text-gray-500" : ""}`}
             >
               {task.task_title}
             </p>
-            {task.task_details && (
-              <p
-                className={`text-sm text-gray-500 mt-1 ${
-                  task.status ? "line-through" : ""
-                }`}
-              >
-                {task.task_details}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center">
-          <span className="text-sm text-gray-500 mr-4">
-            {task.due_date ? formatDate(task.due_date) : ""}
-          </span>
-          <div className="flex space-x-2">
             <button
-              onClick={() => onEdit(task)}
-              className="p-1.5 text-blue-500 hover:bg-blue-100 rounded transition-colors"
-              title="Edit"
+              onClick={() => onOpenDetails(task)}
+              className="text-xs text-indigo-600 hover:underline"
+              style={{ marginLeft: 8 }}
             >
-              {/* Edit icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => onDelete(task.id)}
-              className="p-1.5 text-red-500 hover:bg-red-100 rounded transition-colors"
-              title="Delete"
-            >
-              {/* Delete icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
+              Details
             </button>
           </div>
+          {task.task_details && (
+            <p
+              className={`text-sm text-gray-500 mt-1 ${task.status ? "line-through" : ""}`}
+            >
+              {task.task_details}
+            </p>
+          )}
         </div>
       </div>
-    </li>
-  );
-};
+      <div className="flex items-center">
+        <span className="text-sm text-gray-500 mr-4">
+          {task.due_date ? formatDate(task.due_date) : ""}
+        </span>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onOpenUpdate(task)}
+            className="p-1.5 text-blue-500 hover:bg-blue-100 rounded transition-colors"
+            title="Edit"
+          >
+            {/* Edit icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+              />
+            </svg>
+          </button>
+          <TaskDeleteButton
+            taskId={task.id}
+            url_call={url_call}
+            onDeleteTask={onDeleteTask}
+          />
+        </div>
+      </div>
+    </div>
+  </li>
+);
 
 const TasksData = ({
   tasks = [],
   loading,
-  onComplete,
-  onEdit,
-  onDelete,
+  url_call,
+  onCompleteTask,
+  onDeleteTask,
   onOpenAdd,
-  onOpenDetails,
+  onUpdateTask,
 }) => {
+  const [detailsTask, setDetailsTask] = useState(null);
+  const [updateTask, setUpdateTask] = useState(null);
+
+  const handleUpdate = (updated, counts) => {
+    setUpdateTask(null);
+    if (onUpdateTask) onUpdateTask();
+  };
+
   if (loading) {
     return <div className="p-6 text-center">Loading...</div>;
   }
@@ -183,18 +165,34 @@ const TasksData = ({
   }
 
   return (
-    <ul className="divide-y divide-gray-200">
-      {tasks.map((task) => (
-        <TaskRow
-          key={task.id}
-          task={task}
-          onComplete={onComplete}
-          onEdit={onEdit}
-          onDelete={onDelete}
+    <>
+      <ul className="divide-y divide-gray-200">
+        {tasks.map((task) => (
+          <TaskRow
+            key={task.id}
+            task={task}
+            url_call={url_call}
+            onCompleteTask={onCompleteTask}
+            onDeleteTask={onDeleteTask}
+            onOpenDetails={setDetailsTask}
+            onOpenUpdate={setUpdateTask}
+          />
+        ))}
+      </ul>
+      {detailsTask && (
+        <DetailsModal task={detailsTask} onClose={() => setDetailsTask(null)} />
+      )}
+      {updateTask && (
+        <UpdateTask
+          task={updateTask}
+          onClose={() => setUpdateTask(null)}
+          onUpdate={handleUpdate}
+          url_call={url_call}
         />
-      ))}
-    </ul>
+      )}
+    </>
   );
 };
 
 export default TasksData;
+
