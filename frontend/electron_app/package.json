@@ -1,14 +1,19 @@
 {
   "name": "imhoteptasks",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Imhotep Tasks - Task Management Application",
   "main": "main.js",
   "scripts": {
+    "build:web": "npm --prefix ../imhotep_tasks run build",
+    "prepare": "npm run build:web && rm -rf build && cp -r ../imhotep_tasks/dist ./build",
     "start": "electron .",
+    "start:dev": "ELECTRON_START_URL=http://localhost:3001 electron .",
+    "start:prod": "npm run prepare && electron .",
     "dist": "electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "electron-builder --config=build.js",
-    "build:snap": "electron-builder --config=build.js --linux snap",
+    "build": "npm run prepare && electron-builder --config=build.js",
+    "build:snap": "npm run prepare && electron-builder --config=build.js --linux snap",
+    "make:snap": "npm run prepare && electron-builder --linux snap --publish never",
     "publish": "electron-builder publish"
   },
   "keywords": [
@@ -35,7 +40,8 @@
       "preload.js",
       "package.json",
       "icon.png",
-      "icon1.ico"
+      "icon1.ico",
+      "build/**"
     ],
     "win": {
       "target": "nsis",

@@ -12,7 +12,8 @@ module.exports = {
     "preload.js",
     "package.json",
     "icon.png",
-    "icon1.ico"
+    "icon1.ico",
+    "build/**"
   ],
   "win": {
     "target": "nsis",
@@ -39,7 +40,7 @@ module.exports = {
     {
       "provider": "github",
       "owner": "Imhotep-Tech",
-      "repo": "imhotep-tasks",
+      "repo": "imhotep_tasks",
       "releaseType": "release"
     }
   ]
