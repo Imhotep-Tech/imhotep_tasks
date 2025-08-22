@@ -1,26 +1,48 @@
 const { app, BrowserWindow, shell, dialog } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const path = require('path');
+const fs = require('fs');
 
+const isDev = !!process.env.ELECTRON_START_URL || process.env.NODE_ENV === 'development';
 let mainWindow;
-let isQuitting = false;
-let downloadInProgress = false;
 
 // Function to create the main window
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1024,
         height: 768,
+        show: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
-            enableRemoteModule: false,
+            nodeIntegration: false,
         },
-        icon: path.join(__dirname, 'icon.png')
+        icon: path.join(__dirname, 'icon.png'),
     });
 
-    mainWindow.loadURL('https://imhoteptasks.pythonanywhere.com/');
+    // Prefer explicit dev URL if provided; otherwise load local build/index.html
+    const startUrl = process.env.ELECTRON_START_URL || `file://${path.join(__dirname, 'build', 'index.html')}`;
 
+    // If running in production (no ELECTRON_START_URL) ensure the build exists
+    if (!process.env.ELECTRON_START_URL) {
+        const indexPath = path.join(__dirname, 'build', 'index.html');
+        if (!fs.existsSync(indexPath)) {
+            dialog.showErrorBox(
+                'Missing Build',
+                'Local app build not found. Run the prepare script or use "start:dev" for development.\n\nTry: npm run prepare'
+            );
+            app.quit();
+            return;
+        }
+    }
+
+    mainWindow.loadURL(startUrl).catch((err) => {
+        console.error('Failed to load URL:', err);
+    });
+
+    // avoid white flash
+    mainWindow.once('ready-to-show', () => mainWindow.show());
+
+    // open external links in default browser
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         if (!isInternalURL(url)) {
             shell.openExternal(url);
@@ -37,79 +59,25 @@ function createWindow() {
     });
 
     mainWindow.on('close', (e) => {
-        if (!isQuitting) {
+        // allow normal quit
+        if (!app.isQuitting) {
             e.preventDefault();
             mainWindow.hide();
         }
     });
 }
 
-// Check if the URL is internal
-function isInternalURL(url) {
+// allow file:, localhost and your official domain as internal
+function isInternalURL(url = '') {
     const appDomain = 'https://imhoteptasks.pythonanywhere.com';
-    return url.startsWith(appDomain);
+    return url.startsWith('file:') ||
+        url.startsWith('http://localhost') ||
+        url.startsWith('http://127.0.0.1') ||
+        url.startsWith('https://localhost') ||
+        url.startsWith(appDomain);
 }
 
-// Show download progress and allow user to cancel the download
-function showUpdateAlert() {
-    downloadInProgress = true;
-    autoUpdater.downloadUpdate();
-
-    // Show initial update dialog with a "Cancel" button
-    const downloadDialog = dialog.showMessageBox({
-        type: 'info',
-        title: 'Update Available',
-        message: 'A new version is available. Downloading now...',
-        buttons: ['Cancel'],
-        defaultId: 0,
-        cancelId: 0,
-    }).then((result) => {
-        if (result.response === 0 && downloadInProgress) {  // "Cancel" button clicked
-            console.log('User canceled the download.');
-            autoUpdater.autoDownload = false;
-            downloadInProgress = false;
-            dialog.showMessageBox({
-                type: 'info',
-                title: 'Download Canceled',
-                message: 'The update download has been canceled.',
-            });
-        }
-    });
-
-    // Track download progress in console
-    autoUpdater.on('download-progress', (progressObj) => {
-        const percentage = Math.round(progressObj.percent);
-        console.log(`Downloading: ${percentage}%`);
-    });
-
-    // Automatically install the update upon download completion
-    autoUpdater.on('update-downloaded', () => {
-        console.log('Update downloaded. Automatically restarting to install.');
-        downloadInProgress = false;
-
-        // Immediately apply the update and restart the application
-        autoUpdater.quitAndInstall();
-    });
-}
-
-// Check for application updates
-function checkForUpdates() {
-    console.log('Checking for updates...');
-    autoUpdater.autoDownload = false;
-    autoUpdater.checkForUpdates();
-
-    autoUpdater.on('update-available', () => {
-        console.log('Update available. Displaying update alert.');
-        showUpdateAlert();
-    });
-
-    autoUpdater.on('error', (error) => {
-        console.error('Update error:', error);
-        dialog.showErrorBox('Update Error', error ? error.stack : 'Unknown error');
-    });
-}
-
-// Ensure only a single instance of the application is running
+// single-instance lock
 if (!app.requestSingleInstanceLock()) {
     app.quit();
 } else {
@@ -120,26 +88,20 @@ if (!app.requestSingleInstanceLock()) {
         }
     });
 
-    app.on('ready', () => {
+    app.whenReady().then(() => {
         createWindow();
-        checkForUpdates();
-    });
-
-    app.on('before-quit', () => {
-        isQuitting = true;
-    });
-
-    app.on('window-all-closed', () => {
-        if (process.platform !== 'darwin') {
-            app.quit();
-        }
     });
 
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
-        } else {
-            mainWindow.show();
-        }
+        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        else if (mainWindow) mainWindow.show();
+    });
+
+    app.on('before-quit', () => {
+        app.isQuitting = true;
+    });
+
+    app.on('window-all-closed', () => {
+        if (process.platform !== 'darwin') app.quit();
     });
 }

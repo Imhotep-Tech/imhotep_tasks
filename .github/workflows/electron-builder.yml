@@ -1,0 +1,63 @@
+name: Electron multi-platform build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend deps
+        run: npm ci --prefix frontend/imhotep_tasks
+
+      - name: Install electron_app deps
+        run: npm ci --prefix frontend/electron_app
+
+      - name: Prepare frontend build (prepare script builds frontend and copies into electron_app/build)
+        run: npm run prepare --prefix frontend/electron_app
+
+      - name: Build Linux (snap / AppImage / deb)
+        if: runner.os == 'Linux'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || '' }}
+        run: |
+          # produce snap (or adjust to AppImage/deb if build.js targets them)
+          npx electron-builder --linux snap --publish never
+        shell: bash
+
+      - name: Build Windows (nsis)
+        if: runner.os == 'Windows'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || '' }}
+        run: |
+          npx electron-builder --win nsis --x64 --publish never
+        shell: powershell
+
+      - name: Build macOS (dmg)
+        if: runner.os == 'macOS'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || '' }}
+        run: |
+          npx electron-builder --mac dmg --publish never
+        shell: bash
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-artifacts-${{ matrix.os }}
+          path: frontend/electron_app/dist/**
+
