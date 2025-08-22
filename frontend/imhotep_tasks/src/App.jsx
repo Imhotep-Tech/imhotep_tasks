@@ -15,10 +15,25 @@ import EmailChangeVerification from './components/profile/EmailChangeVerificatio
 import Next7DaysTasks from './components/main/Next7DaysTasks'
 import AllTasks from './components/main/AllTasks'
 import Routines from './components/main/Routines'
+import InstallPrompt from './components/pwa/InstallPrompt'
+import OfflineIndicator from './components/pwa/OfflineIndicator'
+import UpdatePrompt from './components/pwa/UpdatePrompt'
+import DownloadPage from './components/main/DownloadPage'
+import { useEffect } from 'react';
 
 function App() {
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => {
+          // Optionally handle updates here
+        });
+    }
+  }, []);
+
   return (
     <AuthProvider>
+      <OfflineIndicator />
       <Router>
         <div>
           <Routes>
@@ -104,8 +119,14 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/download" 
+              element={<DownloadPage />} 
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <InstallPrompt />
+          <UpdatePrompt />
         </div>
       </Router>
     </AuthProvider>
