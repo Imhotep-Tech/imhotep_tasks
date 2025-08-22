@@ -52,25 +52,25 @@ const InstallPrompt = () => {
       case 'android':
         return {
           icon: '📱',
-          title: 'Install Imhotep tasks App',
+          title: 'Install Imhotep Tasks App',
           subtitle: 'Add to your Android home screen',
-          description: 'Get faster access to AI-powered recipes with our mobile app experience.',
+          description: 'Enjoy a native app experience with your Tasks.',
           buttonText: '📥 Add to Home Screen'
         };
       case 'ios':
         return {
           icon: '📲',
-          title: 'Add Imhotep tasks to Home Screen',
+          title: 'Add Imhotep Tasks to Home Screen',
           subtitle: 'Perfect for iPhone & iPad',
-          description: 'Enjoy a native app experience with offline access to your recipes.',
+          description: 'Enjoy a native app experience with your Tasks.',
           buttonText: '🍎 Add to Home Screen'
         };
       default:
         return {
           icon: '💻',
-          title: 'Install Imhotep tasks Desktop App',
+          title: 'Install Imhotep Tasks Desktop App',
           subtitle: 'Quick access from your desktop',
-          description: 'Install our PWA for faster loading and offline recipe access.',
+          description: 'Install our PWA for faster loading and offline Tasks access.',
           buttonText: '⬇️ Install App'
         };
     }
