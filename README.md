@@ -8,108 +8,150 @@
 
 ## 🚀 Overview
 
-Imhotep Tasks is a modern, intuitive task management system designed to help individuals organize, prioritize, and track their daily tasks with ease. With a clean, responsive interface and powerful features, Imhotep Tasks makes staying productive simpler than ever.
+Imhotep Tasks is a modern task management system built with a Django backend and a React frontend. The app provides task and routine management, authentication, and desktop builds via Electron. This repository is configured to run the full stack using Docker and Docker Compose for a consistent development and deployment workflow.
 
 ## ✨ Features
 
-- **Task Management** - Create, organize, and track tasks with custom categories and priorities
-- **Routine Management** - Build healthy habits with automated routine-based task creation
-- **Deadline Management** - Set due dates and never miss important deadlines 
-- **User Authentication** - Secure account system with customizable user profiles
-- **Responsive Design** - Seamless experience across all devices and screen sizes
-- **Background Sync** - Create tasks offline that automatically sync when you're back online
+- Task Management — Create, organize, and track tasks with categories and priorities
+- Routine Management — Automated routine-based task creation
+- Deadline Management — Set due dates and reminders
+- User Authentication — Secure email/password and social logins (configurable)
+- Responsive React frontend with PWA support
+- Containerized (Docker) development & production-ready setup
 
 ## 🖥️ Platform Support
 
-### Web Application
-Access Imhotep Tasks from any modern browser at [Imhotep Tasks](https://imhoteptasks.pythonanywhere.com)
+- Web App (React + Django)
+- Desktop apps (Electron)
+- Progressive Web App (installable on supported browsers)
 
-### Desktop Applications
-Native desktop applications built with Electron:
-- 🪟 [Windows](https://github.com/Imhotep-Tech/imhotep_tasks/releases/download/1.0.0/Imhotep.Tasks.Setup.1.0.0.exe)
-- 🍎 [macOS](https://github.com/Imhotep-Tech/imhotep_tasks/releases/download/1.0.0/Imhotep.Tasks-1.0.0.dmg) 
-- 🐧 [Linux](https://github.com/Imhotep-Tech/imhotep_tasks/releases/download/1.0.0/imhotep-tasks_1.0.0_amd64.snap)
+## 🚀 Quick Start (Docker)
 
-### Mobile Applications
-- 📱 [Android APK](https://github.com/Imhotep-Tech/imhotep_tasks/releases/latest/download/imhotep-tasks.apk)
-- 📱 iOS: Use as PWA (Progressive Web App) by following [these instructions](https://imhoteptasks.pythonanywhere.com/download)
+The fastest way to run the full application is with Docker Compose. This will start the Django API, the React frontend, and a PostgreSQL database.
 
-All versions can be found on our [releases page](https://github.com/Imhotep-Tech/imhotep_tasks/releases).
+Prerequisites:
+- Docker
+- Docker Compose
 
-## 📦 Downloads
-
-For the latest releases and downloads:
-
-- **Web App**: [https://imhoteptasks.pythonanywhere.com](https://imhoteptasks.pythonanywhere.com)
-- **All Platforms**: Visit our [Downloads Page](https://imhoteptasks.pythonanywhere.com/download) for detailed installation instructions
-- **Release History**: Check our [Version History](https://imhoteptasks.pythonanywhere.com/version) for updates and changes
-
-## 🛠️ Tech Stack
-
-- **Frontend**: HTML, CSS (Tailwind CSS), JavaScript
-- **Backend**: Django (Python)
-- **Database**: Relational Database System
-- **PWA Features**: Service Workers, IndexedDB
-- **Desktop Apps**: Electron
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.8+
-- pip
-
-### Installation
+From the repository root run:
 
 ```bash
-# Clone the repository
-git clone https://github.com/Imhotep-Tech/imhotep_tasks.git
-cd imhotep_tasks
+docker compose up --build
+```
 
-# Create and activate virtual environment
+This will:
+- Build and run the Django backend (http://localhost:8000)
+- Build and run the React frontend (http://localhost:3000)
+- Start a PostgreSQL database (port 5432)
+
+To stop the stack:
+
+```bash
+docker compose down
+```
+
+View logs:
+
+```bash
+docker compose logs -f
+```
+
+Rebuild after dependency changes:
+
+```bash
+docker compose up --build
+```
+
+## 🔧 Environment (example)
+
+Create environment files for the services if your setup requires them. Example values (use secure values in production):
+
+# Backend (.env.backend)
+DEBUG=True
+SECRET_KEY='replace-with-secure-secret'
+DATABASE_NAME='imhotep_tasks_db'
+DATABASE_USER='imhotep_tasks_user'
+DATABASE_PASSWORD='imhotep_tasks_password'
+DATABASE_HOST='db'
+DATABASE_PORT=5432
+
+# Frontend (.env.frontend or use Vite .env)
+VITE_API_URL=http://localhost:8000
+
+Adjust your docker-compose.yml and service config to load these files as needed.
+
+## 📝 Development (manual)
+
+If you prefer to run services without Docker during development, follow the steps below.
+
+### Backend (Django)
+
+Prerequisites: Python 3.11+, pip, virtualenv
+
+```bash
+# from repository root
+cd backend/imhotep_tasks
 python -m venv venv
-source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-
-# Install dependencies
+source venv/bin/activate
 pip install -r requirements.txt
-
-# Apply migrations
+# create .env file or set env vars as described above
 python manage.py migrate
-
-# Run development server
+python manage.py createsuperuser  # optional
 python manage.py runserver
 ```
 
-Visit `http://localhost:8000` in your browser to access the application.
+The API will be available at http://localhost:8000
+
+### Frontend (React + Vite)
+
+Prerequisites: Node 18+/npm or pnpm
+
+```bash
+cd frontend/imhotep_tasks
+npm install
+# set VITE_API_URL in .env to http://localhost:8000
+npm run dev
+```
+
+The frontend dev server will be available at http://localhost:3000 (or the port Vite reports).
 
 ## 📱 Progressive Web App
 
-Imhotep Tasks is available as a Progressive Web App. When visiting the application in a supported browser, you'll be prompted to install it on your device for offline access. For detailed installation instructions, visit our [download page](https://imhoteptasks.pythonanywhere.com/download).
+The React frontend includes PWA support (service worker + manifest). When visiting the site in a supported browser you'll be able to install the app for offline access.
 
-## 🔮 Future Plans
+## 🔮 Production
 
-- Mobile apps for iOS and Android
-- Team collaboration features
-- Calendar integration
-- Advanced analytics and reporting
-- More customization options
+For production deploys use the Docker Compose stack with environment variables set for production (DEBUG=False, secure SECRET_KEY, proper database, allowed hosts). Optionally add a reverse proxy (Nginx) and TLS termination.
+
+## 🌐 Access Points
+
+| Service | URL |
+|--------:|:----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| Django Admin | http://localhost:8000/admin/ |
+| Database (Postgres) | localhost:5432 |
+
+## 🔧 Troubleshooting
+
+Port conflicts (common):
+
+```bash
+# check processes using ports
+sudo lsof -i :3000  # frontend
+sudo lsof -i :8000  # backend
+sudo lsof -i :5432  # database
+```
+
+Kill or reconfigure any processes that conflict with these ports.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to submit issues or pull requests.
-
-Please read our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy](SECURITY.md) before contributing to the project.
+Contributions are welcome. Please read `CODE_OF_CONDUCT.md` and `SECURITY.md` before submitting issues or pull requests.
 
 ## 📄 License
 
-Imhotep Tasks is licensed under the AGPL-3.0 License for non-commercial use and contributions. For commercial use, a separate license is required. See the [LICENSE](LICENSE) file for more information.
-
-## 🔒 Security
-
-We take security seriously. If you discover a security vulnerability, please follow the guidelines in our [Security Policy](SECURITY.md).
-
-## 👥 About Imhotep Tech
-
-[Imhotep Tech](https://imhoteptech.vercel.app) is dedicated to developing innovative software solutions that enhance productivity and simplify complex workflows.
+This project is available under the AGPL-3.0 License. See the `LICENSE` file for details.
 
 ---
 

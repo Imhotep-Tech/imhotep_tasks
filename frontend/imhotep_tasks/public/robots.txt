@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /forgot-password
+
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /verify-email/
+Disallow: /verify-email-change/
+Disallow: /auth/google/callback
+Disallow: /reset-password
+
+Sitemap: https://imhoteptasks.vercel.app/sitemap.xml
