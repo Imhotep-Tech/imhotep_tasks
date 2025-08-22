@@ -11,4 +11,4 @@ Disallow: /verify-email-change/
 Disallow: /auth/google/callback
 Disallow: /reset-password
 
-Sitemap: https://imhoteptasks.vercel.app/sitemap.xml
+Sitemap: https://imhotep-tasks.vercel.app/sitemap.xml

@@ -11,7 +11,7 @@ const electronReleases = {
 };
 const androidApk = "https://github.com/Imhotep-Tech/imhotep_tasks/releases/latest/download/imhotep-tasks.apk";
 const snapStore = "https://snapcraft.io/imhoteptasks";
-const webAppUrl = "https://imhoteptasks.vercel.app";
+const webAppUrl = "https://imhotep-tasks.vercel.app";
 
 export default function DownloadPage() {
   const navigate = useNavigate();
@@ -229,7 +229,7 @@ export default function DownloadPage() {
                 <div className="text-sm text-gray-600 mt-2 mb-4 bg-gray-50 rounded-lg p-3">
                   <p className="font-medium mb-2">Installation Steps:</p>
                   <ol className="list-decimal pl-5 space-y-2">
-                    <li>Open <a href={webAppUrl} className="text-blue-600">imhoteptasks.vercel.app</a> in Safari</li>
+                    <li>Open <a href={webAppUrl} className="text-blue-600">imhotep-tasks.vercel.app</a> in Safari</li>
                     <li>Tap the Share icon <svg className="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M13 4v2.67l-1.33.67 1.33.67V10H7V8.67l1.33-.67L7 7.33V4h6zm-2 9a1 1 0 100-2 1 1 0 000 2z"/></svg> at the bottom of the screen</li>
                     <li>Scroll down and tap "Add to Home Screen"</li>
                     <li>Tap "Add" in the upper right corner</li>

@@ -42,7 +42,7 @@ if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
 else:
     SITE_DOMAIN = 'https://imhoteptasks.pythonanywhere.com' 
-    frontend_url = "https://imhoteptasks.vercel.app"
+    frontend_url = "https://imhotep-tasks.vercel.app"
     # Security settings - keep these as they are
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -243,7 +243,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://imhoteptasks.vercel.app",
+    "https://imhotep-tasks.vercel.app",
     "https://imhoteptasks.pythonanywhere.com",
 ]
 
@@ -251,7 +251,7 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://imhoteptasks.vercel.app",
+    "https://imhotep-tasks.vercel.app",
     "https://imhoteptasks.pythonanywhere.com",
 ]
 
