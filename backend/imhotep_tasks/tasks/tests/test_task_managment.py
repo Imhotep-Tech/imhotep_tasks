@@ -8,7 +8,7 @@ from datetime import date, timedelta
 from django.utils import timezone
 from tasks.models import Tasks
 
-from tasks.task_managment import (
+from backend.imhotep_tasks.main.task_managment import (
     add_task, update_task, delete_task, task_complete
 )
 

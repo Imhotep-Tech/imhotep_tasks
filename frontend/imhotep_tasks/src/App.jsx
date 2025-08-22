@@ -6,7 +6,7 @@ import Login from './components/auth/Login'
 import Register from './components/auth/Register'
 import ForgotPassword from './components/auth/ForgotPassword'
 import ResetPassword from './components/auth/ResetPassword'
-import Dashboard from './components/main/Dashboard'
+import TodayTasks from './components/main/TodayTasks'
 import LandingPage from './components/main/LandingPage'
 import EmailVerification from './components/auth/EmailVerification'
 import GoogleCallback from './components/auth/GoogleCallback'
@@ -14,6 +14,8 @@ import Profile from './components/profile/Profile'
 import EmailChangeVerification from './components/profile/EmailChangeVerification'
 import PublicPortfolio from './components/main/PublicPortfolio'
 import PromptExamples from './components/main/PromptExamples'
+import Next7DaysTasks from './components/main/Next7DaysTasks'
+import AllTasks from './components/main/AllTasks'
 
 function App() {
   return (
@@ -60,10 +62,18 @@ function App() {
             <Route path="/verify-email/:uid/:token" element={<EmailVerification />} />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route 
-              path="/dashboard" 
+              path="/today-tasks" 
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <TodayTasks />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/next-week-tasks" 
+              element={
+                <ProtectedRoute>
+                  <Next7DaysTasks />
                 </ProtectedRoute>
               } 
             />
@@ -88,6 +98,14 @@ function App() {
               element={<EmailChangeVerification />} 
             />
             <Route path="/u/:username" element={<PublicPortfolio />} />
+            <Route 
+              path="/all-tasks" 
+              element={
+                <ProtectedRoute>
+                  <AllTasks />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

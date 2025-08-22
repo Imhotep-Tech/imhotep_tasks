@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import api from '../config/api';
 import { API_URL } from '../config/api';
 
 const AuthContext = createContext();
@@ -7,6 +8,8 @@ const AuthContext = createContext();
 // Configure axios defaults
 axios.defaults.baseURL = API_URL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
+api.defaults.baseURL = API_URL;
+api.defaults.headers.common['Content-Type'] = 'application/json';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -26,8 +29,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (accessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      // set Authorization on the configured api instance too
+      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
     } else {
       delete axios.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['Authorization'];
     }
   }, [accessToken]);
 
@@ -38,7 +44,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error('No refresh token available');
       }
       
-      const response = await axios.post('/api/auth/token/refresh/', {
+      // use the configured api instance for requests to ensure baseURL + headers
+      const response = await api.post('/api/auth/token/refresh/', {
         refresh: refreshToken,
       });
       
@@ -63,7 +70,8 @@ export const AuthProvider = ({ children }) => {
 
   // Axios interceptor to handle token refresh
   useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
+    // interceptor for global axios
+    const interceptorA = axios.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
@@ -84,8 +92,31 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
+    // interceptor for configured api instance
+    const interceptorB = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        
+        if (error.response?.status === 401 && !originalRequest._retry && refreshToken) {
+          originalRequest._retry = true;
+          
+          try {
+            const newAccessToken = await refreshAccessToken();
+            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+            return api(originalRequest);
+          } catch (refreshError) {
+            return Promise.reject(error);
+          }
+        }
+        
+        return Promise.reject(error);
+      }
+    );
+
     return () => {
-      axios.interceptors.response.eject(interceptor);
+      axios.interceptors.response.eject(interceptorA);
+      api.interceptors.response.eject(interceptorB);
     };
   }, [refreshToken]);
 
@@ -94,7 +125,8 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       if (accessToken) {
         try {
-          const response = await axios.get('/api/user-data/');
+          // use configured api to ensure Authorization header is sent
+          const response = await api.get('/api/user-data/');
           setUser(response.data);
         } catch (error) {
           console.error('Auth check failed:', error);
@@ -102,7 +134,7 @@ export const AuthProvider = ({ children }) => {
           if (refreshToken) {
             try {
               await refreshAccessToken();
-              const response = await axios.get('/api/user-data/');
+              const response = await api.get('/api/user-data/');
               setUser(response.data);
             } catch (refreshError) {
               console.error('Token refresh failed during auth check:', refreshError);
@@ -138,7 +170,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Call logout endpoint to blacklist the refresh token
       if (refreshToken) {
-        await axios.post('/api/auth/logout/', {
+        await api.post('/api/auth/logout/', {
           refresh: refreshToken,
         });
       }
@@ -154,6 +186,7 @@ export const AuthProvider = ({ children }) => {
     setRefreshToken(null);
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
   };
 
   const value = {
