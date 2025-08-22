@@ -14,6 +14,8 @@ import Profile from './components/profile/Profile'
 import EmailChangeVerification from './components/profile/EmailChangeVerification'
 import PublicPortfolio from './components/main/PublicPortfolio'
 import PromptExamples from './components/main/PromptExamples'
+import Next7DaysTasks from './components/main/Next7DaysTasks'
+import AllTasks from './components/main/AllTasks'
 
 function App() {
   return (
@@ -68,6 +70,14 @@ function App() {
               } 
             />
             <Route 
+              path="/next-week-tasks" 
+              element={
+                <ProtectedRoute>
+                  <Next7DaysTasks />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/profile" 
               element={
                 <ProtectedRoute>
@@ -88,6 +98,14 @@ function App() {
               element={<EmailChangeVerification />} 
             />
             <Route path="/u/:username" element={<PublicPortfolio />} />
+            <Route 
+              path="/all-tasks" 
+              element={
+                <ProtectedRoute>
+                  <AllTasks />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>

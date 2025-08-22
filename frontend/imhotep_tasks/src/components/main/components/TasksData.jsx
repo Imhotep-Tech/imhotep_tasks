@@ -4,6 +4,21 @@ import TaskDeleteButton from './TaskDeleteButton';
 import UpdateTask from './UpdateTask';
 import DetailsModal from './DetailsModal';
 
+// Helper to get due date color class
+const getDueDateColor = (dueDateIso) => {
+  if (!dueDateIso) return "text-gray-500";
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const dueDate = new Date(dueDateIso);
+  dueDate.setHours(0,0,0,0);
+
+  const diffDays = Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return "text-red-600 font-semibold"; // overdue
+  if (diffDays === 0) return "text-blue-600 font-semibold"; // today
+  if (diffDays === 1) return "text-purple-600 font-semibold"; // tomorrow
+  return "text-gray-500";
+};
+
 const formatDate = (iso) => {
   if (!iso) return "";
   try {
@@ -58,7 +73,7 @@ const TaskRow = ({
         </div>
       </div>
       <div className="flex items-center">
-        <span className="text-sm text-gray-500 mr-4">
+        <span className={`text-sm mr-4 ${getDueDateColor(task.due_date)}`}>
           {task.due_date ? formatDate(task.due_date) : ""}
         </span>
         <div className="flex space-x-2">
