@@ -62,4 +62,3 @@ urlpatterns = [
     path('apply_routines/', routine_managment.apply_routines_view, name='apply_routines'),
 
 ]
-

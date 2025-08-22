@@ -74,7 +74,7 @@ const GoogleCallback = () => {
           setStatus('success');
           setIsNewUser(result.isNewUser);
           if (result.isNewUser) {
-            setMessage('Welcome to Pharaohfolio! Your account has been created successfully.');
+            setMessage('Welcome to Imhotep Tasks! Your account has been created successfully.');
           } else {
             setMessage('Login successful! Redirecting to dashboard...');
           }
@@ -205,7 +205,7 @@ const GoogleCallback = () => {
       case 'processing':
         return '🔐 Securing your Google connection 🔐';
       case 'success':
-        return isNewUser ? '🎉 Your Tasks journey begins now! 🎉' : 'Ready to create amazing recipes!';
+        return isNewUser ? '🎉 Your Tasks journey begins now! 🎉' : 'Ready to create amazing Tasks!';
       case 'error':
         return '💡 Try logging in with Google again 💡';
       default:

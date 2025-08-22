@@ -25,6 +25,7 @@ function Footer() {
             <div className="flex space-x-6 text-sm">
               <a href="https://imhoteptech.vercel.app/" className="text-blue-600 hover:text-blue-800 transition-colors" target="_blank" rel="noopener noreferrer">Imhotep Tech</a>
               <a href="https://github.com/Imhotep-Tech/imhotep_tasks" className="text-blue-600 hover:text-blue-800 transition-colors" target="_blank" rel="noopener noreferrer">Source Code</a>
+              <Link to="/download" className="text-blue-600 hover:text-blue-800 transition-colors">Download</Link>
             </div>
             <div className="text-sm text-gray-500">
               <span className="hidden sm:inline">|</span>
