@@ -6,7 +6,7 @@
   "background_color": "#ffffff",
   "display": "standalone",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/login",
   "orientation": "portrait",
   "categories": ["productivity", "utilities", "task management"],
   "lang": "en",
