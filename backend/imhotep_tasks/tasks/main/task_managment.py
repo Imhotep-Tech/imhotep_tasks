@@ -89,6 +89,7 @@ def all_tasks(request):
 @permission_classes([IsAuthenticated])
 def next_week_tasks(request):
     today = date.today()
+    apply_routines(request, today)
     week_later = today + timedelta(days=7)
 
     user_tasks_qs = Tasks.objects.filter(
@@ -127,8 +128,9 @@ def next_week_tasks(request):
 @permission_classes([IsAuthenticated])
 def add_task(request):
     try:
-        url_call = request.data.get("url_call", "all")
         today = timezone.now().date()
+
+        url_call = request.data.get("url_call", "all")
         task_title = request.data.get("task_title")
         task_details = request.data.get("task_details")
         due_date_raw = request.data.get("due_date")
