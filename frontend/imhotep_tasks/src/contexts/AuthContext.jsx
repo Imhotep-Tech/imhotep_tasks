@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
-import api from '../config/api';
 import { API_URL } from '../config/api';
 
 const AuthContext = createContext();
@@ -8,8 +7,6 @@ const AuthContext = createContext();
 // Configure axios defaults
 axios.defaults.baseURL = API_URL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
-api.defaults.baseURL = API_URL;
-api.defaults.headers.common['Content-Type'] = 'application/json';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -19,8 +16,14 @@ export const useAuth = () => {
   return context;
 };
 
+let refreshPromise = null;
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token'));
   const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refresh_token'));
@@ -29,94 +32,88 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (accessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-      // set Authorization on the configured api instance too
-      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
     } else {
       delete axios.defaults.headers.common['Authorization'];
-      delete api.defaults.headers.common['Authorization'];
     }
   }, [accessToken]);
 
   // Function to refresh the access token
   const refreshAccessToken = async () => {
-    try {
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-      
-      // use the configured api instance for requests to ensure baseURL + headers
-      const response = await api.post('/api/auth/token/refresh/', {
-        refresh: refreshToken,
+    if (refreshPromise) return refreshPromise; // return ongoing promise 
+    if (!refreshToken) throw new Error('No refresh token available');
+
+    refreshPromise = axios
+      .post('/api/auth/token/refresh/', { refresh: refreshToken })
+      .then((response) => {
+        const newAccessToken = response.data.access;
+        const newRefreshToken = response.data.refresh;
+
+        if (newAccessToken) {
+          localStorage.setItem('access_token', newAccessToken);
+          setAccessToken(newAccessToken);
+        }
+        if (newRefreshToken) {
+          localStorage.setItem('refresh_token', newRefreshToken);
+          setRefreshToken(newRefreshToken);
+        }
+        return newAccessToken;
+      })
+      .catch((error) => {
+        console.error('Token refresh failed:', error);
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        setAccessToken(null);
+        setRefreshToken(null);
+        setUser(null);
+        throw error;
+      })
+      .finally(() => {
+        refreshPromise = null; // reset 
       });
-      
-      const newAccessToken = response.data.access;
-      const newRefreshToken = response.data.refresh || refreshToken; // Some implementations rotate refresh tokens
-      
-      localStorage.setItem('access_token', newAccessToken);
-      if (response.data.refresh) {
-        localStorage.setItem('refresh_token', newRefreshToken);
-        setRefreshToken(newRefreshToken);
-      }
-      setAccessToken(newAccessToken);
-      
-      return newAccessToken;
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      // If refresh fails, logout the user
-      logout();
-      throw error;
-    }
+
+    return refreshPromise;
   };
 
   // Axios interceptor to handle token refresh
   useEffect(() => {
-    // interceptor for global axios
-    const interceptorA = axios.interceptors.response.use(
+    const interceptor = axios.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-        
-        if (error.response?.status === 401 && !originalRequest._retry && refreshToken) {
+
+        // Do not try to refresh for auth endpoints to avoid loops
+        const url = originalRequest?.url || '';
+        const isAuthEndpoint =
+          url.includes('/api/auth/token/refresh/') ||
+          url.includes('/api/auth/login/') ||
+          url.includes('/api/auth/logout/') ||
+          url.includes('/api/auth/google/');
+
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          refreshToken &&
+          !isAuthEndpoint
+        ) {
           originalRequest._retry = true;
-          
+
           try {
             const newAccessToken = await refreshAccessToken();
+            originalRequest.headers = originalRequest.headers || {};
             originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
             return axios(originalRequest);
           } catch (refreshError) {
-            return Promise.reject(error);
+            return Promise.reject(refreshError);
           }
         }
-        
-        return Promise.reject(error);
-      }
-    );
 
-    // interceptor for configured api instance
-    const interceptorB = api.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-        
-        if (error.response?.status === 401 && !originalRequest._retry && refreshToken) {
-          originalRequest._retry = true;
-          
-          try {
-            const newAccessToken = await refreshAccessToken();
-            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-            return api(originalRequest);
-          } catch (refreshError) {
-            return Promise.reject(error);
-          }
-        }
-        
         return Promise.reject(error);
       }
     );
 
     return () => {
-      axios.interceptors.response.eject(interceptorA);
-      api.interceptors.response.eject(interceptorB);
+      axios.interceptors.response.eject(interceptor);
     };
   }, [refreshToken]);
 
@@ -125,17 +122,17 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       if (accessToken) {
         try {
-          // use configured api to ensure Authorization header is sent
-          const response = await api.get('/api/user-data/');
+          const response = await axios.get('/api/user-data/');
           setUser(response.data);
+          localStorage.setItem('user', JSON.stringify(response.data));
         } catch (error) {
           console.error('Auth check failed:', error);
-          // Try to refresh token if auth check fails
           if (refreshToken) {
             try {
               await refreshAccessToken();
-              const response = await api.get('/api/user-data/');
+              const response = await axios.get('/api/user-data/');
               setUser(response.data);
+              localStorage.setItem('user', JSON.stringify(response.data));
             } catch (refreshError) {
               console.error('Token refresh failed during auth check:', refreshError);
               logout();
@@ -151,12 +148,10 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, [accessToken]);
 
-  const login = (loginData) => {
-    const { access, refresh, user: userData } = loginData;
-    
-    // Store JWT tokens
+  const login = ({ access, refresh, user: userData }) => {
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
+    localStorage.setItem('user', JSON.stringify(userData));
     setAccessToken(access);
     setRefreshToken(refresh);
     setUser(userData);
@@ -164,29 +159,25 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = (userData) => {
     setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = async () => {
     try {
-      // Call logout endpoint to blacklist the refresh token
       if (refreshToken) {
-        await api.post('/api/auth/logout/', {
-          refresh: refreshToken,
-        });
+        await axios.post('/api/auth/logout/', { refresh: refreshToken });
       }
     } catch (error) {
       console.error('Logout request failed:', error);
-      // Continue with local logout even if request fails
     }
-    
-    // Clear local storage and state
+
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
     setAccessToken(null);
     setRefreshToken(null);
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
-    delete api.defaults.headers.common['Authorization'];
   };
 
   const value = {
@@ -198,9 +189,5 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
