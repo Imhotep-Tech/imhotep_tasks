@@ -34,7 +34,7 @@ const TodayTasks = () => {
       setCompletedCount(data.completed_tasks_count ?? 0);
       setPendingCount(data.pending_tasks ?? 0);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching tasks:', err);
       setError('Failed to load tasks.');
     } finally {
       setLoading(false);
