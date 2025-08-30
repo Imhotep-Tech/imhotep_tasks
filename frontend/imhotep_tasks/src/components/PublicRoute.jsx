@@ -32,7 +32,7 @@ const PublicRoute = ({ children }) => {
                 Welcome!
               </h2>
               <p className="text-gray-600 font-medium mb-6 text-center">
-                Your AI-powered portfolio is starting up...
+                Imhotep Tasks is starting up...
               </p>
 
               <div className="flex items-center justify-center space-x-2">
