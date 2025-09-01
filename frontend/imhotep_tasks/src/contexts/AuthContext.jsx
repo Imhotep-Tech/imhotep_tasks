@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config/api';
+import api from '../config/api'; // Import the configured axios instance
 
 const AuthContext = createContext();
 
@@ -28,19 +29,25 @@ export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(localStorage.getItem('access_token'));
   const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refresh_token'));
 
-  // Set auth token in axios headers
+  // Set auth token in axios headers (on both global and configured instances)
   useEffect(() => {
     if (accessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`; // Set on configured instance
     } else {
       delete axios.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['Authorization']; // Remove from configured instance
     }
   }, [accessToken]);
 
   // Function to refresh the access token
   const refreshAccessToken = async () => {
-    if (refreshPromise) return refreshPromise; // return ongoing promise 
-    if (!refreshToken) throw new Error('No refresh token available');
+    if (refreshPromise) {
+      return refreshPromise;
+    }
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
 
     refreshPromise = axios
       .post('/api/auth/token/refresh/', { refresh: refreshToken })
@@ -59,7 +66,7 @@ export const AuthProvider = ({ children }) => {
         return newAccessToken;
       })
       .catch((error) => {
-        console.error('Token refresh failed:', error);
+        console.error('Token refresh failed:', error); // Existing log
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
@@ -75,7 +82,7 @@ export const AuthProvider = ({ children }) => {
     return refreshPromise;
   };
 
-  // Axios interceptor to handle token refresh
+  // Axios interceptor to handle token refresh (on both global and configured instances)
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,
@@ -112,10 +119,72 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
+    const apiInterceptor = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+
+        // Do not try to refresh for auth endpoints to avoid loops
+        const url = originalRequest?.url || '';
+        const isAuthEndpoint =
+          url.includes('/api/auth/token/refresh/') ||
+          url.includes('/api/auth/login/') ||
+          url.includes('/api/auth/logout/') ||
+          url.includes('/api/auth/google/');
+
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          refreshToken &&
+          !isAuthEndpoint
+        ) {
+          originalRequest._retry = true;
+
+          try {
+            const newAccessToken = await refreshAccessToken();
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+            return api(originalRequest);
+          } catch (refreshError) {
+            return Promise.reject(refreshError);
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
+
     return () => {
       axios.interceptors.response.eject(interceptor);
+      api.interceptors.response.eject(apiInterceptor);
     };
   }, [refreshToken]);
+
+  // Add request interceptor to log headers (on both global and configured instances)
+  useEffect(() => {
+    const requestInterceptor = axios.interceptors.request.use(
+      (config) => {
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    const apiRequestInterceptor = api.interceptors.request.use(
+      (config) => {
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(requestInterceptor);
+      api.interceptors.request.eject(apiRequestInterceptor);
+    };
+  }, []);
 
   // Check if user is authenticated on app load
   useEffect(() => {
