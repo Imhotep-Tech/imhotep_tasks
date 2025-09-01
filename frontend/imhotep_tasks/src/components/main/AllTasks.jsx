@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../config/api';
 import Footer from '../common/Footer';
+import Pagination from '../common/Pagination';
 import AddTask from './components/AddTask';
 import TasksInfo from './components/TasksInfo';
 import TasksData from './components/TasksData';
@@ -117,26 +118,13 @@ const AllTasks = () => {
             onUpdateTask={handleUpdate}
           />
 
+          <Pagination
+            currentPage={page}
+            totalPages={numPages}
+            totalItems={totalTasks}
+            onPageChange={changePage}
+          />
         </div>
-
-        {numPages > 1 && (
-          <div className="px-4 py-5 bg-gray-50 border-t border-gray-200">
-            <nav className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <button onClick={() => changePage(page - 1)} disabled={page <= 1} className="px-3 py-2 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50">
-                  Previous
-                </button>
-                <span className="text-sm text-gray-700">Page {page} of {numPages}</span>
-                <button onClick={() => changePage(page + 1)} disabled={page >= numPages} className="px-3 py-2 border rounded-md bg-white hover:bg-gray-50 disabled:opacity-50">
-                  Next
-                </button>
-              </div>
-              <p className="mt-3 text-sm text-gray-500">
-                Showing page {page} — {totalTasks} tasks
-              </p>
-            </nav>
-          </div>
-        )}
 
         {showAdd && <AddTask onClose={() => setShowAdd(false)} onCreate={handleCreate} url_call="all" />}
       </div>
