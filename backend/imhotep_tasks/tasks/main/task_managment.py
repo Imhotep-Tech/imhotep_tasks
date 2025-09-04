@@ -155,11 +155,10 @@ def add_task(request):
             "pending_tasks": pending
         }, status=status.HTTP_201_CREATED)
     
-    except Exception as e:
+    except Exception:
         return Response(
             {
                 'error': 'An error occurred',
-                'details': str(e),
                 'success': False
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -195,11 +194,10 @@ def update_task(request, task_id):
             "pending_tasks": pending
         }, status=status.HTTP_200_OK)
     
-    except Exception as e:
+    except Exception:
         return Response(
             {
                 'error': 'An error occurred',
-                'details': str(e),
                 'success': False
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -227,11 +225,10 @@ def delete_task(request, task_id):
             "pending_tasks": pending
         }, status=status.HTTP_200_OK)
 
-    except Exception as e:
+    except Exception:
             return Response(
                 {
                     'error': 'An error occurred',
-                    'details': str(e),
                     'success': False
                 }, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -264,11 +261,10 @@ def task_complete(request, task_id):
             "pending_tasks": pending
         }, status=status.HTTP_200_OK)
 
-    except Exception as e:
+    except Exception:
         return Response(
             {
                 'error': 'An error occurred',
-                'details': str(e),
                 'success': False
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
