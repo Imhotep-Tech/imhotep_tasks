@@ -43,8 +43,11 @@ class Routines(models.Model):
     # the user that created this task
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    # the dates that this routine will be added on
-    routines_dates = models.CharField(max_length=200, default="all_days")
+    # the dates the type to this routine
+    routine_type = models.CharField(max_length=200,default='weekly')
+
+    # the dates that this routine will be added
+    routines_dates = models.JSONField(default=list)
 
     #to set the current status of the routine if active or not
     status = models.BooleanField(default=True)
