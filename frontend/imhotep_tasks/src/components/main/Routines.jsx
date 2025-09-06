@@ -4,23 +4,105 @@ import axios from '../../config/api';
 import Footer from '../common/Footer';
 
 const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
-    const { user } = useAuth();
+  const { user } = useAuth();
   const [title, setTitle] = useState(routine?.routines_title || '');
-  const [days, setDays] = useState(routine?.routines_dates?.split(' ') || []);
+  const [routineType, setRoutineType] = useState(routine?.routine_type || 'weekly');
+  const [days, setDays] = useState(routine?.routines_dates ? (Array.isArray(routine.routines_dates) ? routine.routines_dates : routine.routines_dates.split(' ')) : []);
+  const [yearlyInput, setYearlyInput] = useState(''); // New state for yearly input display
+  const [yearlyError, setYearlyError] = useState(''); // New state for yearly validation errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const allDays = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const allMonthlyDays = Array.from({ length: 31 }, (_, i) => i + 1); // New: For monthly (1-31)
 
+  // Initialize yearly input when editing existing routine
+  useEffect(() => {
+    if (routine && routine.routine_type === 'yearly' && routine.routines_dates) {
+      const dates = Array.isArray(routine.routines_dates) ? routine.routines_dates : routine.routines_dates.split(' ');
+      setYearlyInput(dates.join(', '));
+    }
+  }, [routine]);
+
+  // Updated: Handle day toggle for weekly/monthly (as arrays)
   const handleDayToggle = (day) => {
     setDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
     );
   };
 
+  // Updated: Handle yearly input change with comprehensive validation
+  const handleYearlyChange = (value) => {
+    // Update the input display state
+    setYearlyInput(value);
+    setYearlyError(''); // Clear previous errors
+    
+    // If input is empty, clear the days array
+    if (!value.trim()) {
+      setDays([]);
+      return;
+    }
+    
+    const parts = value.split(',').map(s => s.trim()).filter(s => s); // Remove empty parts
+    const validDates = [];
+    const errors = [];
+    
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      
+      // Check if format matches MM-DD or M-D (1-2 digits for month and day)
+      if (!/^\d{1,2}-\d{1,2}$/.test(part)) {
+        errors.push(`Date ${i + 1} "${part}" is invalid. Use MM-DD format (e.g., 12-25)`);
+        continue;
+      }
+      
+      const [monthStr, dayStr] = part.split('-');
+      const month = parseInt(monthStr, 10);
+      const day = parseInt(dayStr, 10);
+      
+      // Validate month (1-12)
+      if (isNaN(month) || month < 1 || month > 12) {
+        errors.push(`Date ${i + 1} "${part}" has invalid month. Month must be 1-12`);
+        continue;
+      }
+      
+      // Validate day based on month
+      let maxDay;
+      let monthName;
+      if ([1, 3, 5, 7, 8, 10, 12].includes(month)) {
+        maxDay = 31;
+        monthName = ['', 'January', 'March', 'May', 'July', 'August', 'October', 'December'][[1, 3, 5, 7, 8, 10, 12].indexOf(month) + 1];
+      } else if ([4, 6, 9, 11].includes(month)) {
+        maxDay = 30;
+        monthName = ['April', 'June', 'September', 'November'][[4, 6, 9, 11].indexOf(month)];
+      } else {
+        maxDay = 29;
+        monthName = 'February';
+      }
+      
+      if (isNaN(day) || day < 1 || day > maxDay) {
+        errors.push(`Date ${i + 1} "${part}" has invalid day. ${monthName} has maximum ${maxDay} days`);
+        continue;
+      }
+      
+      // Pad to 2 digits and add to valid dates
+      const paddedMonth = month.toString().padStart(2, '0');
+      const paddedDay = day.toString().padStart(2, '0');
+      validDates.push(`${paddedMonth}-${paddedDay}`);
+    }
+    
+    // Set error message if there are validation errors
+    if (errors.length > 0) {
+      setYearlyError(errors.join('. '));
+    }
+    
+    setDays(validDates);
+  };
+
+  // Updated: Quick select for weekly
   const handleQuickSelect = (type) => {
     if (type === 'all') setDays([...allDays]);
-    else if (type === 'weekdays') setDays(allDays.slice(0,5));
+    else if (type === 'weekdays') setDays(allDays.slice(0, 5));
     else if (type === 'weekends') setDays(allDays.slice(5));
     else setDays([]);
   };
@@ -29,10 +111,36 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
+    // New: Validation
+    if (!title.trim()) {
+      setError('Routine title is required.');
+      setLoading(false);
+      return;
+    }
+    if (!routineType) {
+      setError('Routine type is required.');
+      setLoading(false);
+      return;
+    }
+    if (days.length === 0) {
+      setError('At least one date must be selected.');
+      setLoading(false);
+      return;
+    }
+    
+    // Check for yearly validation errors
+    if (routineType === 'yearly' && yearlyError) {
+      setError('Please fix the date format errors before saving.');
+      setLoading(false);
+      return;
+    }
+    
     try {
       const payload = {
         routines_title: title,
-        routines_dates: days.join(' ')
+        routine_type: routineType,
+        routines_dates: days
       };
       let res;
       if (routine) {
@@ -67,27 +175,95 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
               required
             />
           </div>
+          {/* New: Routine Type Tabs */}
           <div>
-            <label className="text-sm font-medium text-gray-700">Frequency</label>
-            <div className="flex gap-2 mb-2">
-              <button type="button" onClick={() => handleQuickSelect('all')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">All Days</button>
-              <button type="button" onClick={() => handleQuickSelect('weekdays')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">Weekdays</button>
-              <button type="button" onClick={() => handleQuickSelect('weekends')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">Weekends</button>
-              <button type="button" onClick={() => handleQuickSelect('none')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">Clear</button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {allDays.map((day) => (
-                <label key={day} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={days.includes(day)}
-                    onChange={() => handleDayToggle(day)}
-                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 capitalize">{day}</span>
-                </label>
+            <label className="text-sm font-medium text-gray-700">Routine Type *</label>
+            <div className="flex mt-1 border-b">
+              {['weekly', 'monthly', 'yearly'].map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setRoutineType(type);
+                    setDays([]); // Reset dates on type change
+                    setYearlyInput(''); // Reset yearly input on type change
+                    setYearlyError(''); // Reset yearly error on type change
+                  }}
+                  className={`px-4 py-2 text-sm font-medium capitalize ${
+                    routineType === type
+                      ? 'border-b-2 border-indigo-500 text-indigo-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {type}
+                </button>
               ))}
             </div>
+          </div>
+          {/* Updated: Conditional Dates Input */}
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              {routineType === 'weekly' ? 'Days of the Week' : routineType === 'monthly' ? 'Days of the Month (1-31)' : 'Specific Dates (MM-DD format, comma-separated)'}
+            </label>
+            {routineType === 'weekly' && (
+              <>
+                <div className="flex gap-2 mb-2">
+                  <button type="button" onClick={() => handleQuickSelect('all')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">All Days</button>
+                  <button type="button" onClick={() => handleQuickSelect('weekdays')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">Weekdays</button>
+                  <button type="button" onClick={() => handleQuickSelect('weekends')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">Weekends</button>
+                  <button type="button" onClick={() => handleQuickSelect('none')} className="px-2 py-1 text-xs bg-gray-100 rounded hover:bg-gray-200">Clear</button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {allDays.map((day) => (
+                    <label key={day} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={days.includes(day)}
+                        onChange={() => handleDayToggle(day)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 capitalize">{day}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+            {routineType === 'monthly' && (
+              <div className="grid grid-cols-5 gap-2 max-h-32 overflow-y-auto">
+                {allMonthlyDays.map((day) => (
+                  <label key={day} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={days.includes(day.toString())}
+                      onChange={() => handleDayToggle(day.toString())}
+                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span className="ml-1 text-xs text-gray-700">{day}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            {routineType === 'yearly' && (
+              <>
+                <input
+                  type="text"
+                  placeholder="e.g., 12-25,01-01,06-15 (MM-DD format, comma-separated)"
+                  value={yearlyInput}
+                  onChange={(e) => handleYearlyChange(e.target.value)}
+                  className={`mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    yearlyError ? 'border-red-500 focus:ring-red-400' : 'focus:ring-indigo-400'
+                  }`}
+                />
+                {yearlyError && (
+                  <div className="mt-1 text-sm text-red-600">
+                    {yearlyError}
+                  </div>
+                )}
+                <div className="mt-1 text-xs text-gray-500">
+                  Format: MM-DD (month-day). Examples: 12-25 (Christmas), 01-01 (New Year), 06-15 (June 15th)
+                </div>
+              </>
+            )}
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
           <div className="flex items-center justify-end gap-2 pt-2">
