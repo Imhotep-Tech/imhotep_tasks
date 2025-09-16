@@ -1,0 +1,47 @@
+name: imhoteptasks
+version: '1.0.0'
+summary: Task management app
+description: |
+  Imhotep Tasks helps you organize, prioritize, and track your tasks with an easy-to-use interface. Stay productive and never miss a deadline.
+
+grade: stable
+confinement: strict
+
+base: core22
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+
+apps:
+  imhoteptasks:
+    command: imhotep-tasks
+    extensions: [gnome]
+    plugs:
+      - home
+      - network
+      - network-status
+
+parts:
+  imhotep-tasks:
+    plugin: dump
+    source: .
+    stage-packages:
+      - libnss3-dev
+      - libatk-bridge2.0-dev
+      - libdrm2
+      - libxcomposite1
+      - libxdamage1
+      - libxrandr2
+      - libgbm1
+      - libxss1
+      - libasound2
+
+license: AGPL-3.0
+source-code: https://github.com/Imhotep-Tech/imhotep_tasks
+website: https://imhotep-tasks.vercel.app
+contact: imhoteptech@outlook.com
+
+# Age rating (content rating for Snap)
+content:
+  - rating: mild
+    description: Suitable for all ages

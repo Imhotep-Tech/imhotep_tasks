@@ -20,6 +20,7 @@ import OfflineIndicator from './components/pwa/OfflineIndicator'
 import UpdatePrompt from './components/pwa/UpdatePrompt'
 import DownloadPage from './components/main/DownloadPage'
 import { useEffect } from 'react';
+import DesktopAuthHandler from './desktop/DesktopAuthHandler'
 
 function App() {
   useEffect(() => {
@@ -33,6 +34,7 @@ function App() {
       <OfflineIndicator />
       <Router>
         <div>
+          <DesktopAuthHandler />
           <Routes>
               <Route 
                 path="/" 

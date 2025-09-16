@@ -1,12 +1,24 @@
 {
   "name": "imhotep_tasks",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.0.0",
+  "description": "Imhotep Tasks desktop app wrapper for the React UI",
+  "author": "Imhotep Tech",
+  "license": "AGPL-3.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron": "cross-env APP_DEV_URL=http://localhost:3000 electron .",
+    "electron:dev": "concurrently -k \"vite\" \"npm:electron\"",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:all": "electron-builder -mwl --linux AppImage snap flatpak",
+    "postinstall": "electron-builder install-app-deps",
+    "test": "playwright test",
+    "gen:icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
     "@codemirror/basic-setup": "^0.20.0",
@@ -21,11 +33,16 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "@playwright/test": "^1.47.2",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^30.0.9",
+    "electron-builder": "^25.1.8",
     "eslint": "^9.30.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -33,5 +50,64 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "vite": "^7.0.4"
+  },
+  "build": {
+    "appId": "com.imhotep.tasks",
+    "productName": "ImhotepTasks",
+    "icon": "build/icon.png",
+    "protocols": [
+      { "name": "Imhotep Tasks", "schemes": ["imhotep-tasks"] }
+    ],
+    "files": [
+      "dist/**/*",
+      "public/**/*",
+      "electron/**/*",
+      "build/**/*"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "linux": {
+      "category": "Utility",
+      "icon": "build/icons",
+      "target": [
+        "AppImage",
+        "snap",
+        "flatpak"
+      ],
+      "desktop": {
+        "MimeType": "x-scheme-handler/imhotep-tasks;",
+        "Icon": "com.imhotep.tasks"
+      }
+    },
+    "flatpak": {
+      "runtime": "org.freedesktop.Platform",
+      "runtimeVersion": "23.08",
+      "sdk": "org.freedesktop.Sdk",
+      "base": "org.electronjs.Electron2.BaseApp",
+      "baseVersion": "23.08",
+      "finishArgs": [
+        "--share=network",
+        "--socket=x11",
+        "--socket=wayland",
+        "--device=dri",
+        "--filesystem=home"
+      ]
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/favicon.ico",
+      "protocols": [
+        { "name": "Imhotep Tasks", "schemes": ["imhotep-tasks"] }
+      ]
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/favicon.icns",
+      "protocols": [
+        { "name": "Imhotep Tasks", "schemes": ["imhotep-tasks"] }
+      ]
+    }
   }
 }

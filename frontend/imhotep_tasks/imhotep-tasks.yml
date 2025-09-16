@@ -1,0 +1,53 @@
+app-id: com.imhoteptech.imhoteptasks
+runtime: org.freedesktop.Platform
+runtime-version: '22.08'
+sdk: org.freedesktop.Sdk
+command: imhotep-tasks
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=home
+
+modules:
+  - name: imhotep-tasks
+    buildsystem: simple
+    build-commands:
+      - cp -r . /app/
+      - chmod +x /app/imhotep-tasks
+    sources:
+      - type: dir
+        path: .
+
+metadata:
+  name: Imhotep Tasks
+  summary: Task management app
+  description: |
+    Imhotep Tasks helps you organize, prioritize, and track your tasks with an easy-to-use interface. Stay productive and never miss a deadline.
+  developer-name: Imhotep Tech
+  license: AGPL-3.0
+  url: https://imhotep-tasks.vercel.app
+  source-repo: https://github.com/Imhotep-Tech/imhotep_tasks
+  content-rating:
+    type: oars-1.1
+    value:
+      violence-cartoon: none
+      violence-fantasy: none
+      violence-realistic: none
+      violence-bloodshed: none
+      violence-sexual: none
+      drugs-alcohol: none
+      drugs-narcotics: none
+      sex-nudity: none
+      sex-themes: none
+      language-profanity: none
+      language-humor: none
+      language-discrimination: none
+      money-advertising: none
+      social-chat: none
+      social-info: none
+      social-audio: none
+      social-location: none
+      social-contacts: none
