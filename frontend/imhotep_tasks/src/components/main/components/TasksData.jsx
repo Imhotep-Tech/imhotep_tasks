@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import TaskCompleteButton from './TaskCompleteButton';
 import TaskDeleteButton from './TaskDeleteButton';
 import UpdateTask from './UpdateTask';
@@ -7,48 +7,52 @@ import DateComponent from "./DateComponent";
 
 const TaskRow = ({
   task,
-  onEdit,
   url_call,
   onCompleteTask,
   onDeleteTask,
   onOpenDetails,
   onOpenUpdate,
+  isSelected,
+  onToggleSelect
 }) => {
-
   return (
     <li
       key={task.id}
-      className={`p-4 hover:bg-gray-50 transition-all ${task.status ? "bg-gray-50" : ""}`}
+      className={`p-4 hover:bg-gray-50 transition-all ${task.status ? "bg-gray-50" : ""} flex items-center`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <TaskCompleteButton
-            task={task}
-            url_call={url_call}
-            onCompleteTask={onCompleteTask}
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <p
-                onClick={() => onOpenDetails(task)}
-                className={`font-medium text-gray-800 cursor-pointer hover:underline ${
-                  task.status ? "line-through text-gray-500" : ""
-                }`}
-              >
-                {task.task_title}
-              </p>
-            </div>
-          </div>
+      {/* Unified row for checkbox + complete toggle + title */}
+      <div className="flex items-center flex-1">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(task.id)}
+          className="h-5 w-5 mr-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 align-middle"
+        />
+        <TaskCompleteButton
+          task={task}
+          url_call={url_call}
+          onCompleteTask={onCompleteTask}
+        />
+        <div>
+          <p
+            onClick={() => onOpenDetails(task)}
+            className={`font-medium text-gray-800 cursor-pointer hover:underline ${
+              task.status ? "line-through text-gray-500" : ""
+            }`}
+          >
+            {task.task_title}
+          </p>
         </div>
-        <div className="flex items-center">
-          <DateComponent task={task} />
-          <div className="flex space-x-2">
+      </div>
+      {/* Right side (date + actions) */}
+      <div className="flex items-center">
+        <DateComponent task={task} />
+        <div className="flex space-x-2">
             <button
               onClick={() => onOpenUpdate(task)}
               className="p-1.5 text-blue-500 hover:bg-blue-100 rounded transition-colors"
               title="Edit"
             >
-              {/* Edit icon */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -69,7 +73,6 @@ const TaskRow = ({
               url_call={url_call}
               onDeleteTask={onDeleteTask}
             />
-          </div>
         </div>
       </div>
     </li>
@@ -84,11 +87,20 @@ const TasksData = ({
   onDeleteTask,
   onOpenAdd,
   onUpdateTask,
+  // new props
+  selectedIds = [],
+  onToggleSelect,
+  onSelectAll
 }) => {
   const [detailsTask, setDetailsTask] = useState(null);
   const [updateTask, setUpdateTask] = useState(null);
 
-  const handleUpdate = (updated, counts) => {
+  const allSelected = useMemo(
+    () => tasks.length > 0 && selectedIds.length === tasks.length,
+    [tasks, selectedIds]
+  );
+
+  const handleUpdate = () => {
     setUpdateTask(null);
     if (onUpdateTask) onUpdateTask();
   };
@@ -148,6 +160,31 @@ const TasksData = ({
 
   return (
     <>
+      {/* Select All Bar */}
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => onSelectAll(allSelected)}
+            className="text-xs bg-white border px-3 py-1.5 rounded shadow-sm hover:bg-gray-100 transition"
+          >
+            {allSelected ? 'Clear All' : 'Select All'}
+          </button>
+          {selectedIds.length > 0 && (
+            <span className="text-xs text-gray-600">
+              {selectedIds.length} selected
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => onOpenAdd()}
+          className="hidden md:inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs"
+        >
+          + New Task
+        </button>
+      </div>
+
       <ul className="divide-y divide-gray-200">
         {tasks.map((task) => (
           <TaskRow
@@ -158,6 +195,8 @@ const TasksData = ({
             onDeleteTask={onDeleteTask}
             onOpenDetails={setDetailsTask}
             onOpenUpdate={setUpdateTask}
+            isSelected={selectedIds.includes(task.id)}
+            onToggleSelect={onToggleSelect}
           />
         ))}
       </ul>
@@ -167,9 +206,9 @@ const TasksData = ({
       {updateTask && (
         <UpdateTask
           task={updateTask}
-          onClose={() => setUpdateTask(null)}
-          onUpdate={handleUpdate}
-          url_call={url_call}
+            onClose={() => setUpdateTask(null)}
+            onUpdate={handleUpdate}
+            url_call={url_call}
         />
       )}
     </>
@@ -177,4 +216,3 @@ const TasksData = ({
 };
 
 export default TasksData;
-

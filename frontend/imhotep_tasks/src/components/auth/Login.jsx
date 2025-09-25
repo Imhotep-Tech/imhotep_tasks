@@ -87,9 +87,9 @@ const Login = () => {
     setLoading(false);
   };
 
-  const getGoogleAuthUrl = async () => {
+  const getGoogleAuthUrl = async (isDesktop) => {
     try {
-      const response = await axios.get('/api/auth/google/url/');
+      const response = await axios.get('/api/auth/google/url/', { params: { platform: isDesktop ? 'desktop' : 'web' } });
       return response.data.auth_url;
     } catch (error) {
       console.error('Failed to get Google auth URL:', error);
@@ -102,8 +102,14 @@ const Login = () => {
     
     try {
       setGoogleLoading(true);
-      const authUrl = await getGoogleAuthUrl();
-      window.location.href = authUrl;
+      const isDesktop = Boolean(window?.desktop);
+      const authUrl = await getGoogleAuthUrl(isDesktop);
+      if (isDesktop && window?.desktop) {
+        // Open externally via Electron to ensure default browser
+        window.desktop.navigate(authUrl);
+      } else {
+        window.location.href = authUrl;
+      }
     } catch (error) {
       setError('Failed to initiate Google login');
       setGoogleLoading(false);

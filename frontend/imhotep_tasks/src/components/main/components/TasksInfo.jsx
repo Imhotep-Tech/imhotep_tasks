@@ -1,9 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const TasksInfo = ({pendingCount, completedCount, totalTasks}) => {
+const TasksInfo = ({
+  pendingCount,
+  completedCount,
+  totalTasks,
+  // new props
+  selectedCount = 0,
+  onBulkAction,        // (action, date?) => void
+  bulkLoading = false
+}) => {
+  // local state for dropdown + date
+  const [action, setAction] = useState('');
+  const [dateValue, setDateValue] = useState('');
+
+  const handleApply = () => {
+    if (!action) return;
+    if (action === 'update_date' && !dateValue) return;
+    onBulkAction && onBulkAction(action, dateValue);
+    setAction('');
+    setDateValue('');
+  };
 
   return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-indigo-100 text-indigo-500 mr-4">
@@ -46,6 +66,57 @@ const TasksInfo = ({pendingCount, completedCount, totalTasks}) => {
             </div>
           </div>
         </div>
+
+      {/* Bulk actions section */}
+      <div className="mb-8">
+        <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-600">
+                {selectedCount > 0
+                  ? `${selectedCount} task${selectedCount > 1 ? 's' : ''} selected`
+                  : 'Select tasks to enable bulk actions'}
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+              <select
+                value={action}
+                onChange={(e) => setAction(e.target.value)}
+                className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                disabled={selectedCount === 0 || bulkLoading}
+              >
+                <option value="">Bulk Action</option>
+                <option value="complete_toggle">Toggle Complete</option>
+                <option value="delete">Delete</option>
+                <option value="update_date">Change Due Date</option>
+              </select>
+              {action === 'update_date' && (
+                <input
+                  type="date"
+                  value={dateValue}
+                  onChange={(e) => setDateValue(e.target.value)}
+                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  disabled={bulkLoading}
+                />
+              )}
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={
+                  selectedCount === 0 ||
+                  !action ||
+                  bulkLoading ||
+                  (action === 'update_date' && !dateValue)
+                }
+                className="bg-indigo-600 disabled:opacity-50 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm shadow transition-colors"
+              >
+                {bulkLoading ? 'Applying...' : 'Apply'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 

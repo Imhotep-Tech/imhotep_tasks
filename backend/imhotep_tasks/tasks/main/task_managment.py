@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from datetime import date, timedelta, datetime as _datetime
+from datetime import date, timedelta
 from django.utils import timezone
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from ..models import User, Tasks
+from ..models import Tasks
 from ..utils import tasks_managements_utils
 
 #the user today_tasks function
@@ -70,6 +70,7 @@ def all_tasks(request):
     total_number_tasks = user_tasks_qs.count()
 
     response_data = {
+        "success": True,
         "username": request.user.username,
         "user_tasks": tasks_list,
         "pagination": {
@@ -110,6 +111,7 @@ def next_week_tasks(request):
     total_number_tasks = user_tasks_qs.count()
 
     response_data = {
+        "success": True,
         "username": request.user.username,
         "user_tasks": tasks_list,
         "pagination": {
@@ -202,7 +204,47 @@ def update_task(request, task_id):
             }, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def multiple_update_task_dates(request):
+    try:
+        url_call = request.data.get("url_call", "all")
+        task_ids = request.data.get("task_ids", [])
+
+        if not isinstance(task_ids, list):
+            return Response({"error": "task_ids should be a list of IDs", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not task_ids:
+            return Response({"error": "task_ids list is empty", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+        if not tasks_qs.exists():
+            return Response({"error": "No tasks found", "success": False},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        due_date_raw = request.data.get("due_date", None)
+        if due_date_raw is not None:
+            parsed = tasks_managements_utils._parse_date_input(due_date_raw)
+            for t in tasks_qs:
+                t.due_date = parsed
+            Tasks.objects.bulk_update(tasks_qs, ['due_date'])
+
+        tasks_data = [tasks_managements_utils.serialize_task(t) for t in tasks_qs]
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
+
+        return Response({
+            "success": True,
+            "tasks": tasks_data,
+            "total_number_tasks": total,
+            "completed_tasks_count": completed,
+            "pending_tasks": pending
+        }, status=status.HTTP_200_OK)
+    except Exception:
+        return Response({"error": "An error occurred", "success": False},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_task(request, task_id):
@@ -210,13 +252,8 @@ def delete_task(request, task_id):
         task = get_object_or_404(Tasks, id=task_id, created_by=request.user)
         url_call = request.data.get("url_call", "all")
 
-        due_date = getattr(task.due_date, "date", task.due_date)
-        if hasattr(due_date, "date"):
-            due_date = due_date.date()
         task.delete()
-
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
-
         return Response({
             "success": True,
             "message": "Task deleted",
@@ -224,15 +261,35 @@ def delete_task(request, task_id):
             "completed_tasks_count": completed,
             "pending_tasks": pending
         }, status=status.HTTP_200_OK)
-
     except Exception:
-            return Response(
-                {
-                    'error': 'An error occurred',
-                    'success': False
-                }, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        return Response({"error": "An error occurred", "success": False},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def multiple_delete_task(request):
+    try:
+        task_ids = request.data.get("task_ids", [])
+        url_call = request.data.get("url_call", "all")
+        if not isinstance(task_ids, list):
+            return Response({"error": "task_ids should be a list of IDs", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not task_ids:
+            return Response({"error": "task_ids list is empty", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+        tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+        tasks_qs.delete()
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
+        return Response({
+            "success": True,
+            "message": "Tasks deleted",
+            "total_number_tasks": total,
+            "completed_tasks_count": completed,
+            "pending_tasks": pending
+        }, status=status.HTTP_200_OK)
+    except Exception:
+        return Response({"error": "An error occurred", "success": False},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -240,19 +297,11 @@ def task_complete(request, task_id):
     try:
         url_call = request.data.get("url_call", "all")
         task = get_object_or_404(Tasks, id=task_id, created_by=request.user)
-
-        if task.status:
-            task.status = False
-            task.done_date = None
-        else:
-            task.status = True
-            task.done_date = timezone.now().date()
-
+        task.status = not task.status  # simplified toggle
+        task.done_date = timezone.now().date() if task.status else None
         task.save()
         task_data = tasks_managements_utils.serialize_task(task)
-
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
-
         return Response({
             "success": True,
             "task": task_data,
@@ -260,12 +309,33 @@ def task_complete(request, task_id):
             "completed_tasks_count": completed,
             "pending_tasks": pending
         }, status=status.HTTP_200_OK)
-
     except Exception:
-        return Response(
-            {
-                'error': 'An error occurred',
-                'success': False
-            }, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"error": "An error occurred", "success": False},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def multiple_task_complete(request):
+    try:
+        url_call = request.data.get("url_call", "all")
+        task_ids = request.data.get("task_ids", [])
+        if not isinstance(task_ids, list):
+            return Response({"error": "task_ids should be a list of IDs", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+        tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+        for t in tasks_qs:
+            t.status = not t.status
+            t.done_date = timezone.now().date() if t.status else None
+        Tasks.objects.bulk_update(tasks_qs, ['status', 'done_date'])
+        tasks_data = [tasks_managements_utils.serialize_task(t) for t in tasks_qs]
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
+        return Response({
+            "success": True,
+            "tasks": tasks_data,
+            "total_number_tasks": total,
+            "completed_tasks_count": completed,
+            "pending_tasks": pending
+        }, status=status.HTTP_200_OK)
+    except Exception:
+        return Response({"error": "An error occurred", "success": False},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
