@@ -53,6 +53,11 @@ urlpatterns = [
     path('tasks/delete_task/<int:task_id>/', task_managment.delete_task, name='delete_task'),
     path('tasks/task_complete/<int:task_id>/', task_managment.task_complete, name='task_complete'),
 
+    # New bulk task management endpoints
+    path('tasks/multiple_delete_task/', task_managment.multiple_delete_task, name='multiple_delete_task'),
+    path('tasks/multiple_task_complete/', task_managment.multiple_task_complete, name='multiple_task_complete'),
+    path('tasks/multiple_update_task_dates/', task_managment.multiple_update_task_dates, name='multiple_update_task_dates'),
+
     # Routine management URLs
     path('routines/', routine_managment.show_routines, name='show_routines'),
     path('add_routine/', routine_managment.add_routine, name='add_routine'),

@@ -19,6 +19,9 @@ const AllTasks = () => {
   const [loading, setLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [error, setError] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const url_call = "all";
 
   const fetchTasks = async (pageNum = 1) => {
     setLoading(true);
@@ -60,18 +63,48 @@ const AllTasks = () => {
     setPendingCount((prev) => (serverResponse.pending_tasks ?? prev));
   };
 
+  const clearSelection = () => setSelectedIds([]);
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+  const selectAll = (alreadyAll) => {
+    if (alreadyAll) setSelectedIds([]);
+    else setSelectedIds(tasks.map(t => t.id));
+  };
+
+  const handleBulkAction = async (action, dateValue) => {
+    if (!selectedIds.length) return;
+    try {
+      setBulkLoading(true);
+      if (action === 'delete') {
+        await axios.delete('api/tasks/multiple_delete_task/', { data: { task_ids: selectedIds, url_call } });
+      } else if (action === 'complete_toggle') {
+        await axios.post('api/tasks/multiple_task_complete/', { task_ids: selectedIds, url_call });
+      } else if (action === 'update_date') {
+        await axios.patch('api/tasks/multiple_update_task_dates/', { task_ids: selectedIds, due_date: dateValue, url_call });
+      }
+      await fetchTasks(page);
+      clearSelection();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const handleComplete = (updatedTask, counts) => {
     setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
     setTotalTasks(counts.total_number_tasks ?? totalTasks);
     setCompletedCount(counts.completed_tasks_count ?? completedCount);
     setPendingCount(counts.pending_tasks ?? pendingCount);
+    clearSelection();
   };
-
   const handleDelete = (deletedId, counts) => {
     setTasks((prev) => prev.filter((t) => t.id !== deletedId));
     setTotalTasks(counts.total_number_tasks ?? Math.max(0, totalTasks - 1));
     setCompletedCount(counts.completed_tasks_count ?? completedCount);
     setPendingCount(counts.pending_tasks ?? Math.max(0, pendingCount - 1));
+    clearSelection();
   };
 
   const handleUpdate = () => {
@@ -99,7 +132,14 @@ const AllTasks = () => {
           </div>
         </div>
 
-        <TasksInfo pendingCount={pendingCount} completedCount={completedCount} totalTasks={totalTasks}/>
+        <TasksInfo
+          pendingCount={pendingCount}
+          completedCount={completedCount}
+          totalTasks={totalTasks}
+          selectedCount={selectedIds.length}
+          onBulkAction={handleBulkAction}
+          bulkLoading={bulkLoading}
+        />
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-4 bg-gray-50 border-b border-gray-200">
@@ -109,13 +149,14 @@ const AllTasks = () => {
           <TasksData
             tasks={tasks}
             loading={loading}
-            onEdit={(task) => window.location.href = `/tasks/update_task/${task.id}/`}
-            onOpenAdd={() => setShowAdd(true)}
-            onOpenDetails={() => {}}
-            url_call="all"
+            url_call={url_call}
             onCompleteTask={handleComplete}
             onDeleteTask={handleDelete}
             onUpdateTask={handleUpdate}
+            onOpenAdd={() => setShowAdd(true)}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
+            onSelectAll={selectAll}
           />
 
           <Pagination
