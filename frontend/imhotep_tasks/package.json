@@ -26,7 +26,7 @@
     "@codemirror/lang-html": "^6.4.9",
     "@codemirror/lang-javascript": "^6.2.4",
     "@codemirror/view": "^6.38.1",
-    "axios": "^1.11.0",
+    "axios": "^1.12.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1"
@@ -49,65 +49,5 @@
     "globals": "^16.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "vite": "^7.0.4"
-  },
-  "build": {
-    "appId": "com.imhotep.tasks",
-    "productName": "ImhotepTasks",
-    "icon": "build/icon.png",
-    "protocols": [
-      { "name": "Imhotep Tasks", "schemes": ["imhotep-tasks"] }
-    ],
-    "files": [
-      "dist/**/*",
-      "public/**/*",
-      "electron/**/*",
-      "build/**/*"
-    ],
-    "directories": {
-      "output": "dist",
-      "buildResources": "build"
-    },
-    "linux": {
-      "category": "Utility",
-      "icon": "build/icons",
-      "target": [
-        "AppImage",
-        "snap",
-        "flatpak"
-      ],
-      "desktop": {
-        "MimeType": "x-scheme-handler/imhotep-tasks;",
-        "Icon": "com.imhotep.tasks"
-      }
-    },
-    "flatpak": {
-      "runtime": "org.freedesktop.Platform",
-      "runtimeVersion": "23.08",
-      "sdk": "org.freedesktop.Sdk",
-      "base": "org.electronjs.Electron2.BaseApp",
-      "baseVersion": "23.08",
-      "finishArgs": [
-        "--share=network",
-        "--socket=x11",
-        "--socket=wayland",
-        "--device=dri",
-        "--filesystem=home"
-      ]
-    },
-    "win": {
-      "target": "nsis",
-      "icon": "public/favicon.ico",
-      "protocols": [
-        { "name": "Imhotep Tasks", "schemes": ["imhotep-tasks"] }
-      ]
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "public/favicon.icns",
-      "protocols": [
-        { "name": "Imhotep Tasks", "schemes": ["imhotep-tasks"] }
-      ]
-    }
   }
 }
