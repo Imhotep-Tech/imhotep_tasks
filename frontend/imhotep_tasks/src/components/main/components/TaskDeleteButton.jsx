@@ -9,6 +9,16 @@ const TaskDeleteButton = ({ taskId, url_call, onDeleteTask }) => {
     setLoading(true);
     try {
       const res = await axios.delete(`api/tasks/delete_task/${taskId}/`, { data: { url_call } });
+
+      if (res.data?.finance_errors && res.data.finance_errors.length) {
+        // Show a simple alert for finance-related issues while still deleting the task locally
+        alert(
+          `The task was deleted, but some linked Imhotep Finance transactions could not be removed:\n\n- ${res.data.finance_errors.join(
+            "\n- "
+          )}`
+        );
+      }
+
       onDeleteTask(taskId, res.data);
     } catch (err) {
       // Optionally handle error

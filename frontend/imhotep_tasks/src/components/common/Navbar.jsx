@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link, useLocation } from 'react-router-dom';
 import Logo from '../../assets/imhotep_tasks.png';
+import { useFinance } from '../../contexts/FinanceContext';
 
 const Navbar = ({ onToggle }) => {
   const { user, logout } = useAuth();
+  const { status: financeStatus } = useFinance();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -142,6 +144,13 @@ const Navbar = ({ onToggle }) => {
                       </span>
                     </div>
                   )}
+                  {financeStatus?.connected && (
+                    <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <span className="text-emerald-700 text-xs font-medium">
+                        Imhotep Finance connected
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -254,6 +263,27 @@ const Navbar = ({ onToggle }) => {
                     </svg>
                   </div>
                   <span className="font-semibold">Profile</span>
+                </Link>
+
+                <Link 
+                  to="/finance/imhotep" 
+                  className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
+                    isActive('/finance/imhotep') 
+                      ? 'bg-gradient-to-r from-sky-500 to-indigo-500 text-white shadow-lg transform scale-105' 
+                      : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
+                  }`}
+                  onClick={closeNavbar}
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 transition-colors duration-300 ${
+                    isActive('/finance/imhotep') 
+                      ? 'bg-white/20' 
+                      : 'bg-sky-100 group-hover:bg-sky-200'
+                  }`}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M5 6h14M7 14h10M9 18h6" />
+                    </svg>
+                  </div>
+                  <span className="font-semibold">Imhotep Finance</span>
                 </Link>
 
               </div>

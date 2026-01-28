@@ -250,3 +250,15 @@ SOCIALACCOUNT_PROVIDERS = {
         'SCOPE': ['profile', 'email'],
     }
 }
+
+# Imhotep Finance OAuth2 public API configuration
+IMHOTEP_FINANCE_BASE_URL = config(
+    'IMHOTEP_FINANCE_BASE_URL',
+    default='http://localhost:8000',
+)
+IMHOTEP_FINANCE_CLIENT_ID = config('IMHOTEP_FINANCE_CLIENT_ID', default='')
+IMHOTEP_FINANCE_CLIENT_SECRET = config('IMHOTEP_FINANCE_CLIENT_SECRET', default='')
+IMHOTEP_FINANCE_REDIRECT_URI = config(
+    'IMHOTEP_FINANCE_REDIRECT_URI',
+    default=f"{frontend_url}/imhotep-finance/callback",
+)

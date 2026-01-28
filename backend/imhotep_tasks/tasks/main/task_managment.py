@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from ..models import Tasks
 from ..utils import tasks_managements_utils
+from .. import finance_services
 
 #the user today_tasks function
 @api_view(['GET'])
@@ -138,11 +139,21 @@ def add_task(request):
         due_date_raw = request.data.get("due_date")
         due_date = tasks_managements_utils._parse_date_input(due_date_raw) or today
 
+        # Finance-related fields (optional)
+        price = request.data.get("price")
+        transaction_currency = request.data.get("transaction_currency")
+        transaction_status = request.data.get("transaction_status")
+        transaction_category = request.data.get("transaction_category")
+
         task = Tasks.objects.create(
             task_title=task_title,
             task_details=task_details,
             due_date=due_date,
-            created_by=request.user
+            created_by=request.user,
+            price=price if price else None,
+            transaction_currency=transaction_currency if transaction_currency else None,
+            transaction_status=transaction_status if transaction_status else None,
+            transaction_category=transaction_category if transaction_category else None,
         )
 
         task_data = tasks_managements_utils.serialize_task(task)
@@ -182,6 +193,18 @@ def update_task(request, task_id):
         if due_date_raw is not None:
             parsed = tasks_managements_utils._parse_date_input(due_date_raw)
             task.due_date = parsed
+
+        # Finance-related fields (optional, only update if provided)
+        if "price" in request.data:
+            price = request.data.get("price")
+            task.price = price if price else None
+        if "transaction_currency" in request.data:
+            task.transaction_currency = request.data.get("transaction_currency") or None
+        if "transaction_status" in request.data:
+            task.transaction_status = request.data.get("transaction_status") or None
+        if "transaction_category" in request.data:
+            task.transaction_category = request.data.get("transaction_category") or None
+
         task.save()
 
         task_data = tasks_managements_utils.serialize_task(task)
@@ -252,6 +275,12 @@ def delete_task(request, task_id):
         task = get_object_or_404(Tasks, id=task_id, created_by=request.user)
         url_call = request.data.get("url_call", "all")
 
+        finance_errors = []
+        # Attempt to delete linked Imhotep Finance transaction, but do not block task deletion
+        success, payload = finance_services.delete_task_transaction(task)
+        if not success and payload.get("message"):
+            finance_errors.append(payload["message"])
+
         task.delete()
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
         return Response({
@@ -259,7 +288,8 @@ def delete_task(request, task_id):
             "message": "Task deleted",
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
+            "finance_errors": finance_errors,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},
@@ -278,6 +308,13 @@ def multiple_delete_task(request):
             return Response({"error": "task_ids list is empty", "success": False},
                             status=status.HTTP_400_BAD_REQUEST)
         tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+
+        finance_errors = []
+        for t in tasks_qs:
+            success, payload = finance_services.delete_task_transaction(t)
+            if not success and payload.get("message"):
+                finance_errors.append(payload["message"])
+
         tasks_qs.delete()
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
         return Response({
@@ -285,7 +322,8 @@ def multiple_delete_task(request):
             "message": "Tasks deleted",
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
+            "finance_errors": finance_errors,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},
@@ -300,6 +338,20 @@ def task_complete(request, task_id):
         task.status = not task.status  # simplified toggle
         task.done_date = timezone.now().date() if task.status else None
         task.save()
+
+        finance_error = None
+        if task.status:
+            # Task is now complete - create a finance transaction if it has a price
+            success, payload = finance_services.create_task_transaction(task)
+            if not success and payload.get("message"):
+                finance_error = payload["message"]
+        else:
+            # Task is now incomplete - delete the linked finance transaction if exists
+            success, payload = finance_services.delete_task_transaction(task)
+            if not success and payload.get("message") and task.transaction_id:
+                # Only show error if there was actually a transaction to delete
+                finance_error = payload["message"]
+
         task_data = tasks_managements_utils.serialize_task(task)
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
         return Response({
@@ -307,7 +359,8 @@ def task_complete(request, task_id):
             "task": task_data,
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
+            "finance_error": finance_error,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},
@@ -323,9 +376,24 @@ def multiple_task_complete(request):
             return Response({"error": "task_ids should be a list of IDs", "success": False},
                             status=status.HTTP_400_BAD_REQUEST)
         tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+        
+        finance_errors = []
         for t in tasks_qs:
             t.status = not t.status
             t.done_date = timezone.now().date() if t.status else None
+            
+            if t.status:
+                # Task is now complete - create a finance transaction if it has a price
+                success, payload = finance_services.create_task_transaction(t)
+                if not success and payload.get("message"):
+                    finance_errors.append(payload["message"])
+            else:
+                # Task is now incomplete - delete the linked finance transaction if exists
+                if t.transaction_id:
+                    success, payload = finance_services.delete_task_transaction(t)
+                    if not success and payload.get("message"):
+                        finance_errors.append(payload["message"])
+        
         Tasks.objects.bulk_update(tasks_qs, ['status', 'done_date'])
         tasks_data = [tasks_managements_utils.serialize_task(t) for t in tasks_qs]
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
@@ -334,7 +402,8 @@ def multiple_task_complete(request):
             "tasks": tasks_data,
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
+            "finance_errors": finance_errors,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},

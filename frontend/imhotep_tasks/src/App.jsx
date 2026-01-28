@@ -15,12 +15,15 @@ import EmailChangeVerification from './components/profile/EmailChangeVerificatio
 import Next7DaysTasks from './components/main/Next7DaysTasks'
 import AllTasks from './components/main/AllTasks'
 import Routines from './components/main/Routines'
+import ImhotepFinanceConnect from './components/main/ImhotepFinanceConnect'
+import ImhotepFinanceCallback from './components/main/ImhotepFinanceCallback'
 import InstallPrompt from './components/pwa/InstallPrompt'
 import OfflineIndicator from './components/pwa/OfflineIndicator'
 import UpdatePrompt from './components/pwa/UpdatePrompt'
 import DownloadPage from './components/main/DownloadPage'
 import { useEffect } from 'react';
 import DesktopAuthHandler from './desktop/DesktopAuthHandler'
+import { FinanceProvider } from './contexts/FinanceContext'
 
 function App() {
   useEffect(() => {
@@ -31,11 +34,12 @@ function App() {
 
   return (
     <AuthProvider>
-      <OfflineIndicator />
-      <Router>
-        <div>
-          <DesktopAuthHandler />
-          <Routes>
+      <FinanceProvider>
+        <OfflineIndicator />
+        <Router>
+          <div>
+            <DesktopAuthHandler />
+            <Routes>
               <Route 
                 path="/" 
                 element={
@@ -116,6 +120,22 @@ function App() {
               } 
             />
             <Route 
+              path="/finance/imhotep" 
+              element={
+                <ProtectedRoute>
+                  <ImhotepFinanceConnect />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/finance/imhotep/callback" 
+              element={
+                <ProtectedRoute>
+                  <ImhotepFinanceCallback />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/routines" 
               element={
                 <ProtectedRoute>
@@ -127,12 +147,13 @@ function App() {
               path="/download" 
               element={<DownloadPage />} 
             />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          <InstallPrompt />
-          <UpdatePrompt />
-        </div>
-      </Router>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <InstallPrompt />
+            <UpdatePrompt />
+          </div>
+        </Router>
+      </FinanceProvider>
     </AuthProvider>
   )
 }

@@ -42,6 +42,18 @@ const TaskRow = ({
           >
             {task.task_title}
           </p>
+          {task.transaction_id && (
+            <div className="mt-1 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 border border-emerald-100">
+              <span className="mr-1">
+                {task.transaction_status || 'Transaction'}
+              </span>
+              {task.price != null && (
+                <span>
+                  · {task.price} {task.transaction_currency || ''}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
       {/* Right side (date + actions) */}

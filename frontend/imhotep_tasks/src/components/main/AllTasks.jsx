@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../config/api';
+import { useFinance } from '../../contexts/FinanceContext';
 import Footer from '../common/Footer';
 import Pagination from '../common/Pagination';
 import AddTask from './components/AddTask';
@@ -9,6 +10,7 @@ import TasksData from './components/TasksData';
 
 const AllTasks = () => {
   const { user } = useAuth();
+  const { status: financeStatus } = useFinance();
 
   const [tasks, setTasks] = useState([]);
   const [page, setPage] = useState(1);
@@ -131,6 +133,14 @@ const AllTasks = () => {
             </button>
           </div>
         </div>
+
+        {!financeStatus?.connected && (
+          <div className="mb-6 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+            Connect with Imhotep Finance to automatically create and manage
+            transactions for tasks with a price. You can do this from the
+            <span className="font-semibold"> Imhotep Finance</span> section in the sidebar.
+          </div>
+        )}
 
         <TasksInfo
           pendingCount={pendingCount}

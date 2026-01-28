@@ -31,6 +31,10 @@ def show_routines(request):
             "routine_type": r.routine_type,
             "status": r.status,
             "created_by": r.created_by.id,
+            "price": float(r.price) if r.price is not None else None,
+            "transaction_currency": r.transaction_currency,
+            "transaction_status": r.transaction_status,
+            "transaction_category": r.transaction_category,
         }
         for r in user_routines.object_list
     ]
@@ -52,6 +56,12 @@ def add_routine(request):
     routines_title = request.data.get("routines_title")
     routines_dates = request.data.get("routines_dates")
     routine_type = request.data.get("routine_type")
+
+    # Finance fields (optional)
+    price = request.data.get("price")
+    transaction_currency = request.data.get("transaction_currency")
+    transaction_status = request.data.get("transaction_status")
+    transaction_category = request.data.get("transaction_category")
 
     # Validate required fields
     if not routines_title:
@@ -85,7 +95,11 @@ def add_routine(request):
             routines_title=routines_title,
             routine_type=routine_type,
             routines_dates=routines_dates,
-            created_by=request.user
+            created_by=request.user,
+            price=price if price else None,
+            transaction_currency=transaction_currency if transaction_currency else None,
+            transaction_status=transaction_status if transaction_status else None,
+            transaction_category=transaction_category if transaction_category else None,
         )
     else:
         return Response(
@@ -99,8 +113,13 @@ def add_routine(request):
             "id": routine.id,
             "routines_title": routine.routines_title,
             "routines_dates": routine.routines_dates,
+            "routine_type": routine.routine_type,
             "status": routine.status,
             "created_by": routine.created_by.id,
+            "price": float(routine.price) if routine.price is not None else None,
+            "transaction_currency": routine.transaction_currency,
+            "transaction_status": routine.transaction_status,
+            "transaction_category": routine.transaction_category,
         }
     })
 
@@ -136,6 +155,17 @@ def update_routine(request, routine_id):
     if routine_type is not None:
         routine.routine_type = routine_type
 
+    # Finance fields (optional, only update if provided)
+    if "price" in request.data:
+        price = request.data.get("price")
+        routine.price = price if price else None
+    if "transaction_currency" in request.data:
+        routine.transaction_currency = request.data.get("transaction_currency") or None
+    if "transaction_status" in request.data:
+        routine.transaction_status = request.data.get("transaction_status") or None
+    if "transaction_category" in request.data:
+        routine.transaction_category = request.data.get("transaction_category") or None
+
     routine.save()
     return Response({
         "success": True,
@@ -143,8 +173,13 @@ def update_routine(request, routine_id):
             "id": routine.id,
             "routines_title": routine.routines_title,
             "routines_dates": routine.routines_dates,
+            "routine_type": routine.routine_type,
             "status": routine.status,
             "created_by": routine.created_by.id,
+            "price": float(routine.price) if routine.price is not None else None,
+            "transaction_currency": routine.transaction_currency,
+            "transaction_status": routine.transaction_status,
+            "transaction_category": routine.transaction_category,
         }
     })
 

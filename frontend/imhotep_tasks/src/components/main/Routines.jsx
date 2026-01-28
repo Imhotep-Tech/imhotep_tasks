@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useFinance } from '../../contexts/FinanceContext';
 import axios from '../../config/api';
 import Footer from '../common/Footer';
 
 const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
   const { user } = useAuth();
+  const { status: financeStatus, currencies, currenciesLoading, fetchCurrencies } = useFinance();
+  const financeConnected = financeStatus?.connected && financeStatus?.token_valid;
+
+  const [activeTab, setActiveTab] = useState('routine');
   const [title, setTitle] = useState(routine?.routines_title || '');
   const [routineType, setRoutineType] = useState(routine?.routine_type || 'weekly');
   const [days, setDays] = useState(routine?.routines_dates ? (Array.isArray(routine.routines_dates) ? routine.routines_dates : routine.routines_dates.split(' ')) : []);
@@ -12,6 +17,22 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
   const [yearlyError, setYearlyError] = useState(''); // New state for yearly validation errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Finance fields
+  const [price, setPrice] = useState(routine?.price || '');
+  const [transactionCurrency, setTransactionCurrency] = useState(routine?.transaction_currency || 'USD');
+  const [transactionStatus, setTransactionStatus] = useState(routine?.transaction_status || 'Withdraw');
+  const [transactionCategory, setTransactionCategory] = useState(routine?.transaction_category || '');
+
+  // Fetch currencies when finance tab is opened
+  useEffect(() => {
+    if (activeTab === 'finance' && financeConnected && currencies.length === 0) {
+      fetchCurrencies();
+    }
+  }, [activeTab, financeConnected, currencies.length, fetchCurrencies]);
+
+  // Default currencies if API fails
+  const currencyOptions = currencies.length > 0 ? currencies : ['USD', 'EUR', 'GBP', 'EGP'];
 
   const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   const allMonthlyDays = Array.from({ length: 31 }, (_, i) => i + 1); // New: For monthly (1-31)
@@ -140,7 +161,19 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
       const payload = {
         routines_title: title,
         routine_type: routineType,
-        routines_dates: days
+        routines_dates: days,
+        // Only include finance fields if user is connected and has entered a price
+        ...(financeConnected && price ? {
+          price: parseFloat(price),
+          transaction_currency: transactionCurrency,
+          transaction_status: transactionStatus,
+          transaction_category: transactionCategory || null,
+        } : financeConnected ? {
+          price: null,
+          transaction_currency: null,
+          transaction_status: null,
+          transaction_category: null,
+        } : {})
       };
       let res;
       if (routine) {
@@ -164,42 +197,74 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
           <h3 className="text-lg font-semibold">{routine ? 'Update Routine' : 'Add New Routine'}</h3>
           <button aria-label="Close" onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
         </div>
+
+        {/* Tab navigation - only show if finance is connected */}
+        {financeConnected && (
+          <div className="flex border-b mb-4">
+            <button
+              type="button"
+              onClick={() => setActiveTab('routine')}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === 'routine'
+                  ? 'border-b-2 border-indigo-500 text-indigo-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Routine Details
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('finance')}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === 'finance'
+                  ? 'border-b-2 border-indigo-500 text-indigo-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Finance
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="text-sm font-medium text-gray-700">Routine Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              required
-            />
-          </div>
-          {/* New: Routine Type Tabs */}
-          <div>
-            <label className="text-sm font-medium text-gray-700">Routine Type *</label>
-            <div className="flex mt-1 border-b">
-              {['weekly', 'monthly', 'yearly'].map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => {
-                    setRoutineType(type);
-                    setDays([]); // Reset dates on type change
-                    setYearlyInput(''); // Reset yearly input on type change
-                    setYearlyError(''); // Reset yearly error on type change
-                  }}
-                  className={`px-4 py-2 text-sm font-medium capitalize ${
-                    routineType === type
-                      ? 'border-b-2 border-indigo-500 text-indigo-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Routine Details Tab */}
+          {activeTab === 'routine' && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Routine Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  required
+                />
+              </div>
+              {/* New: Routine Type Tabs */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">Routine Type *</label>
+                <div className="flex mt-1 border-b">
+                  {['weekly', 'monthly', 'yearly'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setRoutineType(type);
+                        setDays([]); // Reset dates on type change
+                        setYearlyInput(''); // Reset yearly input on type change
+                        setYearlyError(''); // Reset yearly error on type change
+                      }}
+                      className={`px-4 py-2 text-sm font-medium capitalize ${
+                        routineType === type
+                          ? 'border-b-2 border-indigo-500 text-indigo-600'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
           {/* Updated: Conditional Dates Input */}
           <div>
             <label className="text-sm font-medium text-gray-700">
@@ -265,6 +330,76 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
               </>
             )}
           </div>
+            </>
+          )}
+
+          {/* Finance Tab - only if connected */}
+          {activeTab === 'finance' && financeConnected && (
+            <>
+              <p className="text-xs text-gray-500 mb-2">
+                Add financial details to create a transaction in Imhotep Finance when tasks from this routine are completed.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Currency</label>
+                  <select
+                    value={transactionCurrency}
+                    onChange={(e) => setTransactionCurrency(e.target.value)}
+                    className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    disabled={currenciesLoading}
+                  >
+                    {currenciesLoading ? (
+                      <option>Loading...</option>
+                    ) : (
+                      currencyOptions.map((currency) => (
+                        <option key={currency} value={currency}>
+                          {currency}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Transaction Type</label>
+                <select
+                  value={transactionStatus}
+                  onChange={(e) => setTransactionStatus(e.target.value)}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                >
+                  <option value="Withdraw">Withdraw (Expense)</option>
+                  <option value="Deposit">Deposit (Income)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Category</label>
+                <input
+                  type="text"
+                  value={transactionCategory}
+                  onChange={(e) => setTransactionCategory(e.target.value)}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  placeholder="e.g. Work, Shopping, Bills"
+                />
+              </div>
+            </>
+          )}
+
           {error && <div className="text-sm text-red-600">{error}</div>}
           <div className="flex items-center justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="chef-button-secondary px-3 py-2 rounded">Cancel</button>
