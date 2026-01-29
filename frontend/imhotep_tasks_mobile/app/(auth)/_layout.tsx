@@ -44,8 +44,8 @@ export default function AuthLayout() {
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />
       <Stack.Screen name="forgot-password" />
-      <Stack.Screen name="verify-email/[uid]/[token]" />
-      <Stack.Screen name="verify-email-change/[uid]/[token]/[new_email]" />
+      <Stack.Screen name="email-verify" />
+      <Stack.Screen name="email-change-verification" />
     </Stack>
   );
 }

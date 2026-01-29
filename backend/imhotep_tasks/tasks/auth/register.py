@@ -147,14 +147,25 @@ def verify_email(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Find the user by email
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            return Response(
-                {'error': 'User not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+        if '@' in email:
+
+            # Find the user by email
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'User not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            # Find the user by username in the case of email not having '@'
+            try:
+                user = User.objects.get(username=email)
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'User not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
 
         # Find the OTP record
         try:
@@ -191,6 +202,7 @@ def verify_email(request):
             )
 
     except Exception as e:
+        print(str(e))
         return Response(
             {'error': f'An error occurred during verification'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

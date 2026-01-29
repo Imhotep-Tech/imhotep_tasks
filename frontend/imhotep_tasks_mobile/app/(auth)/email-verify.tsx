@@ -2,63 +2,99 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Image,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Link } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios, { AxiosError } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type VerificationStatus = 'verifying' | 'success' | 'error';
+type VerificationStatus = 'input' | 'verifying' | 'success' | 'error';
 
 export default function EmailVerificationScreen() {
-  const { uid, token } = useLocalSearchParams<{ uid: string; token: string }>();
   const router = useRouter();
-  const [status, setStatus] = useState<VerificationStatus>('verifying');
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [status, setStatus] = useState<VerificationStatus>('input');
   const [message, setMessage] = useState('');
-  const [countdown, setCountdown] = useState(10);
+  const [error, setError] = useState('');
+  const [countdown, setCountdown] = useState(5);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let timerId: NodeJS.Timeout | null = null;
-
-    const verifyEmail = async () => {
-      try {
-        await axios.post('/api/auth/verify-email/', { uid, token });
-        setStatus('success');
-        setMessage('Your email has been verified successfully!');
-
-        timerId = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev <= 1) {
-              if (timerId) clearInterval(timerId);
-              router.replace('/(auth)/login');
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      } catch (error) {
-        setStatus('error');
-        const axiosError = error as AxiosError<any>;
-        setMessage(
-          axiosError.response?.data?.error ||
-            'The verification link is invalid or has expired.'
-        );
+    // Get email from AsyncStorage (set during registration)
+    const loadEmail = async () => {
+      const storedEmail = await AsyncStorage.getItem('pendingVerificationEmail');
+      if (storedEmail) {
+        setEmail(storedEmail);
       }
     };
+    loadEmail();
+  }, []);
 
-    if (uid && token) {
-      verifyEmail();
-    } else {
-      setStatus('error');
-      setMessage('Invalid verification link.');
+  const verifyEmail = async (otpCode: string, userEmail: string) => {
+    try {
+      const response = await axios.post('/api/auth/verify-email/', {
+        otp: otpCode,
+        email: userEmail,
+      });
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      const axiosError = error as AxiosError<any>;
+      return {
+        success: false,
+        error: axiosError.response?.data?.error || 'Verification failed. Please try again.',
+      };
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!email) {
+      setError('Please enter your email address');
+      return;
     }
 
-    return () => {
-      if (timerId) clearInterval(timerId);
-    };
-  }, [uid, token, router]);
+    if (!otp || otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP code');
+      return;
+    }
+
+    setStatus('verifying');
+    setError('');
+    setLoading(true);
+
+    const result = await verifyEmail(otp, email);
+
+    if (result.success) {
+      setStatus('success');
+      setMessage(result.message || 'Your email has been verified successfully!');
+      // Clear stored email
+      await AsyncStorage.removeItem('pendingVerificationEmail');
+
+      // Start countdown
+      let count = 5;
+      const timerId = setInterval(() => {
+        count--;
+        setCountdown(count);
+        if (count <= 0) {
+          clearInterval(timerId);
+          router.replace('/(auth)/login');
+        }
+      }, 1000);
+    } else {
+      setStatus('input');
+      setError(result.error || 'Verification failed');
+    }
+
+    setLoading(false);
+  };
 
   const getIcon = () => {
     switch (status) {
@@ -80,13 +116,17 @@ export default function EmailVerificationScreen() {
             <Ionicons name="alert-circle" size={24} color="#DC2626" />
           </View>
         );
+      default:
+        return null;
     }
   };
 
   const getTitle = () => {
     switch (status) {
+      case 'input':
+        return 'Verify Your Email';
       case 'verifying':
-        return 'Verifying Your Email...';
+        return 'Verifying...';
       case 'success':
         return 'Email Verified';
       case 'error':
@@ -96,6 +136,8 @@ export default function EmailVerificationScreen() {
 
   const getSubtitle = () => {
     switch (status) {
+      case 'input':
+        return 'Enter the 6-digit OTP code sent to your email. The code expires in 10 minutes.';
       case 'verifying':
         return 'Please wait while we verify your email address.';
       case 'success':
@@ -106,68 +148,149 @@ export default function EmailVerificationScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Ionicons name="checkmark-done" size={32} color="#2563EB" />
-          </View>
-        </View>
-
-        <Text style={styles.title}>{getTitle()}</Text>
-        <Text style={styles.subtitle}>{getSubtitle()}</Text>
-
-        {/* Status Icon */}
-        <View style={styles.statusIconContainer}>{getIcon()}</View>
-
-        {/* Progress Bar (verifying) */}
-        {status === 'verifying' && (
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={styles.progressFill} />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.card}>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <Image
+                source={require('@/assets/images/imhotep_tasks.png')}
+                style={{ width: 40, height: 40 }}
+                resizeMode="contain"
+              />
             </View>
-            <Text style={styles.progressText}>Processing verification...</Text>
           </View>
-        )}
 
-        {/* Action Button */}
-        {status !== 'verifying' && (
-          <Link
-            href={status === 'success' ? '/(auth)/login' : '/(auth)/register'}
-            asChild
-          >
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>
-                {status === 'success' ? 'Back to Login' : 'Register'}
+          <Text style={styles.title}>{getTitle()}</Text>
+          <Text style={styles.subtitle}>{getSubtitle()}</Text>
+
+          {(status === 'verifying' || status === 'success') && (
+            <View style={styles.statusIconContainer}>{getIcon()}</View>
+          )}
+
+          {/* Input Form */}
+          {status === 'input' && (
+            <>
+              {error ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              {/* Email Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email Address Or Username</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons
+                    name="person-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your email or username"
+                    placeholderTextColor="#9CA3AF"
+                    value={email}
+                    onChangeText={(text) => {
+                      setEmail(text);
+                      if (error) setError('');
+                    }}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="default"
+                  />
+                </View>
+              </View>
+
+              {/* OTP Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>OTP Code</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons
+                    name="keypad-outline"
+                    size={20}
+                    color="#9CA3AF"
+                    style={styles.inputIcon}
+                  />
+                  <TextInput
+                    style={[styles.input, styles.otpInput]}
+                    placeholder="000000"
+                    placeholderTextColor="#9CA3AF"
+                    value={otp}
+                    onChangeText={(text) => {
+                      setOtp(text.replace(/\D/g, ''));
+                      if (error) setError('');
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+                </View>
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.button, (loading || otp.length !== 6 || !email) && styles.buttonDisabled]}
+                onPress={handleSubmit}
+                disabled={loading || otp.length !== 6 || !email}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.buttonText}>Verify Email</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Resend Link */}
+              <Text style={styles.helpText}>
+                Didn't receive the code?{' '}
+                <Link href="/(auth)/login" asChild>
+                  <Text style={styles.linkText}>Login to resend</Text>
+                </Link>
               </Text>
-            </TouchableOpacity>
-          </Link>
-        )}
+            </>
+          )}
 
-        {/* Countdown Message */}
-        {status === 'success' && countdown > 0 && (
-          <View style={styles.countdownBox}>
-            <Text style={styles.countdownText}>
-              Redirecting to login in {countdown} second
-              {countdown !== 1 ? 's' : ''}...
-            </Text>
-          </View>
-        )}
+          {/* Verifying State */}
+          {status === 'verifying' && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View style={styles.progressFill} />
+              </View>
+              <Text style={styles.progressText}>Processing verification...</Text>
+            </View>
+          )}
 
-        {/* Error Help Text */}
-        {status === 'error' && (
-          <Text style={styles.helpText}>
-            If this problem persists, try registering again or contact support.
-          </Text>
-        )}
+          {/* Success State */}
+          {status === 'success' && (
+            <>
+              <Link href="/(auth)/login" asChild>
+                <TouchableOpacity style={styles.button}>
+                  <Text style={styles.buttonText}>Go to Login</Text>
+                </TouchableOpacity>
+              </Link>
+              {countdown > 0 && (
+                <View style={styles.countdownBox}>
+                  <Text style={styles.countdownText}>
+                    Redirecting to login in {countdown} second{countdown !== 1 ? 's' : ''}...
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
 
-        {/* Support Link */}
-        <Text style={styles.supportText}>
-          Need help? Contact support
-        </Text>
-      </View>
-    </View>
+          {/* Support Link */}
+          <Text style={styles.supportText}>Need help? Contact support</Text>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -175,8 +298,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#EEF2FF',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 16,
   },
   card: {
@@ -236,6 +361,54 @@ const styles = StyleSheet.create({
   iconCircleRed: {
     backgroundColor: '#FEE2E2',
   },
+  errorBox: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 16,
+    width: '100%',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 6,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    backgroundColor: 'white',
+  },
+  inputIcon: {
+    paddingLeft: 12,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: '#111827',
+  },
+  otpInput: {
+    textAlign: 'center',
+    fontSize: 24,
+    letterSpacing: 8,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
   progressContainer: {
     width: '100%',
     marginBottom: 24,
@@ -267,6 +440,9 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
   buttonText: {
     color: 'white',
     fontSize: 16,
@@ -291,6 +467,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
+  },
+  linkText: {
+    color: '#2563EB',
+    fontWeight: '600',
   },
   supportText: {
     marginTop: 24,

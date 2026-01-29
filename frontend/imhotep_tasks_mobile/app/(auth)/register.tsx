@@ -14,6 +14,7 @@ import {
 import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios, { AxiosError } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -96,7 +97,11 @@ export default function RegisterScreen() {
     );
 
     if (result.success) {
+      // Store email for verification page
+      await AsyncStorage.setItem('pendingVerificationEmail', formData.email);
       setSuccess(true);
+      // Redirect to email verification after a short delay
+      setTimeout(() => router.replace('/(auth)/email-verify'), 2000);
     } else {
       setError(
         typeof result.error === 'string' ? result.error : 'Registration failed'
@@ -122,13 +127,12 @@ export default function RegisterScreen() {
           <Text style={styles.successHeading}>Welcome to Imhotep Tasks!</Text>
 
           <Text style={styles.successMessage}>
-            Please check your email and click the verification link to activate
-            your account before logging in.
+            We've sent a verification code to your email. You'll be redirected to enter it shortly.
           </Text>
 
-          <Link href="/(auth)/login" asChild>
+          <Link href="/(auth)/email-verify" asChild>
             <TouchableOpacity style={styles.successButton}>
-              <Text style={styles.successButtonText}>Start Organizing</Text>
+              <Text style={styles.successButtonText}>Verify Email</Text>
             </TouchableOpacity>
           </Link>
         </View>
