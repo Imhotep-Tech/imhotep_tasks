@@ -85,7 +85,7 @@ def add_routine(request):
             routines_title=routines_title,
             routine_type=routine_type,
             routines_dates=routines_dates,
-            created_by=request.user
+            created_by=request.user,
         )
     else:
         return Response(
@@ -99,6 +99,7 @@ def add_routine(request):
             "id": routine.id,
             "routines_title": routine.routines_title,
             "routines_dates": routine.routines_dates,
+            "routine_type": routine.routine_type,
             "status": routine.status,
             "created_by": routine.created_by.id,
         }
@@ -143,6 +144,7 @@ def update_routine(request, routine_id):
             "id": routine.id,
             "routines_title": routine.routines_title,
             "routines_dates": routine.routines_dates,
+            "routine_type": routine.routine_type,
             "status": routine.status,
             "created_by": routine.created_by.id,
         }

@@ -4,7 +4,9 @@ import axios from '../../config/api';
 import Footer from '../common/Footer';
 
 const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
+
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('routine');
   const [title, setTitle] = useState(routine?.routines_title || '');
   const [routineType, setRoutineType] = useState(routine?.routine_type || 'weekly');
   const [days, setDays] = useState(routine?.routines_dates ? (Array.isArray(routine.routines_dates) ? routine.routines_dates : routine.routines_dates.split(' ')) : []);
@@ -140,7 +142,7 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
       const payload = {
         routines_title: title,
         routine_type: routineType,
-        routines_dates: days
+        routines_dates: days,
       };
       let res;
       if (routine) {
@@ -164,42 +166,46 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
           <h3 className="text-lg font-semibold">{routine ? 'Update Routine' : 'Add New Routine'}</h3>
           <button aria-label="Close" onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
         </div>
+
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="text-sm font-medium text-gray-700">Routine Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              required
-            />
-          </div>
-          {/* New: Routine Type Tabs */}
-          <div>
-            <label className="text-sm font-medium text-gray-700">Routine Type *</label>
-            <div className="flex mt-1 border-b">
-              {['weekly', 'monthly', 'yearly'].map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => {
-                    setRoutineType(type);
-                    setDays([]); // Reset dates on type change
-                    setYearlyInput(''); // Reset yearly input on type change
-                    setYearlyError(''); // Reset yearly error on type change
-                  }}
-                  className={`px-4 py-2 text-sm font-medium capitalize ${
-                    routineType === type
-                      ? 'border-b-2 border-indigo-500 text-indigo-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Routine Details Tab */}
+          {activeTab === 'routine' && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Routine Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  required
+                />
+              </div>
+              {/* New: Routine Type Tabs */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">Routine Type *</label>
+                <div className="flex mt-1 border-b">
+                  {['weekly', 'monthly', 'yearly'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setRoutineType(type);
+                        setDays([]); // Reset dates on type change
+                        setYearlyInput(''); // Reset yearly input on type change
+                        setYearlyError(''); // Reset yearly error on type change
+                      }}
+                      className={`px-4 py-2 text-sm font-medium capitalize ${
+                        routineType === type
+                          ? 'border-b-2 border-indigo-500 text-indigo-600'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
           {/* Updated: Conditional Dates Input */}
           <div>
             <label className="text-sm font-medium text-gray-700">
@@ -265,6 +271,9 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
               </>
             )}
           </div>
+            </>
+          )}
+
           {error && <div className="text-sm text-red-600">{error}</div>}
           <div className="flex items-center justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="chef-button-secondary px-3 py-2 rounded">Cancel</button>

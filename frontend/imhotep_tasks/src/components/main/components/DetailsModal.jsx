@@ -2,6 +2,7 @@ import React from 'react';
 
 const DetailsModal = ({ task, onClose }) => {
   if (!task) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-5">
@@ -26,6 +27,7 @@ const DetailsModal = ({ task, onClose }) => {
             <span className="font-medium text-gray-700">Status:</span>
             <span className="ml-2">{task.status ? 'Completed' : 'Pending'}</span>
           </div>
+          
         </div>
       </div>
     </div>

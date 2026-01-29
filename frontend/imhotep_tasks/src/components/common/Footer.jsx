@@ -29,7 +29,7 @@ function Footer() {
             </div>
             <div className="text-sm text-gray-500">
               <span className="hidden sm:inline">|</span>
-              <span className="ml-2 sm:ml-3">&copy; 2025 Imhotep Tasks</span>
+              <span className="ml-2 sm:ml-3">&copy; 2026 Imhotep Tasks</span>
             </div>
           </div>
         </div>

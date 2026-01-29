@@ -5,6 +5,7 @@ from django.utils import timezone
 
 #a class to define a table to save the poll questions in them
 class Tasks(models.Model):
+
     # the title it self with max 200 char
     task_title = models.CharField(max_length=200)
 
@@ -35,7 +36,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-    
+
+
 class Routines(models.Model):
     # the title it self with max 200 char
     routines_title = models.CharField(max_length=200)

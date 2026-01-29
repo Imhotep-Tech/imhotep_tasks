@@ -31,11 +31,11 @@ function App() {
 
   return (
     <AuthProvider>
-      <OfflineIndicator />
-      <Router>
-        <div>
-          <DesktopAuthHandler />
-          <Routes>
+        <OfflineIndicator />
+        <Router>
+          <div>
+            <DesktopAuthHandler />
+            <Routes>
               <Route 
                 path="/" 
                 element={
@@ -127,12 +127,12 @@ function App() {
               path="/download" 
               element={<DownloadPage />} 
             />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          <InstallPrompt />
-          <UpdatePrompt />
-        </div>
-      </Router>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <InstallPrompt />
+            <UpdatePrompt />
+          </div>
+        </Router>
     </AuthProvider>
   )
 }

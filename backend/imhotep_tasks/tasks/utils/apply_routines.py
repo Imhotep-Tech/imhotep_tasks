@@ -69,7 +69,7 @@ def apply_routines(request, target_date, manually=False):
                 task_details=f"Created from {routine.routine_type} routine: {routine.routines_title}",
                 due_date=target_date,
                 created_by=request.user,
-                status=False
+                status=False,
             )
             routine.last_applied = target_date_only
             routine.save()

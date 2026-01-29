@@ -9,6 +9,7 @@ const TaskDeleteButton = ({ taskId, url_call, onDeleteTask }) => {
     setLoading(true);
     try {
       const res = await axios.delete(`api/tasks/delete_task/${taskId}/`, { data: { url_call } });
+
       onDeleteTask(taskId, res.data);
     } catch (err) {
       // Optionally handle error

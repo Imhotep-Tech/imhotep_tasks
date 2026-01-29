@@ -142,7 +142,7 @@ def add_task(request):
             task_title=task_title,
             task_details=task_details,
             due_date=due_date,
-            created_by=request.user
+            created_by=request.user,
         )
 
         task_data = tasks_managements_utils.serialize_task(task)
@@ -182,6 +182,7 @@ def update_task(request, task_id):
         if due_date_raw is not None:
             parsed = tasks_managements_utils._parse_date_input(due_date_raw)
             task.due_date = parsed
+
         task.save()
 
         task_data = tasks_managements_utils.serialize_task(task)
@@ -259,7 +260,7 @@ def delete_task(request, task_id):
             "message": "Task deleted",
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},
@@ -278,6 +279,7 @@ def multiple_delete_task(request):
             return Response({"error": "task_ids list is empty", "success": False},
                             status=status.HTTP_400_BAD_REQUEST)
         tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+
         tasks_qs.delete()
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
         return Response({
@@ -285,7 +287,7 @@ def multiple_delete_task(request):
             "message": "Tasks deleted",
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},
@@ -300,6 +302,7 @@ def task_complete(request, task_id):
         task.status = not task.status  # simplified toggle
         task.done_date = timezone.now().date() if task.status else None
         task.save()
+
         task_data = tasks_managements_utils.serialize_task(task)
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
         return Response({
@@ -307,7 +310,7 @@ def task_complete(request, task_id):
             "task": task_data,
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},
@@ -323,9 +326,11 @@ def multiple_task_complete(request):
             return Response({"error": "task_ids should be a list of IDs", "success": False},
                             status=status.HTTP_400_BAD_REQUEST)
         tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+        
         for t in tasks_qs:
             t.status = not t.status
             t.done_date = timezone.now().date() if t.status else None
+        
         Tasks.objects.bulk_update(tasks_qs, ['status', 'done_date'])
         tasks_data = [tasks_managements_utils.serialize_task(t) for t in tasks_qs]
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
@@ -334,7 +339,7 @@ def multiple_task_complete(request):
             "tasks": tasks_data,
             "total_number_tasks": total,
             "completed_tasks_count": completed,
-            "pending_tasks": pending
+            "pending_tasks": pending,
         }, status=status.HTTP_200_OK)
     except Exception:
         return Response({"error": "An error occurred", "success": False},
