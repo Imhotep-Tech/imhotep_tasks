@@ -45,9 +45,16 @@ const Login = () => {
       console.error('Login failed:', error);
       
       let errorMessage = 'Login failed';
+      let needsVerification = false;
+      let userEmail = null;
       
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
+        // Check if this is an email verification error
+        if (errorMessage === 'Email not verified') {
+          needsVerification = true;
+          userEmail = formData.username; // Could be email or username
+        }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.status === 401) {
@@ -59,6 +66,8 @@ const Login = () => {
       return { 
         success: false, 
         error: errorMessage,
+        needsVerification,
+        userEmail,
         info: error.response?.data?.message && error.response.data.error !== error.response.data.message 
           ? error.response.data.message 
           : null
@@ -78,9 +87,17 @@ const Login = () => {
       login(result.data);
       navigate('/today-tasks');
     } else {
-      setError(result.error);
-      if (result.info) {
-        setInfo(result.info);
+      if (result.needsVerification) {
+        // Store email for verification page and redirect
+        localStorage.setItem('pendingVerificationEmail', result.userEmail);
+        setInfo('Please verify your email. A verification code has been sent.');
+        // Redirect to verification page after a short delay
+        setTimeout(() => navigate('/verify-email'), 2000);
+      } else {
+        setError(result.error);
+        if (result.info) {
+          setInfo(result.info);
+        }
       }
     }
     

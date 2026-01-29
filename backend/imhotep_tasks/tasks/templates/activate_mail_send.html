@@ -17,7 +17,9 @@
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td align="center">
-                                        <img src="{{ domain }}/static/imhotep_tasks.png" alt="Imhotep Tasks Logo" width="48" height="48" style="display: block;">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" style="fill: none; stroke: #2563eb; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;">
+                                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                        </svg>
                                     </td>
                                 </tr>
                                 <tr>
@@ -36,20 +38,20 @@
                                 <tr>
                                     <td style="padding: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 24px;">
                                         <p style="margin: 0 0 16px 0;">Hi {{ user.username }},</p>
-                                        <p style="margin: 0 0 24px 0;">Thank you for registering with Imhotep Tasks. To get started organizing your work and achieving more, please activate your account by clicking the button below:</p>
+                                        <p style="margin: 0 0 24px 0;">Thank you for registering with Imhotep Tasks. To get started organizing your work and achieving more, please use the verification code below:</p>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td align="center" style="padding: 16px 0 32px 0;">
-                                        <a href="{{ frontend_url }}/verify-email/{{ uid }}/{{ token }}/" class="button">
-                                            ✨ Verify Email Address
-                                        </a>
+                                        <div style="background-color: #f3f4f6; border: 2px dashed #2563eb; border-radius: 8px; padding: 20px 40px; display: inline-block;">
+                                            <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #2563eb; font-family: 'Courier New', monospace;">{{ otp_code }}</span>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 0; color: #6b7280; font-size: 14px; line-height: 20px;">
-                                        <p style="margin: 0 0 16px 0;">If the button above doesn't work, you can also copy and paste the following link into your browser:</p>
-                                        <p style="margin: 0; word-break: break-all; color: #2563eb;">{{ frontend_url }}/verify-email/{{ uid }}/{{ token }}</p>
+                                    <td style="padding: 0; color: #6b7280; font-size: 14px; line-height: 20px; text-align: center;">
+                                        <p style="margin: 0 0 16px 0;">⏰ This code will expire in <strong>{{ validity_minutes }} minutes</strong>.</p>
+                                        <p style="margin: 0;">Enter this code in the app to verify your email address.</p>
                                     </td>
                                 </tr>
                             </table>

@@ -81,7 +81,9 @@ const Register = () => {
     
     if (result.success) {
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
+      // Store email in localStorage for verification page
+      localStorage.setItem('pendingVerificationEmail', formData.email);
+      setTimeout(() => navigate('/verify-email'), 2000);
     } else {
       setError(typeof result.error === 'string' ? result.error : 'Registration failed');
     }
@@ -130,10 +132,10 @@ const Register = () => {
                 Welcome to Imhotep Tasks!
               </h2>
               <p className="text-gray-600 font-medium mb-8">
-                Please check your email and click the verification link to activate your account before logging in.
+                We've sent a verification code to your email. You'll be redirected to enter it shortly.
               </p>
               <Link 
-                to="/login" 
+                to="/verify-email" 
                 className="chef-button inline-block text-center no-underline"
               >
                 Start Organizing

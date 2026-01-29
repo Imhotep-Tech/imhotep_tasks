@@ -1,10 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth.views import PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.core.mail import send_mail
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
+from django.utils import timezone
 from imhotep_tasks.settings import SITE_DOMAIN, frontend_url
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -13,7 +14,8 @@ from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from ..models import User
+from ..models import User, PendingOTP
+from tasks.utils.otp_utils import generate_otp, is_otp_valid, OTP_VALIDITY_MINUTES
 
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'password_reset.html'
@@ -93,7 +95,7 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
 @permission_classes([AllowAny])
 def password_reset_request(request):
     """
-    API endpoint to request a password reset email
+    API endpoint to request a password reset OTP email
     """
     try:
         email = request.data.get('email')
@@ -110,22 +112,37 @@ def password_reset_request(request):
         except User.DoesNotExist:
             # Return success even if user doesn't exist for security
             return Response(
-                {'message': 'If an account with this email exists, a password reset link has been sent.'}, 
+                {'message': 'If an account with this email exists, a password reset OTP has been sent.'}, 
                 status=status.HTTP_200_OK
             )
         
-        # Generate password reset email
+        # Generate OTP and save to database
         try:
-            mail_subject = 'Reset your Imhotep Tasks password'
-            current_site = SITE_DOMAIN.rstrip('/')
+            # Invalidate any existing unused OTPs for this user (password reset type)
+            PendingOTP.objects.filter(
+                user=user,
+                otp_type='password_reset',
+                is_used=False
+            ).update(is_used=True)
             
-            # For API-based frontend, we'll send a different template
+            # Generate new OTP
+            otp_code = generate_otp()
+            
+            # Save OTP to database
+            PendingOTP.objects.create(
+                user=user,
+                otp_code=otp_code,
+                otp_type='password_reset',
+                is_used=False
+            )
+            
+            # Send password reset email with OTP
+            mail_subject = 'Reset your Imhotep Tasks password'
+            
             context = {
                 'user': user,
-                'domain': current_site,
-                'frontend_url': frontend_url,  # Your React app URL
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': default_token_generator.make_token(user),
+                'otp_code': otp_code,
+                'validity_minutes': OTP_VALIDITY_MINUTES,
             }
             
             message = render_to_string('password_reset_email.html', context)
@@ -146,13 +163,13 @@ def password_reset_request(request):
             )
         
         return Response(
-            {'message': 'If an account with this email exists, a password reset link has been sent.'}, 
+            {'message': 'If an account with this email exists, a password reset OTP has been sent.'}, 
             status=status.HTTP_200_OK
         )
         
     except Exception:
         return Response(
-            {'error': f'An error occurred during password reset request'}, 
+            {'error': 'An error occurred during password reset request'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -160,17 +177,17 @@ def password_reset_request(request):
 @permission_classes([AllowAny])
 def password_reset_confirm(request):
     """
-    API endpoint to confirm password reset with new password
+    API endpoint to confirm password reset with OTP and new password
     """
     try:
-        uid = request.data.get('uid')
-        token = request.data.get('token')
+        email = request.data.get('email')
+        otp_code = request.data.get('otp')
         new_password = request.data.get('new_password')
         confirm_password = request.data.get('confirm_password')
         
-        if not all([uid, token, new_password, confirm_password]):
+        if not all([email, otp_code, new_password, confirm_password]):
             return Response(
-                {'error': 'All fields are required'}, 
+                {'error': 'All fields are required (email, otp, new_password, confirm_password)'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -189,22 +206,38 @@ def password_reset_confirm(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Decode the user ID
+        # Get the user by email
         try:
-            user_id = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=user_id)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
             return Response(
-                {'error': 'Invalid password reset link'}, 
+                {'error': 'Invalid email or OTP'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if the token is valid
-        if not default_token_generator.check_token(user, token):
+        # Find the OTP record
+        try:
+            pending_otp = PendingOTP.objects.filter(
+                user=user,
+                otp_code=otp_code,
+                is_used=False
+            ).latest('created_at')
+        except PendingOTP.DoesNotExist:
             return Response(
-                {'error': 'Invalid or expired password reset link'}, 
+                {'error': 'Invalid or expired OTP'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # Check if the OTP is still valid (within 10 minutes)
+        if not is_otp_valid(pending_otp):
+            return Response(
+                {'error': 'OTP has expired. Please request a new password reset.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Mark OTP as used
+        pending_otp.is_used = True
+        pending_otp.save()
         
         # Set new password
         user.set_password(new_password)
@@ -217,7 +250,7 @@ def password_reset_confirm(request):
         
     except Exception:
         return Response(
-            {'error': f'An error occurred during password reset'}, 
+            {'error': 'An error occurred during password reset'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -225,43 +258,56 @@ def password_reset_confirm(request):
 @permission_classes([AllowAny])
 def password_reset_validate(request):
     """
-    API endpoint to validate password reset token without changing password
+    API endpoint to validate password reset OTP without changing password
     """
     try:
-        uid = request.data.get('uid')
-        token = request.data.get('token')
+        email = request.data.get('email')
+        otp_code = request.data.get('otp')
         
-        if not uid or not token:
+        if not email or not otp_code:
             return Response(
-                {'error': 'Missing validation parameters'}, 
+                {'error': 'Missing validation parameters (email, otp)'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Decode the user ID
+        # Get the user by email
         try:
-            user_id = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=user_id)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
             return Response(
-                {'valid': False, 'error': 'Invalid password reset link'}, 
+                {'valid': False, 'error': 'Invalid email or OTP'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if the token is valid
-        if default_token_generator.check_token(user, token):
+        # Find the OTP record
+        try:
+            pending_otp = PendingOTP.objects.filter(
+                user=user,
+                otp_code=otp_code,
+                otp_type='password_reset',
+                is_used=False
+            ).latest('created_at')
+        except PendingOTP.DoesNotExist:
+            return Response(
+                {'valid': False, 'error': 'Invalid or expired OTP'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if the OTP is still valid (within 10 minutes)
+        if is_otp_valid(pending_otp):
             return Response(
                 {'valid': True, 'email': user.email}, 
                 status=status.HTTP_200_OK
             )
         else:
             return Response(
-                {'valid': False, 'error': 'Invalid or expired password reset link'}, 
+                {'valid': False, 'error': 'OTP has expired. Please request a new password reset.'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
             
     except Exception:
         return Response(
-            {'valid': False, 'error': f'An error occurred during validation'}, 
+            {'valid': False, 'error': 'An error occurred during validation'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

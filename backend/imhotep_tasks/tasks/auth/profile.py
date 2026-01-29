@@ -1,17 +1,14 @@
 from django.shortcuts import redirect
-from ..models import User
+from ..models import User, PendingOTP
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.contrib.auth.tokens import default_token_generator
-from imhotep_tasks.settings import SITE_DOMAIN, frontend_url
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from tasks.utils.otp_utils import generate_otp, is_otp_valid, OTP_VALIDITY_MINUTES
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -74,25 +71,34 @@ def update_profile(request):
                 if User.objects.filter(email=email).exclude(id=user.id).exists():
                     errors.append('Email already taken, please choose another one!')
                 else:
-                    # Send verification email for new email
+                    # Invalidate any existing unused email change OTPs for this user
+                    PendingOTP.objects.filter(
+                        user=user,
+                        otp_type='email_change',
+                        is_used=False
+                    ).update(is_used=True)
+                    
+                    # Generate new OTP
+                    otp_code = generate_otp()
+                    
+                    # Save OTP to database with new email
+                    PendingOTP.objects.create(
+                        user=user,
+                        otp_code=otp_code,
+                        otp_type='email_change',
+                        new_email=email,
+                        is_used=False
+                    )
+                    
+                    # Send verification email with OTP
                     try:
                         mail_subject = 'Verify your new email address'
-                        current_site = SITE_DOMAIN.rstrip('/')
-                        
-                        # Create verification context
-                        uid = urlsafe_base64_encode(force_bytes(user.pk))
-                        token = default_token_generator.make_token(user)
-                        new_email_encoded = urlsafe_base64_encode(force_bytes(email))
                         
                         context = {
                             'user': user,
-                            'domain': current_site,
-                            'frontend_url': frontend_url,
-                            'uid': uid,
-                            'token': token,
                             'new_email': email,
-                            'new_email_encoded': new_email_encoded,
-                            'verification_url': f'{frontend_url}/verify-email-change/{uid}/{token}/{new_email_encoded}'
+                            'otp_code': otp_code,
+                            'validity_minutes': OTP_VALIDITY_MINUTES,
                         }
                         
                         message = render_to_string('activate_mail_change_send.html', context)
@@ -105,11 +111,18 @@ def update_profile(request):
                             html_message=message
                         )
                         
-                        messages.append("Email verification sent! Please check your new email to verify the change.")
+                        messages.append("Email verification sent! Please check your new email for the verification code.")
+                        email_verification_required = True
+                        pending_new_email = email
                         
                     except Exception as email_error:
                         print(f"Failed to send email verification: {str(email_error)}")
                         errors.append("Failed to send verification email. Please try again later.")
+                        email_verification_required = False
+                        pending_new_email = None
+        else:
+            email_verification_required = False
+            pending_new_email = None
 
         # Save user if there are no errors
         if not errors:
@@ -123,7 +136,7 @@ def update_profile(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        return Response({
+        response_data = {
             'message': messages[0] if len(messages) == 1 else messages,
             'user': {
                 'id': user.id,
@@ -133,7 +146,13 @@ def update_profile(request):
                 'last_name': user.last_name,
                 'email_verify': user.email_verify,
             }
-        })
+        }
+        
+        if email_verification_required:
+            response_data['email_verification_required'] = True
+            response_data['pending_new_email'] = pending_new_email
+        
+        return Response(response_data)
 
     except Exception as e:
         return Response(
@@ -196,57 +215,66 @@ def change_password(request):
         )
 
 @api_view(['POST'])
-@permission_classes([])
+@permission_classes([IsAuthenticated])
 def verify_email_change(request):
-    """Verify email change using token"""
+    """Verify email change using OTP"""
     try:
-        uid = request.data.get('uid')
-        token = request.data.get('token')
-        new_email_encoded = request.data.get('new_email')  # This is actually the encoded email from URL
+        otp_code = request.data.get('otp')
         
-        if not all([uid, token, new_email_encoded]):
+        if not otp_code:
             return Response(
-                {'error': 'Missing verification parameters'}, 
+                {'error': 'OTP code is required'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Decode the user ID and new email
+        user = request.user
+        
+        # Find the OTP record for email change
         try:
-            user_id = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=user_id)
-            new_email = force_str(urlsafe_base64_decode(new_email_encoded))
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            pending_otp = PendingOTP.objects.filter(
+                user=user,
+                otp_code=otp_code,
+                otp_type='email_change',
+                is_used=False
+            ).latest('created_at')
+        except PendingOTP.DoesNotExist:
             return Response(
-                {'error': 'Invalid verification link'}, 
+                {'error': 'Invalid or expired OTP'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        # Check if the token is valid
-        if default_token_generator.check_token(user, token):
-            # Check if the new email is already taken by another user
-            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
-                return Response(
-                    {'error': 'This email address is already in use by another account'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Update the user's email
-            user.email = new_email
-            user.email_verify = True
-            user.save()
-            
+        
+        # Check if the OTP is still valid (within 10 minutes)
+        if not is_otp_valid(pending_otp):
             return Response(
-                {'message': 'Email updated successfully'}, 
-                status=status.HTTP_200_OK
-            )
-        else:
-            return Response(
-                {'error': 'Invalid or expired verification link'}, 
+                {'error': 'OTP has expired. Please request a new email change.'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        new_email = pending_otp.new_email
+        
+        # Check if the new email is already taken by another user
+        if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+            return Response(
+                {'error': 'This email address is already in use by another account'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Mark OTP as used
+        pending_otp.is_used = True
+        pending_otp.save()
+        
+        # Update the user's email
+        user.email = new_email
+        user.email_verify = True
+        user.save()
+        
+        return Response(
+            {'message': 'Email updated successfully'}, 
+            status=status.HTTP_200_OK
+        )
             
     except Exception as e:
         return Response(
-            {'error': f'An error occurred during email verification'}, 
+            {'error': 'An error occurred during email verification'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

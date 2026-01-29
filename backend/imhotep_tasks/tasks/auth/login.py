@@ -1,17 +1,14 @@
 from django.contrib.auth import authenticate
-from ..models import User
+from ..models import User, PendingOTP
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
 from django.template.loader import render_to_string
-from django.contrib.auth.tokens import default_token_generator
-from imhotep_tasks.settings import SITE_DOMAIN, frontend_url
 from django.views.decorators.csrf import csrf_exempt
+from tasks.utils.otp_utils import generate_otp, OTP_VALIDITY_MINUTES
 
 #the login route
 @api_view(['POST'])
@@ -61,16 +58,31 @@ def login_view(request):
                     }
                 })
             else:
+                # Invalidate any existing unused registration OTPs for this user
+                PendingOTP.objects.filter(
+                    user=user,
+                    otp_type='registration',
+                    is_used=False
+                ).update(is_used=True)
+                
+                # Generate new OTP
+                otp_code = generate_otp()
+                
+                # Save OTP to database
+                PendingOTP.objects.create(
+                    user=user,
+                    otp_code=otp_code,
+                    otp_type='registration',
+                    is_used=False
+                )
+                
                 # Send verification email
                 try:
                     mail_subject = 'Activate your Imhotep Tasks account'
-                    current_site = SITE_DOMAIN.rstrip('/')
                     message = render_to_string('activate_mail_send.html', {
                         'user': user,
-                        'domain': current_site,
-                        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                        'token': default_token_generator.make_token(user),
-                        'frontend_url': frontend_url
+                        'otp_code': otp_code,
+                        'validity_minutes': OTP_VALIDITY_MINUTES,
                     })
                     send_mail(mail_subject, message, 'imhoteptech1@gmail.com', [user.email], html_message=message)
                 except Exception as email_error:

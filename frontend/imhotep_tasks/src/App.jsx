@@ -5,7 +5,6 @@ import PublicRoute from './components/PublicRoute'
 import Login from './components/auth/Login'
 import Register from './components/auth/Register'
 import ForgotPassword from './components/auth/ForgotPassword'
-import ResetPassword from './components/auth/ResetPassword'
 import TodayTasks from './components/main/TodayTasks'
 import LandingPage from './components/main/LandingPage'
 import EmailVerification from './components/auth/EmailVerification'
@@ -69,15 +68,11 @@ function App() {
                 </PublicRoute>
               } 
             />
-            <Route 
-              path="/reset-password" 
-              element={
-                <PublicRoute>
-                  <ResetPassword />
-                </PublicRoute>
-              } 
-            />
-            <Route path="/verify-email/:uid/:token" element={<EmailVerification />} />
+            <Route path="/verify-email" element={
+              <PublicRoute>
+                <EmailVerification />
+              </PublicRoute>
+            } />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route 
               path="/today-tasks" 
@@ -104,8 +99,12 @@ function App() {
               } 
             />
             <Route 
-              path="/verify-email-change/:uid/:token/:new_email" 
-              element={<EmailChangeVerification />} 
+              path="/verify-email-change" 
+              element={
+                <ProtectedRoute>
+                  <EmailChangeVerification />
+                </ProtectedRoute>
+              } 
             />
             <Route 
               path="/all-tasks" 

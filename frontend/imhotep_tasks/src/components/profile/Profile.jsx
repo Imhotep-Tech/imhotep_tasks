@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../common/Footer';
 
 const Profile = () => {
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, token } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Email verification modal state
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [pendingNewEmail, setPendingNewEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
 
   // Profile form data
   const [profileData, setProfileData] = useState({
@@ -70,7 +78,15 @@ const Profile = () => {
 
     try {
       const response = await axios.put('/api/profile/update/', profileData);
-      setSuccess(response.data.message);
+      
+      // Check if email verification is required
+      if (response.data.email_verification_required) {
+        setPendingNewEmail(response.data.pending_new_email);
+        setShowOtpModal(true);
+        setSuccess('A verification code has been sent to your new email address.');
+      } else {
+        setSuccess(response.data.message);
+      }
       
       // Update user context with new data
       if (response.data.user) {
@@ -81,6 +97,47 @@ const Profile = () => {
     }
     
     setLoading(false);
+  };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!otp || otp.length !== 6) {
+      setOtpError('Please enter a valid 6-digit OTP code');
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpError('');
+
+    try {
+      const response = await axios.post('/api/profile/verify-email-change/', 
+        { otp },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setShowOtpModal(false);
+      setOtp('');
+      setSuccess('Email changed successfully! Please log in again with your new email.');
+      
+      // Log out user after email change
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 2000);
+    } catch (error) {
+      setOtpError(error.response?.data?.error || 'Verification failed. Please try again.');
+    }
+    
+    setOtpLoading(false);
+  };
+
+  const closeOtpModal = () => {
+    setShowOtpModal(false);
+    setOtp('');
+    setOtpError('');
+    // Reset email to current value since verification was cancelled
+    setProfileData(prev => ({ ...prev, email: user.email }));
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -411,6 +468,95 @@ const Profile = () => {
           </div>
         </div>
       </section>
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative animate-fade-in">
+            {/* Close button */}
+            <button
+              onClick={closeOtpModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Modal header */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Verify Your New Email</h3>
+              <p className="text-sm text-gray-600 mt-2">
+                We've sent a 6-digit verification code to <span className="font-medium text-blue-600">{pendingNewEmail}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">The code expires in 10 minutes</p>
+            </div>
+
+            {/* OTP Form */}
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              {otpError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 flex items-center">
+                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                  </svg>
+                  {otpError}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">Enter Verification Code</label>
+                <input
+                  id="otp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => {
+                    setOtp(e.target.value.replace(/\D/g, ''));
+                    if (otpError) setOtpError('');
+                  }}
+                  required
+                  autoFocus
+                  className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-4 border border-gray-300 rounded-lg text-center text-2xl tracking-[0.5em] font-mono"
+                  placeholder="000000"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={closeOtpModal}
+                  className="flex-1 py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={otpLoading || otp.length !== 6}
+                  className="flex-1 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  {otpLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                      Verifying...
+                    </span>
+                  ) : 'Verify Email'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </>
