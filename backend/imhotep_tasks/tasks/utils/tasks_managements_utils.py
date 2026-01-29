@@ -14,12 +14,6 @@ def serialize_task(task):
         "status": bool(task.status),
         "done_date": task.done_date.isoformat() if getattr(task, "done_date", None) else None,
         "created_by": getattr(task.created_by, "id", None),
-        # Optional finance-related fields
-        "price": getattr(task, "price", None),
-        "transaction_id": getattr(task, "transaction_id", None),
-        "transaction_status": getattr(task, "transaction_status", None),
-        "transaction_currency": getattr(task, "transaction_currency", None),
-        "transaction_category": getattr(task, "transaction_category", None),
     }
 
 # Helper: parse date-like input to date

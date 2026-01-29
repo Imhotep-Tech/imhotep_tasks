@@ -64,17 +64,12 @@ def apply_routines(request, target_date, manually=False):
         
         if should_create_task:
             # create task from routine using date only
-            # Include finance fields if set on the routine
             Tasks.objects.create(
                 task_title=routine.routines_title,
                 task_details=f"Created from {routine.routine_type} routine: {routine.routines_title}",
                 due_date=target_date,
                 created_by=request.user,
                 status=False,
-                price=routine.price,
-                transaction_currency=routine.transaction_currency,
-                transaction_status=routine.transaction_status,
-                transaction_category=routine.transaction_category,
             )
             routine.last_applied = target_date_only
             routine.save()

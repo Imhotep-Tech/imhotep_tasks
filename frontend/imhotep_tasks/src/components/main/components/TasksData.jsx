@@ -47,11 +47,7 @@ const TaskRow = ({
               <span className="mr-1">
                 {task.transaction_status || 'Transaction'}
               </span>
-              {task.price != null && (
-                <span>
-                  · {task.price} {task.transaction_currency || ''}
-                </span>
-              )}
+        
             </div>
           )}
         </div>

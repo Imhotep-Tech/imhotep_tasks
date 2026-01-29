@@ -19,12 +19,6 @@ urlpatterns = [
     
     path('user-data/', views.user_view, name='user_data'),
 
-    # Imhotep Finance integration endpoints
-    path('finance/imhotep/authorize-url/', views.imhotep_finance_authorize_url, name='imhotep_finance_authorize_url'),
-    path('finance/imhotep/callback/', views.imhotep_finance_callback, name='imhotep_finance_callback'),
-    path('finance/imhotep/status/', views.imhotep_finance_status, name='imhotep_finance_status'),
-    path('finance/imhotep/currencies/', views.imhotep_finance_currencies, name='imhotep_finance_currencies'),
-    
     # Authentication endpoints
     path('auth/login/', login.login_view, name='login'),
     path('auth/logout/', logout.logout_view, name='logout'),
