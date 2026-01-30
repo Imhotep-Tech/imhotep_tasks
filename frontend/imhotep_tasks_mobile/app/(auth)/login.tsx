@@ -11,6 +11,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  useColorScheme,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +20,49 @@ import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const themes = {
+  light: {
+    background: '#EEF2FF',
+    card: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    placeholder: '#9CA3AF',
+    border: '#D1D5DB',
+    primary: '#2563EB',
+    primaryLight: '#EFF6FF',
+    error: '#DC2626',
+    errorBg: '#FEF2F2',
+    errorBorder: '#FECACA',
+    info: '#2563EB',
+    infoBg: '#EFF6FF',
+    infoBorder: '#BFDBFE',
+    inputBg: '#FFFFFF',
+    divider: '#D1D5DB',
+  },
+  dark: {
+    background: '#1F2937',
+    card: '#374151',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    placeholder: '#6B7280',
+    border: '#4B5563',
+    primary: '#3B82F6',
+    primaryLight: '#1E3A5F',
+    error: '#F87171',
+    errorBg: '#7F1D1D',
+    errorBorder: '#F87171',
+    info: '#60A5FA',
+    infoBg: '#1E3A5F',
+    infoBorder: '#3B82F6',
+    inputBg: '#4B5563',
+    divider: '#4B5563',
+  },
+};
+
 export default function LoginScreen() {
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+
   const [formData, setFormData] = useState({
     username: '',
     password: '',

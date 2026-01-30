@@ -8,8 +8,10 @@ interface AuthContextType {
   user: any;
   login: ({ access, refresh, user }: { access: string; refresh: string; user: any }) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (userData: any) => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
+  token: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -171,12 +173,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await AsyncStorage.removeItem('user');
   };
 
+  // Update User Function
+  const updateUser = async (userData: any) => {
+    setUser(userData);
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
+  };
+
   const value = {
     user,
     login,
     logout,
+    updateUser,
     loading,
     isAuthenticated: !!user,
+    token: accessToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
