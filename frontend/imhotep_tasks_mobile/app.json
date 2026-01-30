@@ -9,17 +9,34 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "associatedDomains": [
+        "applinks:imhotep-tasks.vercel.app"
+      ]
     },
     "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/imhotep_tasks.png",
-        "backgroundImage": "./assets/images/imhotep_tasks.png",
-        "monochromeImage": "./assets/images/imhotep_tasks.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "imhotep-tasks.vercel.app",
+              "pathPrefix": "/verify-email"
+            },
+            {
+              "scheme": "https",
+              "host": "imhotep-tasks.vercel.app",
+              "pathPrefix": "/verify-email-change"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "package": "com.imhoteptech.imhotep_tasks_mobile"
     },
     "web": {
       "output": "static",
@@ -44,29 +61,17 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "android": {
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "imhotep-tasks.vercel.app",
-              "pathPrefix": "/verify-email"
-            },
-            {
-              "scheme": "https",
-              "host": "imhotep-tasks.vercel.app",
-              "pathPrefix": "/verify-email-change"
-            }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
-        }
-      ]
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dc580c3f-1d6d-40c1-a539-56f83e8b9818"
+      }
     },
-    "ios": {
-      "associatedDomains": ["applinks:imhotep-tasks.vercel.app"]
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/dc580c3f-1d6d-40c1-a539-56f83e8b9818"
     }
   }
 }

@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import UpdateChecker from '@/components/UpdateChecker';
 
 export const unstable_settings = {
   initialRouteName: '(auth)',
@@ -28,6 +29,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
         <RootLayoutNav />
+        <UpdateChecker />
         <StatusBar style="auto" />
       </AuthProvider>
     </ThemeProvider>
