@@ -10,9 +10,40 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DatePickerModal } from './DatePickerModal';
+
+// Theme colors
+const themes = {
+  light: {
+    background: '#FFFFFF',
+    surface: '#F9FAFB',
+    text: '#1F2937',
+    textSecondary: '#6B7280',
+    placeholder: '#9CA3AF',
+    border: '#D1D5DB',
+    borderLight: '#E5E7EB',
+    primary: '#6366F1',
+    primaryLight: '#EEF2FF',
+    error: '#EF4444',
+    overlay: 'rgba(0, 0, 0, 0.5)',
+  },
+  dark: {
+    background: '#1F2937',
+    surface: '#374151',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    placeholder: '#6B7280',
+    border: '#4B5563',
+    borderLight: '#374151',
+    primary: '#818CF8',
+    primaryLight: '#312E81',
+    error: '#F87171',
+    overlay: 'rgba(0, 0, 0, 0.7)',
+  },
+};
 
 interface Task {
   id: number;
@@ -39,6 +70,9 @@ export function TaskFormModal({
   onSubmit,
   loading,
 }: TaskFormModalProps) {
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -123,38 +157,46 @@ export function TaskFormModal({
         onRequestClose={handleClose}
       >
         <KeyboardAvoidingView
-          style={styles.overlay}
+          style={[styles.overlay, { backgroundColor: colors.overlay }]}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          <View style={styles.container}>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>{headerTitle}</Text>
+          <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>{headerTitle}</Text>
               <Pressable onPress={handleClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </Pressable>
             </View>
 
             <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Title *</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Title *</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  }]}
                   value={title}
                   onChangeText={setTitle}
                   placeholder="e.g. Write project proposal"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.placeholder}
                   autoFocus={mode === 'add'}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Description (optional)</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Description (optional)</Text>
                 <TextInput
-                  style={[styles.input, styles.textArea]}
+                  style={[styles.input, styles.textArea, { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  }]}
                   value={description}
                   onChangeText={setDescription}
                   placeholder="Add details to help you remember"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.placeholder}
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
@@ -162,20 +204,24 @@ export function TaskFormModal({
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Due Date (optional)</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Due Date (optional)</Text>
                 <Pressable
-                  style={styles.dateButton}
+                  style={[styles.dateButton, { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  }]}
                   onPress={() => setShowDatePicker(true)}
                 >
                   <Ionicons
                     name="calendar-outline"
                     size={20}
-                    color={dueDate ? '#6366F1' : '#9CA3AF'}
+                    color={dueDate ? colors.primary : colors.placeholder}
                   />
                   <Text
                     style={[
                       styles.dateButtonText,
-                      !dueDate && styles.dateButtonPlaceholder,
+                      { color: colors.text },
+                      !dueDate && { color: colors.placeholder },
                     ]}
                   >
                     {formatDateDisplay(dueDate)}
@@ -188,22 +234,25 @@ export function TaskFormModal({
                       }}
                       style={styles.clearDateButton}
                     >
-                      <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+                      <Ionicons name="close-circle" size={20} color={colors.placeholder} />
                     </Pressable>
                   ) : (
-                    <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                    <Ionicons name="chevron-forward" size={20} color={colors.placeholder} />
                   )}
                 </Pressable>
               </View>
 
-              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
 
               <View style={styles.actions}>
-                <Pressable style={styles.cancelButton} onPress={handleClose}>
-                  <Text style={styles.cancelText}>Cancel</Text>
+                <Pressable 
+                  style={[styles.cancelButton, { borderColor: colors.border }]} 
+                  onPress={handleClose}
+                >
+                  <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancel</Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                  style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
                   onPress={handleSubmit}
                   disabled={loading}
                 >
@@ -235,11 +284,9 @@ export function TaskFormModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -250,12 +297,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   closeButton: {
     padding: 4,
@@ -269,18 +314,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#1F2937',
-    backgroundColor: '#F9FAFB',
   },
   textArea: {
     minHeight: 100,
@@ -289,26 +330,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: '#F9FAFB',
     gap: 10,
   },
   dateButtonText: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
-  },
-  dateButtonPlaceholder: {
-    color: '#9CA3AF',
   },
   clearDateButton: {
     padding: 2,
   },
   error: {
-    color: '#EF4444',
     fontSize: 14,
     marginBottom: 12,
   },
@@ -324,17 +358,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
   },
   cancelText: {
-    color: '#6B7280',
     fontSize: 16,
     fontWeight: '500',
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366F1',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,

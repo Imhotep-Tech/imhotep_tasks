@@ -76,25 +76,30 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
   const url_call = pageType;
   const endpoint = API_ENDPOINTS[pageType];
 
-  // Sort tasks with overdue at the top
+  // Track initial order - only sort on fetch, not on toggle
+  const [initialOrder, setInitialOrder] = useState<number[]>([]);
+
+  // Sort tasks with overdue at the top - only on initial load
   const sortedTasks = useMemo(() => {
-    if (!sortOverdueFirst) return tasks;
+    if (!sortOverdueFirst || initialOrder.length === 0) return tasks;
     
+    // Maintain the initial order established on fetch
     return [...tasks].sort((a, b) => {
-      const aOverdue = isOverdue(a.due_date, a.status);
-      const bOverdue = isOverdue(b.due_date, b.status);
-
-      // Overdue tasks first
-      if (aOverdue && !bOverdue) return -1;
-      if (!aOverdue && bOverdue) return 1;
-
-      // Then by completion status (pending first)
-      if (!a.status && b.status) return -1;
-      if (a.status && !b.status) return 1;
-
+      const aIndex = initialOrder.indexOf(a.id);
+      const bIndex = initialOrder.indexOf(b.id);
+      
+      // If both are in the initial order, maintain that order
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+      
+      // New tasks (not in initial order) go to the top
+      if (aIndex === -1 && bIndex !== -1) return -1;
+      if (aIndex !== -1 && bIndex === -1) return 1;
+      
       return 0;
     });
-  }, [tasks, sortOverdueFirst]);
+  }, [tasks, sortOverdueFirst, initialOrder]);
 
   // Fetch tasks
   const fetchTasks = useCallback(async (pageNum = 1, isRefresh = false) => {
@@ -107,7 +112,33 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     try {
       const res = await api.get<TasksResponse>(`${endpoint}?page=${pageNum}`);
       const data = res.data;
-      setTasks(data.user_tasks || []);
+      const fetchedTasks = data.user_tasks || [];
+      
+      // Sort tasks with overdue first on initial fetch
+      if (sortOverdueFirst) {
+        const sorted = [...fetchedTasks].sort((a, b) => {
+          const aOverdue = isOverdue(a.due_date, a.status);
+          const bOverdue = isOverdue(b.due_date, b.status);
+
+          // Overdue tasks first
+          if (aOverdue && !bOverdue) return -1;
+          if (!aOverdue && bOverdue) return 1;
+
+          // Then by completion status (pending first)
+          if (!a.status && b.status) return -1;
+          if (a.status && !b.status) return 1;
+
+          return 0;
+        });
+        
+        // Store the initial sorted order
+        setInitialOrder(sorted.map(t => t.id));
+        setTasks(sorted);
+      } else {
+        setInitialOrder(fetchedTasks.map(t => t.id));
+        setTasks(fetchedTasks);
+      }
+      
       setPage(data.pagination?.page || 1);
       setNumPages(data.pagination?.num_pages || 1);
       setTotalTasks(data.total_number_tasks ?? 0);
@@ -120,7 +151,7 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
       setLoading(false);
       setRefreshing(false);
     }
-  }, [endpoint]);
+  }, [endpoint, sortOverdueFirst]);
 
   const onRefresh = useCallback(() => {
     fetchTasks(1, true);
