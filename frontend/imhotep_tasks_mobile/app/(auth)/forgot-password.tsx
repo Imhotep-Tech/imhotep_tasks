@@ -10,15 +10,58 @@ import {
   Platform,
   ScrollView,
   Image,
+  useColorScheme,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios, { AxiosError } from 'axios';
 
+const themes = {
+  light: {
+    background: '#EEF2FF',
+    card: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    placeholder: '#9CA3AF',
+    border: '#D1D5DB',
+    primary: '#2563EB',
+    primaryLight: '#EFF6FF',
+    error: '#DC2626',
+    errorBg: '#FEF2F2',
+    errorBorder: '#FECACA',
+    success: '#16A34A',
+    successBg: '#F0FDF4',
+    successBorder: '#BBF7D0',
+    successLight: '#DCFCE7',
+    inputBg: '#FFFFFF',
+  },
+  dark: {
+    background: '#1F2937',
+    card: '#374151',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    placeholder: '#6B7280',
+    border: '#4B5563',
+    primary: '#3B82F6',
+    primaryLight: '#1E3A5F',
+    error: '#F87171',
+    errorBg: '#7F1D1D',
+    errorBorder: '#F87171',
+    success: '#4ADE80',
+    successBg: '#14532D',
+    successBorder: '#4ADE80',
+    successLight: '#14532D',
+    inputBg: '#4B5563',
+  },
+};
+
 type Step = 'email' | 'otp' | 'success';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -167,22 +210,22 @@ export default function ForgotPasswordScreen() {
   // Success Screen
   if (step === 'success') {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.centerContent}>
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <View style={styles.logoContainer}>
-              <View style={[styles.logoCircle, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="checkmark" size={32} color="#16A34A" />
+              <View style={[styles.logoCircle, { backgroundColor: colors.successLight }]}>
+                <Ionicons name="checkmark" size={32} color={colors.success} />
               </View>
             </View>
 
-            <Text style={styles.title}>Password Reset!</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>Password Reset!</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Your password has been successfully reset. You can now log in with your new password.
             </Text>
 
             <Link href="/(auth)/login" asChild>
-              <TouchableOpacity style={styles.submitButton}>
+              <TouchableOpacity style={[styles.submitButton, { backgroundColor: colors.primary }]}>
                 <Text style={styles.submitButtonText}>Back to Login</Text>
               </TouchableOpacity>
             </Link>
@@ -196,51 +239,51 @@ export default function ForgotPasswordScreen() {
   if (step === 'otp') {
     return (
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
             <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Ionicons name="key-outline" size={32} color="#2563EB" />
+              <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
+                <Ionicons name="key-outline" size={32} color={colors.primary} />
               </View>
             </View>
 
-            <Text style={styles.title}>Reset Password</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.text }]}>Reset Password</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Enter the 6-digit code sent to {email} and create your new password. The code expires in 10 minutes.
             </Text>
 
             {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
               </View>
             ) : null}
 
             {resendSuccess ? (
-              <View style={styles.successBox}>
-                <Text style={styles.successText}>New OTP sent successfully!</Text>
+              <View style={[styles.successBox, { backgroundColor: colors.successBg, borderColor: colors.successBorder }]}>
+                <Text style={[styles.successText, { color: colors.success }]}>New OTP sent successfully!</Text>
               </View>
             ) : null}
 
             {/* OTP Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Verification Code</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: colors.text }]}>Verification Code</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                 <Ionicons
                   name="keypad-outline"
                   size={20}
-                  color="#9CA3AF"
+                  color={colors.placeholder}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={[styles.input, styles.otpInput]}
+                  style={[styles.input, styles.otpInput, { color: colors.text }]}
                   placeholder="000000"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.placeholder}
                   value={otp}
                   onChangeText={(text) => {
                     setOtp(text.replace(/\D/g, ''));
@@ -254,18 +297,18 @@ export default function ForgotPasswordScreen() {
 
             {/* New Password Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>New Password</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: colors.text }]}>New Password</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color="#9CA3AF"
+                  color={colors.placeholder}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Enter new password"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.placeholder}
                   value={newPassword}
                   onChangeText={(text) => {
                     setNewPassword(text);
@@ -281,7 +324,7 @@ export default function ForgotPasswordScreen() {
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
-                    color="#3B82F6"
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               </View>
@@ -289,18 +332,18 @@ export default function ForgotPasswordScreen() {
 
             {/* Confirm Password Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm New Password</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={[styles.label, { color: colors.text }]}>Confirm New Password</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                 <Ionicons
                   name="shield-checkmark-outline"
                   size={20}
-                  color="#9CA3AF"
+                  color={colors.placeholder}
                   style={styles.inputIcon}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Confirm new password"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.placeholder}
                   value={confirmPassword}
                   onChangeText={(text) => {
                     setConfirmPassword(text);
@@ -316,7 +359,7 @@ export default function ForgotPasswordScreen() {
                   <Ionicons
                     name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
-                    color="#3B82F6"
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               </View>
@@ -324,7 +367,7 @@ export default function ForgotPasswordScreen() {
 
             {/* Submit Button */}
             <TouchableOpacity
-              style={[styles.submitButton, (loading || otp.length !== 6) && styles.submitButtonDisabled]}
+              style={[styles.submitButton, { backgroundColor: colors.primary }, (loading || otp.length !== 6) && styles.submitButtonDisabled]}
               onPress={handleOtpSubmit}
               disabled={loading || otp.length !== 6}
             >
@@ -337,9 +380,9 @@ export default function ForgotPasswordScreen() {
 
             {/* Resend OTP */}
             <View style={styles.resendContainer}>
-              <Text style={styles.resendText}>Didn't receive the code? </Text>
+              <Text style={[styles.resendText, { color: colors.textSecondary }]}>Didn't receive the code? </Text>
               <TouchableOpacity onPress={handleResendOtp} disabled={resendLoading}>
-                <Text style={styles.resendLink}>
+                <Text style={[styles.resendLink, { color: colors.primary }]}>
                   {resendLoading ? 'Sending...' : 'Resend'}
                 </Text>
               </TouchableOpacity>
@@ -347,8 +390,8 @@ export default function ForgotPasswordScreen() {
 
             {/* Back to Email */}
             <TouchableOpacity onPress={() => setStep('email')} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={16} color="#6B7280" />
-              <Text style={styles.backButtonText}>Change email</Text>
+              <Ionicons name="arrow-back" size={16} color={colors.textSecondary} />
+              <Text style={[styles.backButtonText, { color: colors.textSecondary }]}>Change email</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -359,17 +402,17 @@ export default function ForgotPasswordScreen() {
   // Email Input Screen (initial)
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           {/* Logo */}
             <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
+              <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
                   <Image
                     source={require('@/assets/images/imhotep_tasks.png')}
                     style={{ width: 64, height: 64 }}
@@ -378,32 +421,32 @@ export default function ForgotPasswordScreen() {
               </View>
             </View>
 
-          <Text style={styles.title}>Forgot Password?</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Forgot Password?</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Enter your email and we'll send you a verification code to reset your password.
           </Text>
 
           {/* Error Message */}
           {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+              <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
             </View>
           ) : null}
 
           {/* Email Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email address</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Email address</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
               <Ionicons
                 name="at-outline"
                 size={20}
-                color="#9CA3AF"
+                color={colors.placeholder}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="you@example.com"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
@@ -418,7 +461,7 @@ export default function ForgotPasswordScreen() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
             onPress={handleEmailSubmit}
             disabled={loading}
           >
@@ -431,10 +474,10 @@ export default function ForgotPasswordScreen() {
 
           {/* Sign In Link */}
           <View style={styles.signInContainer}>
-            <Text style={styles.signInText}>Remembered your password? </Text>
+            <Text style={[styles.signInText, { color: colors.textSecondary }]}>Remembered your password? </Text>
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity>
-                <Text style={styles.signInLink}>Sign in</Text>
+                <Text style={[styles.signInLink, { color: colors.primary }]}>Sign in</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -447,7 +490,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EEF2FF',
   },
   centerContent: {
     flex: 1,
@@ -461,7 +503,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -480,7 +521,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -488,26 +528,21 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     textAlign: 'center',
-    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
-    color: '#6B7280',
     marginBottom: 24,
     lineHeight: 20,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FECACA',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#DC2626',
     fontSize: 14,
   },
   inputContainer: {
@@ -516,16 +551,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
-    backgroundColor: 'white',
   },
   inputIcon: {
     paddingLeft: 12,
@@ -535,10 +567,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: '#111827',
   },
   submitButton: {
-    backgroundColor: '#2563EB',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
@@ -558,11 +588,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   signInText: {
-    color: '#6B7280',
     fontSize: 14,
   },
   signInLink: {
-    color: '#2563EB',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -570,18 +598,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 14,
     textAlign: 'center',
-    color: '#6B7280',
   },
   successBox: {
-    backgroundColor: '#F0FDF4',
     borderWidth: 1,
-    borderColor: '#BBF7D0',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   successText: {
-    color: '#16A34A',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -600,11 +624,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   resendText: {
-    color: '#6B7280',
     fontSize: 14,
   },
   resendLink: {
-    color: '#2563EB',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -615,7 +637,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   backButtonText: {
-    color: '#6B7280',
     fontSize: 14,
     marginLeft: 4,
   },

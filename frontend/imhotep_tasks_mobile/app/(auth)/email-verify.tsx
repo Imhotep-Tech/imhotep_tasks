@@ -10,16 +10,59 @@ import {
   Platform,
   ScrollView,
   Image,
+  useColorScheme,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios, { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const themes = {
+  light: {
+    background: '#EEF2FF',
+    card: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    placeholder: '#9CA3AF',
+    border: '#D1D5DB',
+    primary: '#2563EB',
+    primaryLight: '#EFF6FF',
+    error: '#DC2626',
+    errorBg: '#FEF2F2',
+    errorBorder: '#FECACA',
+    success: '#16A34A',
+    successBg: '#DCFCE7',
+    successBorder: '#86EFAC',
+    inputBg: '#FFFFFF',
+    progressBg: '#E5E7EB',
+  },
+  dark: {
+    background: '#1F2937',
+    card: '#374151',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    placeholder: '#6B7280',
+    border: '#4B5563',
+    primary: '#3B82F6',
+    primaryLight: '#1E3A5F',
+    error: '#F87171',
+    errorBg: '#7F1D1D',
+    errorBorder: '#F87171',
+    success: '#4ADE80',
+    successBg: '#14532D',
+    successBorder: '#4ADE80',
+    inputBg: '#4B5563',
+    progressBg: '#4B5563',
+  },
+};
+
 type VerificationStatus = 'input' | 'verifying' | 'success' | 'error';
 
 export default function EmailVerificationScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [status, setStatus] = useState<VerificationStatus>('input');
@@ -100,20 +143,20 @@ export default function EmailVerificationScreen() {
     switch (status) {
       case 'verifying':
         return (
-          <View style={[styles.iconCircle, styles.iconCircleBlue]}>
-            <ActivityIndicator size="small" color="#2563EB" />
+          <View style={[styles.iconCircle, { backgroundColor: colors.primaryLight }]}>
+            <ActivityIndicator size="small" color={colors.primary} />
           </View>
         );
       case 'success':
         return (
-          <View style={[styles.iconCircle, styles.iconCircleGreen]}>
-            <Ionicons name="checkmark" size={24} color="#16A34A" />
+          <View style={[styles.iconCircle, { backgroundColor: colors.successBg }]}>
+            <Ionicons name="checkmark" size={24} color={colors.success} />
           </View>
         );
       case 'error':
         return (
-          <View style={[styles.iconCircle, styles.iconCircleRed]}>
-            <Ionicons name="alert-circle" size={24} color="#DC2626" />
+          <View style={[styles.iconCircle, { backgroundColor: colors.errorBg }]}>
+            <Ionicons name="alert-circle" size={24} color={colors.error} />
           </View>
         );
       default:
@@ -149,17 +192,17 @@ export default function EmailVerificationScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
+            <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
               <Image
                 source={require('@/assets/images/imhotep_tasks.png')}
                 style={{ width: 40, height: 40 }}
@@ -168,8 +211,8 @@ export default function EmailVerificationScreen() {
             </View>
           </View>
 
-          <Text style={styles.title}>{getTitle()}</Text>
-          <Text style={styles.subtitle}>{getSubtitle()}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{getTitle()}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{getSubtitle()}</Text>
 
           {(status === 'verifying' || status === 'success') && (
             <View style={styles.statusIconContainer}>{getIcon()}</View>
@@ -179,25 +222,25 @@ export default function EmailVerificationScreen() {
           {status === 'input' && (
             <>
               {error ? (
-                <View style={styles.errorBox}>
-                  <Text style={styles.errorText}>{error}</Text>
+                <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+                  <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
                 </View>
               ) : null}
 
               {/* Email Input */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email Address Or Username</Text>
-                <View style={styles.inputWrapper}>
+                <Text style={[styles.label, { color: colors.text }]}>Email Address Or Username</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                   <Ionicons
                     name="person-outline"
                     size={20}
-                    color="#9CA3AF"
+                    color={colors.placeholder}
                     style={styles.inputIcon}
                   />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="Enter your email or username"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={email}
                     onChangeText={(text) => {
                       setEmail(text);
@@ -212,18 +255,18 @@ export default function EmailVerificationScreen() {
 
               {/* OTP Input */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>OTP Code</Text>
-                <View style={styles.inputWrapper}>
+                <Text style={[styles.label, { color: colors.text }]}>OTP Code</Text>
+                <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                   <Ionicons
                     name="keypad-outline"
                     size={20}
-                    color="#9CA3AF"
+                    color={colors.placeholder}
                     style={styles.inputIcon}
                   />
                   <TextInput
-                    style={[styles.input, styles.otpInput]}
+                    style={[styles.input, styles.otpInput, { color: colors.text }]}
                     placeholder="000000"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.placeholder}
                     value={otp}
                     onChangeText={(text) => {
                       setOtp(text.replace(/\D/g, ''));
@@ -237,7 +280,7 @@ export default function EmailVerificationScreen() {
 
               {/* Submit Button */}
               <TouchableOpacity
-                style={[styles.button, (loading || otp.length !== 6 || !email) && styles.buttonDisabled]}
+                style={[styles.button, { backgroundColor: colors.primary }, (loading || otp.length !== 6 || !email) && styles.buttonDisabled]}
                 onPress={handleSubmit}
                 disabled={loading || otp.length !== 6 || !email}
               >
@@ -249,10 +292,10 @@ export default function EmailVerificationScreen() {
               </TouchableOpacity>
 
               {/* Resend Link */}
-              <Text style={styles.helpText}>
+              <Text style={[styles.helpText, { color: colors.textSecondary }]}>
                 Didn't receive the code?{' '}
                 <Link href="/(auth)/login" asChild>
-                  <Text style={styles.linkText}>Login to resend</Text>
+                  <Text style={[styles.linkText, { color: colors.primary }]}>Login to resend</Text>
                 </Link>
               </Text>
             </>
@@ -261,10 +304,10 @@ export default function EmailVerificationScreen() {
           {/* Verifying State */}
           {status === 'verifying' && (
             <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View style={styles.progressFill} />
+              <View style={[styles.progressBar, { backgroundColor: colors.progressBg }]}>
+                <View style={[styles.progressFill, { backgroundColor: colors.primary }]} />
               </View>
-              <Text style={styles.progressText}>Processing verification...</Text>
+              <Text style={[styles.progressText, { color: colors.textSecondary }]}>Processing verification...</Text>
             </View>
           )}
 
@@ -272,13 +315,13 @@ export default function EmailVerificationScreen() {
           {status === 'success' && (
             <>
               <Link href="/(auth)/login" asChild>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={[styles.button, { backgroundColor: colors.primary }]}>
                   <Text style={styles.buttonText}>Go to Login</Text>
                 </TouchableOpacity>
               </Link>
               {countdown > 0 && (
-                <View style={styles.countdownBox}>
-                  <Text style={styles.countdownText}>
+                <View style={[styles.countdownBox, { backgroundColor: colors.successBg, borderColor: colors.successBorder }]}>
+                  <Text style={[styles.countdownText, { color: colors.success }]}>
                     Redirecting to login in {countdown} second{countdown !== 1 ? 's' : ''}...
                   </Text>
                 </View>
@@ -287,7 +330,7 @@ export default function EmailVerificationScreen() {
           )}
 
           {/* Support Link */}
-          <Text style={styles.supportText}>Need help? Contact support</Text>
+          <Text style={[styles.supportText, { color: colors.textSecondary }]}>Need help? Contact support</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -297,7 +340,6 @@ export default function EmailVerificationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EEF2FF',
   },
   scrollContent: {
     flexGrow: 1,
@@ -305,7 +347,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 32,
     width: '100%',
@@ -324,7 +365,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -332,13 +372,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     textAlign: 'center',
-    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
-    color: '#6B7280',
     marginBottom: 24,
     lineHeight: 20,
   },
@@ -353,25 +391,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconCircleBlue: {
-    backgroundColor: '#EFF6FF',
   },
   iconCircleGreen: {
-    backgroundColor: '#DCFCE7',
   },
   iconCircleRed: {
-    backgroundColor: '#FEE2E2',
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FECACA',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     width: '100%',
   },
   errorText: {
-    color: '#DC2626',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -382,16 +414,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
-    backgroundColor: 'white',
   },
   inputIcon: {
     paddingLeft: 12,
@@ -401,7 +430,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: '#111827',
   },
   otpInput: {
     textAlign: 'center',
@@ -416,24 +444,20 @@ const styles = StyleSheet.create({
   progressBar: {
     width: '100%',
     height: 8,
-    backgroundColor: '#E5E7EB',
     borderRadius: 4,
     overflow: 'hidden',
   },
   progressFill: {
     width: '60%',
     height: '100%',
-    backgroundColor: '#3B82F6',
     borderRadius: 4,
   },
   progressText: {
     marginTop: 8,
     fontSize: 14,
-    color: '#6B7280',
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#2563EB',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -450,32 +474,26 @@ const styles = StyleSheet.create({
   },
   countdownBox: {
     marginTop: 16,
-    backgroundColor: '#DCFCE7',
     borderWidth: 1,
-    borderColor: '#86EFAC',
     borderRadius: 8,
     padding: 12,
     width: '100%',
   },
   countdownText: {
-    color: '#166534',
     fontSize: 14,
     textAlign: 'center',
   },
   helpText: {
     marginTop: 16,
     fontSize: 14,
-    color: '#6B7280',
     textAlign: 'center',
   },
   linkText: {
-    color: '#2563EB',
     fontWeight: '600',
   },
   supportText: {
     marginTop: 24,
     fontSize: 14,
-    color: '#6B7280',
     textAlign: 'center',
   },
 });

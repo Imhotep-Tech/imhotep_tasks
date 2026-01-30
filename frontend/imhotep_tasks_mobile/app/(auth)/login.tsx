@@ -193,17 +193,17 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
+            <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
               <Image
                 source={require('@/assets/images/imhotep_tasks.png')}
                 style={{ width: 64, height: 64 }}
@@ -212,14 +212,14 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.text }]}>Welcome Back</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Sign in to continue organizing your tasks
           </Text>
 
           {/* Google Sign-in Button */}
           <TouchableOpacity
-            style={styles.googleButton}
+            style={[styles.googleButton, { backgroundColor: colors.primary }]}
             onPress={handleGoogleLogin}
             disabled={loading || googleLoading}
           >
@@ -231,39 +231,39 @@ export default function LoginScreen() {
 
           {/* Divider */}
           <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or sign in with email</Text>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+            <Text style={[styles.dividerText, { color: colors.textSecondary }]}>Or sign in with email</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
           </View>
 
           {/* Error Message */}
           {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
+              <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
             </View>
           ) : null}
 
           {/* Info Message */}
           {info ? (
-            <View style={styles.infoBox}>
-              <Text style={styles.infoText}>{info}</Text>
+            <View style={[styles.infoBox, { backgroundColor: colors.infoBg, borderColor: colors.infoBorder }]}>
+              <Text style={[styles.infoText, { color: colors.info }]}>{info}</Text>
             </View>
           ) : null}
 
           {/* Username/Email Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Username or Email</Text>
-            <View style={styles.inputWrapper}>
+            <Text style={[styles.label, { color: colors.text }]}>Username or Email</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
               <Ionicons
                 name="person-outline"
                 size={20}
-                color="#9CA3AF"
+                color={colors.placeholder}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Username or Email"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
                 value={formData.username}
                 onChangeText={(text) => {
                   setFormData({ ...formData, username: text });
@@ -279,24 +279,24 @@ export default function LoginScreen() {
           {/* Password Input */}
           <View style={styles.inputContainer}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Password</Text>
               <Link href="/(auth)/forgot-password" asChild>
                 <TouchableOpacity>
-                  <Text style={styles.forgotPassword}>Forgot password?</Text>
+                  <Text style={[styles.forgotPassword, { color: colors.primary }]}>Forgot password?</Text>
                 </TouchableOpacity>
               </Link>
             </View>
-            <View style={styles.inputWrapper}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color="#9CA3AF"
+                color={colors.placeholder}
                 style={styles.inputIcon}
               />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.placeholder}
                 value={formData.password}
                 onChangeText={(text) => {
                   setFormData({ ...formData, password: text });
@@ -313,7 +313,7 @@ export default function LoginScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color="#3B82F6"
+                  color={colors.primary}
                 />
               </TouchableOpacity>
             </View>
@@ -321,7 +321,7 @@ export default function LoginScreen() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading}
           >
@@ -334,10 +334,10 @@ export default function LoginScreen() {
 
           {/* Sign Up Link */}
           <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
+            <Text style={[styles.signUpText, { color: colors.textSecondary }]}>Don't have an account? </Text>
             <Link href="/(auth)/register" asChild>
               <TouchableOpacity>
-                <Text style={styles.signUpLink}>Sign up</Text>
+                <Text style={[styles.signUpLink, { color: colors.primary }]}>Sign up</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -350,7 +350,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EEF2FF',
   },
   scrollContent: {
     flexGrow: 1,
@@ -358,7 +357,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: 'white',
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
@@ -375,7 +373,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -383,20 +380,17 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     textAlign: 'center',
-    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
-    color: '#6B7280',
     marginBottom: 24,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563EB',
     paddingVertical: 14,
     borderRadius: 8,
     marginBottom: 20,
@@ -415,35 +409,27 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#D1D5DB',
   },
   dividerText: {
     marginHorizontal: 12,
-    color: '#6B7280',
     fontSize: 14,
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FECACA',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   errorText: {
-    color: '#DC2626',
     fontSize: 14,
   },
   infoBox: {
-    backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   infoText: {
-    color: '#2563EB',
     fontSize: 14,
   },
   inputContainer: {
@@ -452,7 +438,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 6,
   },
   labelRow: {
@@ -464,15 +449,12 @@ const styles = StyleSheet.create({
   forgotPassword: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#2563EB',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#D1D5DB',
     borderRadius: 8,
-    backgroundColor: 'white',
   },
   inputIcon: {
     paddingLeft: 12,
@@ -482,13 +464,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: '#111827',
   },
   eyeIcon: {
     paddingRight: 12,
   },
   submitButton: {
-    backgroundColor: '#2563EB',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
@@ -508,11 +488,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   signUpText: {
-    color: '#6B7280',
     fontSize: 14,
   },
   signUpLink: {
-    color: '#2563EB',
     fontSize: 14,
     fontWeight: '600',
   },
