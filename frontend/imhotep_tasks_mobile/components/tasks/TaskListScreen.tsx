@@ -21,6 +21,7 @@ import {
   TaskFormModal,
   TaskDetailsModal,
   EmptyTasks,
+  BulkActionBar,
   Task,
 } from '@/components/tasks';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -85,10 +86,15 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     refreshing,
     formLoading,
     actionLoading,
+    bulkLoading,
     showFormModal,
     formMode,
     editingTask,
     detailsTask,
+    // Selection state
+    selectedIds,
+    selectionMode,
+    // Actions
     fetchTasks,
     onRefresh,
     handleLoadMore,
@@ -99,6 +105,15 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     handleFormSubmit,
     handleToggleComplete,
     handleDeleteTask,
+    // Selection actions
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    toggleSelectionMode,
+    // Bulk actions
+    handleBulkDelete,
+    handleBulkComplete,
+    handleBulkUpdateDate,
   } = useTasks({ pageType, sortOverdueFirst: pageType === 'today-tasks' });
 
   useEffect(() => {
@@ -117,6 +132,9 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
       onEdit={openEditModal}
       onPress={handleTaskPress}
       loading={actionLoading === item.id}
+      selectionMode={selectionMode}
+      isSelected={selectedIds.includes(item.id)}
+      onToggleSelect={toggleSelect}
     />
   );
 
@@ -133,9 +151,26 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
             </Text>
           )}
         </View>
-        <Pressable style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAddModal}>
-          <Ionicons name="add" size={24} color="#fff" />
-        </Pressable>
+        <View style={styles.headerButtons}>
+          {/* Selection mode toggle */}
+          <Pressable 
+            style={[
+              styles.selectModeButton, 
+              { backgroundColor: selectionMode ? colors.primary : colors.card, borderColor: colors.border }
+            ]} 
+            onPress={toggleSelectionMode}
+          >
+            <Ionicons 
+              name={selectionMode ? "checkmark-done" : "checkbox-outline"} 
+              size={20} 
+              color={selectionMode ? "#FFFFFF" : colors.textSecondary} 
+            />
+          </Pressable>
+          {/* Add task button */}
+          <Pressable style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAddModal}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </Pressable>
+        </View>
       </View>
 
       {/* Navigation buttons for All Tasks page */}
@@ -226,6 +261,18 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
         onToggleComplete={handleToggleComplete}
         onDelete={handleDeleteTask}
       />
+
+      {/* Bulk Action Bar */}
+      <BulkActionBar
+        selectedCount={selectedIds.length}
+        totalCount={sortedTasks.length}
+        loading={bulkLoading}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        onDelete={handleBulkDelete}
+        onToggleComplete={handleBulkComplete}
+        onChangeDueDate={handleBulkUpdateDate}
+      />
     </SafeAreaView>
   );
 }
@@ -258,6 +305,19 @@ const styles = StyleSheet.create({
   greeting: {
     marginTop: 4,
     fontSize: 14,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  selectModeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
   },
   addButton: {
     width: 48,

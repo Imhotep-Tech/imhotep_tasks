@@ -21,11 +21,16 @@ interface UseTasksReturn {
   completedCount: number;
   pendingCount: number;
   
+  // Selection state
+  selectedIds: number[];
+  selectionMode: boolean;
+  
   // Loading states
   loading: boolean;
   refreshing: boolean;
   formLoading: boolean;
   actionLoading: number | null;
+  bulkLoading: boolean;
   
   // Modal states
   showFormModal: boolean;
@@ -44,6 +49,17 @@ interface UseTasksReturn {
   handleFormSubmit: (taskData: TaskFormData) => Promise<void>;
   handleToggleComplete: (task: Task) => Promise<void>;
   handleDeleteTask: (taskId: number) => Promise<void>;
+  
+  // Selection actions
+  toggleSelect: (id: number) => void;
+  selectAll: () => void;
+  clearSelection: () => void;
+  toggleSelectionMode: () => void;
+  
+  // Bulk actions
+  handleBulkDelete: () => Promise<void>;
+  handleBulkComplete: () => Promise<void>;
+  handleBulkUpdateDate: (newDate: string) => Promise<void>;
 }
 
 const API_ENDPOINTS: Record<TaskPageType, string> = {
@@ -61,11 +77,16 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
   const [completedCount, setCompletedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  
   // Loading states
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
   
   // Modal states
   const [showFormModal, setShowFormModal] = useState(false);
@@ -316,6 +337,106 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     );
   }, [url_call]);
 
+  // Selection handlers
+  const toggleSelect = useCallback((id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  }, []);
+
+  const selectAll = useCallback(() => {
+    if (selectedIds.length === tasks.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(tasks.map(t => t.id));
+    }
+  }, [tasks, selectedIds.length]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds([]);
+    setSelectionMode(false);
+  }, []);
+
+  const toggleSelectionMode = useCallback(() => {
+    if (selectionMode) {
+      setSelectedIds([]);
+    }
+    setSelectionMode(prev => !prev);
+  }, [selectionMode]);
+
+  // Bulk delete - same endpoint as web: DELETE api/tasks/multiple_delete_task/
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+
+    Alert.alert(
+      'Delete Tasks',
+      `Are you sure you want to delete ${selectedIds.length} task${selectedIds.length > 1 ? 's' : ''}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setBulkLoading(true);
+            try {
+              await api.delete('api/tasks/multiple_delete_task/', {
+                data: { task_ids: selectedIds, url_call }
+              });
+              await fetchTasks(page);
+              clearSelection();
+            } catch (err) {
+              console.error('Error bulk deleting tasks:', err);
+              Alert.alert('Error', 'Failed to delete tasks.');
+            } finally {
+              setBulkLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [selectedIds, url_call, page, fetchTasks, clearSelection]);
+
+  // Bulk complete toggle - same endpoint as web: POST api/tasks/multiple_task_complete/
+  const handleBulkComplete = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+
+    setBulkLoading(true);
+    try {
+      await api.post('api/tasks/multiple_task_complete/', {
+        task_ids: selectedIds,
+        url_call
+      });
+      await fetchTasks(page);
+      clearSelection();
+    } catch (err) {
+      console.error('Error bulk completing tasks:', err);
+      Alert.alert('Error', 'Failed to update tasks.');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, url_call, page, fetchTasks, clearSelection]);
+
+  // Bulk update date - same endpoint as web: PATCH api/tasks/multiple_update_task_dates/
+  const handleBulkUpdateDate = useCallback(async (newDate: string) => {
+    if (selectedIds.length === 0 || !newDate) return;
+
+    setBulkLoading(true);
+    try {
+      await api.patch('api/tasks/multiple_update_task_dates/', {
+        task_ids: selectedIds,
+        due_date: newDate,
+        url_call
+      });
+      await fetchTasks(page);
+      clearSelection();
+    } catch (err) {
+      console.error('Error bulk updating dates:', err);
+      Alert.alert('Error', 'Failed to update task dates.');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, url_call, page, fetchTasks, clearSelection]);
+
   return {
     // Data
     tasks,
@@ -326,11 +447,16 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     completedCount,
     pendingCount,
     
+    // Selection state
+    selectedIds,
+    selectionMode,
+    
     // Loading states
     loading,
     refreshing,
     formLoading,
     actionLoading,
+    bulkLoading,
     
     // Modal states
     showFormModal,
@@ -349,5 +475,16 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     handleFormSubmit,
     handleToggleComplete,
     handleDeleteTask,
+    
+    // Selection actions
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    toggleSelectionMode,
+    
+    // Bulk actions
+    handleBulkDelete,
+    handleBulkComplete,
+    handleBulkUpdateDate,
   };
 }

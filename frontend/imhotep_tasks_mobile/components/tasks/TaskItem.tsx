@@ -51,11 +51,39 @@ interface TaskItemProps {
   onEdit: (task: Task) => void;
   onPress: (task: Task) => void;
   loading?: boolean;
+  // Selection props
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: (taskId: number) => void;
 }
 
-export function TaskItem({ task, onToggleComplete, onDelete, onEdit, onPress, loading }: TaskItemProps) {
+export function TaskItem({ 
+  task, 
+  onToggleComplete, 
+  onDelete, 
+  onEdit, 
+  onPress, 
+  loading,
+  selectionMode = false,
+  isSelected = false,
+  onToggleSelect,
+}: TaskItemProps) {
   const colorScheme = useColorScheme();
   const colors = themes[colorScheme ?? 'light'];
+
+  const handlePress = () => {
+    if (selectionMode && onToggleSelect) {
+      onToggleSelect(task.id);
+    } else {
+      onPress(task);
+    }
+  };
+
+  const handleLongPress = () => {
+    if (onToggleSelect) {
+      onToggleSelect(task.id);
+    }
+  };
 
   return (
     <Pressable
@@ -63,10 +91,34 @@ export function TaskItem({ task, onToggleComplete, onDelete, onEdit, onPress, lo
         styles.container,
         { backgroundColor: colors.card, borderBottomColor: colors.border },
         task.status && styles.completedContainer,
+        isSelected && [styles.selectedContainer, { backgroundColor: colorScheme === 'dark' ? '#1E3A5F' : '#EFF6FF' }],
       ]}
-      onPress={() => onPress(task)}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
       disabled={loading}
     >
+      {/* Selection checkbox (shown in selection mode) */}
+      {selectionMode && (
+        <Pressable
+          style={styles.selectionCheckButton}
+          onPress={() => onToggleSelect?.(task.id)}
+          disabled={loading}
+        >
+          <View
+            style={[
+              styles.selectionCheckbox,
+              { borderColor: colors.primary },
+              isSelected && { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
+          >
+            {isSelected && (
+              <Ionicons name="checkmark" size={14} color="#fff" />
+            )}
+          </View>
+        </Pressable>
+      )}
+
+      {/* Complete checkbox (always shown) */}
       <Pressable
         style={styles.checkButton}
         onPress={() => onToggleComplete(task)}
@@ -142,6 +194,20 @@ const styles = StyleSheet.create({
   },
   completedContainer: {
     opacity: 0.7,
+  },
+  selectedContainer: {
+    // Background color set inline
+  },
+  selectionCheckButton: {
+    marginRight: 8,
+  },
+  selectionCheckbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkButton: {
     marginRight: 12,
