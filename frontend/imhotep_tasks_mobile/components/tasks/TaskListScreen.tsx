@@ -6,9 +6,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   View,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -21,16 +24,57 @@ import {
   Task,
 } from '@/components/tasks';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTasks, TaskPageType } from '@/hooks/use-tasks';
+
+// Theme colors matching routines.tsx and auth pages
+const themes = {
+  light: {
+    background: '#F3F4F6',
+    card: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    border: '#E5E7EB',
+    primary: '#2563EB',
+    primaryLight: '#EFF6FF',
+    success: '#16A34A',
+    successBg: '#DCFCE7',
+    error: '#DC2626',
+    errorBg: '#FEF2F2',
+    inputBg: '#FFFFFF',
+    placeholder: '#9CA3AF',
+    statsCard: '#FFFFFF',
+  },
+  dark: {
+    background: '#111827',
+    card: '#1F2937',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    border: '#374151',
+    primary: '#3B82F6',
+    primaryLight: '#1E3A5F',
+    success: '#22C55E',
+    successBg: '#14532D',
+    error: '#EF4444',
+    errorBg: '#450A0A',
+    inputBg: '#374151',
+    placeholder: '#6B7280',
+    statsCard: '#1F2937',
+  },
+};
 
 interface TaskListScreenProps {
   pageType: TaskPageType;
   title: string;
   username?: string;
+  showNavButtons?: boolean;
 }
 
-export function TaskListScreen({ pageType, title, username }: TaskListScreenProps) {
+export function TaskListScreen({ pageType, title, username, showNavButtons = false }: TaskListScreenProps) {
   const backgroundColor = useThemeColor({}, 'background');
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme ?? 'light'];
+  const router = useRouter();
 
   const {
     sortedTasks,
@@ -78,21 +122,41 @@ export function TaskListScreen({ pageType, title, username }: TaskListScreenProp
 
   const ListHeader = () => (
     <>
-      <ThemedView style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.background }]}>
         <View>
-          <ThemedText type="title" style={styles.title}>
+          <Text style={[styles.title, { color: colors.text }]}>
             {title}
-          </ThemedText>
+          </Text>
           {username && (
-            <ThemedText style={styles.greeting}>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
               Hello, {username}!
-            </ThemedText>
+            </Text>
           )}
         </View>
-        <Pressable style={styles.addButton} onPress={openAddModal}>
+        <Pressable style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAddModal}>
           <Ionicons name="add" size={24} color="#fff" />
         </Pressable>
-      </ThemedView>
+      </View>
+
+      {/* Navigation buttons for All Tasks page */}
+      {showNavButtons && (
+        <View style={[styles.navButtonsContainer, { backgroundColor: colors.background }]}>
+          <TouchableOpacity
+            style={[styles.navButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => router.push('/(tabs)')}
+          >
+            <Ionicons name="today-outline" size={20} color={colors.primary} />
+            <Text style={[styles.navButtonText, { color: colors.text }]}>Today's Tasks</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.navButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => router.push('/(tabs)/next-week')}
+          >
+            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+            <Text style={[styles.navButtonText, { color: colors.text }]}>Next 7 Days</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <TaskStats
         totalTasks={totalTasks}
@@ -100,27 +164,27 @@ export function TaskListScreen({ pageType, title, username }: TaskListScreenProp
         pendingCount={pendingCount}
       />
 
-      <ThemedView style={styles.listHeader}>
-        <ThemedText type="subtitle" style={styles.listTitle}>
+      <View style={[styles.listHeader, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
+        <Text style={[styles.listTitle, { color: colors.text }]}>
           Tasks
-        </ThemedText>
-      </ThemedView>
+        </Text>
+      </View>
     </>
   );
 
   if (loading && sortedTasks.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366F1" />
-          <ThemedText style={styles.loadingText}>Loading tasks...</ThemedText>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading tasks...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <FlatList
         data={sortedTasks}
         renderItem={renderTask}
@@ -131,8 +195,8 @@ export function TaskListScreen({ pageType, title, username }: TaskListScreenProp
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#6366F1']}
-            tintColor="#6366F1"
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         onEndReached={handleLoadMore}
@@ -177,7 +241,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: '#6B7280',
+    fontSize: 14,
   },
   header: {
     flexDirection: 'row',
@@ -189,33 +253,59 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
+    fontWeight: '800',
   },
   greeting: {
-    color: '#6B7280',
     marginTop: 4,
+    fontSize: 14,
   },
   addButton: {
-    backgroundColor: '#6366F1',
     width: 48,
     height: 48,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#6366F1',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
+  navButtonsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 12,
+  },
+  navButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  navButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
   listHeader: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     marginTop: 8,
   },
   listTitle: {
     fontSize: 18,
+    fontWeight: '600',
   },
   emptyList: {
     flex: 1,

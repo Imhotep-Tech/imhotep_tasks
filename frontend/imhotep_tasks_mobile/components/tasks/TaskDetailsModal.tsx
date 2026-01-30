@@ -8,7 +8,56 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DueDate } from './DueDate';
+
+// Theme colors matching routines.tsx and auth pages
+const themes = {
+  light: {
+    overlay: 'rgba(0, 0, 0, 0.5)',
+    card: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    textMuted: '#9CA3AF',
+    border: '#E5E7EB',
+    primary: '#2563EB',
+    primaryLight: '#EFF6FF',
+    success: '#16A34A',
+    successBg: '#DCFCE7',
+    successBorder: '#22C55E',
+    warning: '#D97706',
+    warningBg: '#FEF3C7',
+    warningBorder: '#F59E0B',
+    error: '#DC2626',
+    errorBg: '#FEE2E2',
+    errorBorder: '#EF4444',
+    transactionBg: '#ECFDF5',
+    transactionText: '#059669',
+    description: '#4B5563',
+  },
+  dark: {
+    overlay: 'rgba(0, 0, 0, 0.7)',
+    card: '#1F2937',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#374151',
+    primary: '#3B82F6',
+    primaryLight: '#1E3A5F',
+    success: '#22C55E',
+    successBg: '#14532D',
+    successBorder: '#22C55E',
+    warning: '#FBBF24',
+    warningBg: '#78350F',
+    warningBorder: '#FBBF24',
+    error: '#EF4444',
+    errorBg: '#450A0A',
+    errorBorder: '#EF4444',
+    transactionBg: '#14532D',
+    transactionText: '#22C55E',
+    description: '#D1D5DB',
+  },
+};
 
 interface Task {
   id: number;
@@ -39,6 +88,9 @@ export function TaskDetailsModal({
   onToggleComplete,
   onDelete,
 }: TaskDetailsModalProps) {
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme ?? 'light'];
+
   if (!task) return null;
 
   const formatDateTime = (iso?: string) => {
@@ -64,12 +116,12 @@ export function TaskDetailsModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Task Details</Text>
+      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
+        <View style={[styles.container, { backgroundColor: colors.card }]}>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Task Details</Text>
             <Pressable onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color="#6B7280" />
+              <Ionicons name="close" size={24} color={colors.textSecondary} />
             </Pressable>
           </View>
 
@@ -79,18 +131,18 @@ export function TaskDetailsModal({
               <View
                 style={[
                   styles.statusBadge,
-                  task.status ? styles.statusCompleted : styles.statusPending,
+                  { backgroundColor: task.status ? colors.successBg : colors.warningBg },
                 ]}
               >
                 <Ionicons
                   name={task.status ? 'checkmark-circle' : 'time'}
                   size={16}
-                  color={task.status ? '#22C55E' : '#F59E0B'}
+                  color={task.status ? colors.success : colors.warning}
                 />
                 <Text
                   style={[
                     styles.statusText,
-                    { color: task.status ? '#22C55E' : '#F59E0B' },
+                    { color: task.status ? colors.success : colors.warning },
                   ]}
                 >
                   {task.status ? 'Completed' : 'Pending'}
@@ -103,11 +155,12 @@ export function TaskDetailsModal({
 
             {/* Title */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Title</Text>
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Title</Text>
               <Text
                 style={[
                   styles.title,
-                  task.status && styles.titleCompleted,
+                  { color: colors.text },
+                  task.status && [styles.titleCompleted, { color: colors.textMuted }],
                 ]}
               >
                 {task.task_title}
@@ -117,18 +170,18 @@ export function TaskDetailsModal({
             {/* Description */}
             {task.task_details ? (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Description</Text>
-                <Text style={styles.description}>{task.task_details}</Text>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Description</Text>
+                <Text style={[styles.description, { color: colors.description }]}>{task.task_details}</Text>
               </View>
             ) : null}
 
             {/* Transaction Info */}
             {task.transaction_id && (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Transaction</Text>
-                <View style={styles.transactionBadge}>
-                  <Ionicons name="cash-outline" size={16} color="#059669" />
-                  <Text style={styles.transactionText}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Transaction</Text>
+                <View style={[styles.transactionBadge, { backgroundColor: colors.transactionBg }]}>
+                  <Ionicons name="cash-outline" size={16} color={colors.transactionText} />
+                  <Text style={[styles.transactionText, { color: colors.transactionText }]}>
                     {task.transaction_status || `Transaction #${task.transaction_id}`}
                   </Text>
                 </View>
@@ -136,19 +189,19 @@ export function TaskDetailsModal({
             )}
 
             {/* Timestamps */}
-            <View style={styles.timestampsContainer}>
+            <View style={[styles.timestampsContainer, { borderTopColor: colors.border }]}>
               {task.created_at && (
                 <View style={styles.timestamp}>
-                  <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                  <Text style={styles.timestampText}>
+                  <Ionicons name="time-outline" size={14} color={colors.textMuted} />
+                  <Text style={[styles.timestampText, { color: colors.textMuted }]}>
                     Created: {formatDateTime(task.created_at)}
                   </Text>
                 </View>
               )}
               {task.updated_at && (
                 <View style={styles.timestamp}>
-                  <Ionicons name="refresh-outline" size={14} color="#9CA3AF" />
-                  <Text style={styles.timestampText}>
+                  <Ionicons name="refresh-outline" size={14} color={colors.textMuted} />
+                  <Text style={[styles.timestampText, { color: colors.textMuted }]}>
                     Updated: {formatDateTime(task.updated_at)}
                   </Text>
                 </View>
@@ -157,21 +210,27 @@ export function TaskDetailsModal({
           </ScrollView>
 
           {/* Actions */}
-          <View style={styles.actions}>
+          <View style={[styles.actions, { borderTopColor: colors.border }]}>
             <View style={styles.actionRow}>
               <Pressable
-                style={[styles.actionButton, styles.editButton]}
+                style={[styles.actionButton, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
                 onPress={() => {
                   onEdit(task);
                   onClose();
                 }}
               >
-                <Ionicons name="pencil" size={18} color="#6366F1" />
-                <Text style={styles.editButtonText}>Edit</Text>
+                <Ionicons name="pencil" size={18} color={colors.primary} />
+                <Text style={[styles.actionButtonText, { color: colors.primary }]}>Edit</Text>
               </Pressable>
 
               <Pressable
-                style={[styles.actionButton, task.status ? styles.incompleteButton : styles.completeButton]}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: task.status ? colors.warningBg : colors.successBg,
+                    borderColor: task.status ? colors.warningBorder : colors.successBorder,
+                  },
+                ]}
                 onPress={() => {
                   onToggleComplete(task);
                   onClose();
@@ -180,22 +239,22 @@ export function TaskDetailsModal({
                 <Ionicons
                   name={task.status ? 'close-circle' : 'checkmark-circle'}
                   size={18}
-                  color={task.status ? '#F59E0B' : '#22C55E'}
+                  color={task.status ? colors.warning : colors.success}
                 />
-                <Text style={task.status ? styles.incompleteButtonText : styles.completeButtonText}>
+                <Text style={[styles.actionButtonText, { color: task.status ? colors.warning : colors.success }]}>
                   {task.status ? 'Undo' : 'Done'}
                 </Text>
               </Pressable>
 
               <Pressable
-                style={[styles.actionButton, styles.deleteButton]}
+                style={[styles.actionButton, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}
                 onPress={() => {
                   onDelete(task.id);
                   onClose();
                 }}
               >
-                <Ionicons name="trash" size={18} color="#EF4444" />
-                <Text style={styles.deleteButtonText}>Delete</Text>
+                <Ionicons name="trash" size={18} color={colors.error} />
+                <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete</Text>
               </Pressable>
             </View>
           </View>
@@ -208,11 +267,9 @@ export function TaskDetailsModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '85%',
@@ -223,12 +280,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   closeButton: {
     padding: 4,
@@ -250,12 +305,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 6,
   },
-  statusCompleted: {
-    backgroundColor: '#DCFCE7',
-  },
-  statusPending: {
-    backgroundColor: '#FEF3C7',
-  },
   statusText: {
     fontSize: 14,
     fontWeight: '500',
@@ -266,7 +315,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6B7280',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
@@ -274,21 +322,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
-    color: '#9CA3AF',
   },
   description: {
     fontSize: 16,
-    color: '#4B5563',
     lineHeight: 24,
   },
   transactionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -297,12 +341,10 @@ const styles = StyleSheet.create({
   },
   transactionText: {
     fontSize: 14,
-    color: '#059669',
     fontWeight: '500',
   },
   timestampsContainer: {
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     paddingTop: 16,
     gap: 8,
   },
@@ -313,12 +355,10 @@ const styles = StyleSheet.create({
   },
   timestampText: {
     fontSize: 13,
-    color: '#9CA3AF',
   },
   actions: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     gap: 12,
   },
   actionRow: {
@@ -332,46 +372,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: 10,
+    borderWidth: 1,
     gap: 8,
   },
-  completeButton: {
-    backgroundColor: '#DCFCE7',
-    borderWidth: 1,
-    borderColor: '#22C55E',
-  },
-  completeButtonText: {
+  actionButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#22C55E',
-  },
-  incompleteButton: {
-    backgroundColor: '#FEF3C7',
-    borderWidth: 1,
-    borderColor: '#F59E0B',
-  },
-  incompleteButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#F59E0B',
-  },
-  editButton: {
-    backgroundColor: '#EEF2FF',
-    borderWidth: 1,
-    borderColor: '#6366F1',
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6366F1',
-  },
-  deleteButton: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#EF4444',
-  },
-  deleteButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#EF4444',
   },
 });

@@ -1,8 +1,38 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DueDate } from './DueDate';
+
+// Theme colors matching routines.tsx and auth pages
+const themes = {
+  light: {
+    card: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    border: '#E5E7EB',
+    primary: '#2563EB',
+    success: '#16A34A',
+    successBg: '#DCFCE7',
+    error: '#DC2626',
+    completedText: '#9CA3AF',
+    transactionBg: '#ECFDF5',
+    transactionText: '#059669',
+  },
+  dark: {
+    card: '#1F2937',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    border: '#374151',
+    primary: '#3B82F6',
+    success: '#22C55E',
+    successBg: '#14532D',
+    error: '#EF4444',
+    completedText: '#6B7280',
+    transactionBg: '#14532D',
+    transactionText: '#22C55E',
+  },
+};
 
 interface Task {
   id: number;
@@ -24,14 +54,14 @@ interface TaskItemProps {
 }
 
 export function TaskItem({ task, onToggleComplete, onDelete, onEdit, onPress, loading }: TaskItemProps) {
-  const textColor = useThemeColor({}, 'text');
-  const backgroundColor = useThemeColor({}, 'background');
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme ?? 'light'];
 
   return (
     <Pressable
       style={[
         styles.container,
-        { backgroundColor },
+        { backgroundColor: colors.card, borderBottomColor: colors.border },
         task.status && styles.completedContainer,
       ]}
       onPress={() => onPress(task)}
@@ -45,7 +75,8 @@ export function TaskItem({ task, onToggleComplete, onDelete, onEdit, onPress, lo
         <View
           style={[
             styles.checkbox,
-            task.status && styles.checkboxCompleted,
+            { borderColor: colors.primary },
+            task.status && [styles.checkboxCompleted, { backgroundColor: colors.success, borderColor: colors.success }],
           ]}
         >
           {task.status && (
@@ -58,8 +89,8 @@ export function TaskItem({ task, onToggleComplete, onDelete, onEdit, onPress, lo
         <Text
           style={[
             styles.title,
-            { color: textColor },
-            task.status && styles.titleCompleted,
+            { color: colors.text },
+            task.status && [styles.titleCompleted, { color: colors.completedText }],
           ]}
           numberOfLines={2}
         >
@@ -72,9 +103,9 @@ export function TaskItem({ task, onToggleComplete, onDelete, onEdit, onPress, lo
           )}
 
           {task.transaction_id && (
-            <View style={styles.transactionBadge}>
-              <Ionicons name="cash-outline" size={12} color="#059669" />
-              <Text style={styles.transactionText}>
+            <View style={[styles.transactionBadge, { backgroundColor: colors.transactionBg }]}>
+              <Ionicons name="cash-outline" size={12} color={colors.transactionText} />
+              <Text style={[styles.transactionText, { color: colors.transactionText }]}>
                 {task.transaction_status || 'Transaction'}
               </Text>
             </View>
@@ -88,14 +119,14 @@ export function TaskItem({ task, onToggleComplete, onDelete, onEdit, onPress, lo
           onPress={() => onEdit(task)}
           disabled={loading}
         >
-          <Ionicons name="pencil-outline" size={18} color="#6366F1" />
+          <Ionicons name="pencil-outline" size={18} color={colors.primary} />
         </Pressable>
         <Pressable
           style={styles.actionButton}
           onPress={() => onDelete(task.id)}
           disabled={loading}
         >
-          <Ionicons name="trash-outline" size={18} color="#EF4444" />
+          <Ionicons name="trash-outline" size={18} color={colors.error} />
         </Pressable>
       </View>
     </Pressable>
@@ -108,7 +139,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   completedContainer: {
     opacity: 0.7,
@@ -121,14 +151,10 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#6366F1',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxCompleted: {
-    backgroundColor: '#22C55E',
-    borderColor: '#22C55E',
-  },
+  checkboxCompleted: {},
   content: {
     flex: 1,
   },
@@ -138,7 +164,6 @@ const styles = StyleSheet.create({
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
-    color: '#9CA3AF',
   },
   metaRow: {
     flexDirection: 'row',
@@ -150,7 +175,6 @@ const styles = StyleSheet.create({
   transactionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
@@ -158,7 +182,6 @@ const styles = StyleSheet.create({
   },
   transactionText: {
     fontSize: 11,
-    color: '#059669',
   },
   actions: {
     flexDirection: 'row',

@@ -21,6 +21,7 @@ const MAPPING = {
   'calendar': 'date-range',
   'list.bullet': 'list',
   'person.fill': 'person',
+  'repeat': 'repeat',
 } as IconMapping;
 
 /**

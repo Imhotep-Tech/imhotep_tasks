@@ -1,22 +1,46 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+// Theme colors matching routines.tsx and auth pages
+const themes = {
+  light: {
+    text: '#111827',
+    textSecondary: '#6B7280',
+    primary: '#2563EB',
+    primaryLight: '#EFF6FF',
+    warning: '#D97706',
+    warningBg: '#FEF3C7',
+  },
+  dark: {
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    primary: '#3B82F6',
+    primaryLight: '#1E3A5F',
+    warning: '#FBBF24',
+    warningBg: '#78350F',
+  },
+};
 
 interface EmptyTasksProps {
   onAddTask: () => void;
 }
 
 export function EmptyTasks({ onAddTask }: EmptyTasksProps) {
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme ?? 'light'];
+
   return (
     <View style={styles.container}>
-      <View style={styles.iconContainer}>
-        <Ionicons name="checkmark-done-circle-outline" size={64} color="#F59E0B" />
+      <View style={[styles.iconContainer, { backgroundColor: colors.warningBg }]}>
+        <Ionicons name="checkmark-done-circle-outline" size={64} color={colors.warning} />
       </View>
-      <Text style={styles.title}>No tasks for today</Text>
-      <Text style={styles.subtitle}>
+      <Text style={[styles.title, { color: colors.text }]}>No tasks for today</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
         You don't have any tasks scheduled for today. Enjoy your free time or create a new task!
       </Text>
-      <Pressable style={styles.button} onPress={onAddTask}>
+      <Pressable style={[styles.button, { backgroundColor: colors.primary }]} onPress={onAddTask}>
         <Ionicons name="add" size={20} color="#fff" />
         <Text style={styles.buttonText}>Add a Task</Text>
       </Pressable>
@@ -32,7 +56,6 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   iconContainer: {
-    backgroundColor: '#FEF3C7',
     borderRadius: 50,
     padding: 16,
     marginBottom: 16,
@@ -40,12 +63,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#6B7280',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
@@ -53,7 +74,6 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366F1',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,

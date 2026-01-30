@@ -1,7 +1,33 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+
+// Theme colors matching routines.tsx and auth pages
+const themes = {
+  light: {
+    card: '#FFFFFF',
+    text: '#111827',
+    textSecondary: '#6B7280',
+    primary: '#2563EB',
+    primaryLight: '#EFF6FF',
+    success: '#16A34A',
+    successBg: '#DCFCE7',
+    warning: '#D97706',
+    warningBg: '#FEF3C7',
+  },
+  dark: {
+    card: '#1F2937',
+    text: '#F9FAFB',
+    textSecondary: '#9CA3AF',
+    primary: '#3B82F6',
+    primaryLight: '#1E3A5F',
+    success: '#22C55E',
+    successBg: '#14532D',
+    warning: '#FBBF24',
+    warningBg: '#78350F',
+  },
+};
 
 interface TaskStatsProps {
   totalTasks: number;
@@ -10,38 +36,38 @@ interface TaskStatsProps {
 }
 
 export function TaskStats({ totalTasks, completedCount, pendingCount }: TaskStatsProps) {
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
+  const colorScheme = useColorScheme();
+  const colors = themes[colorScheme ?? 'light'];
 
   return (
     <View style={styles.container}>
-      <View style={[styles.statCard, { backgroundColor }, styles.totalCard]}>
-        <View style={[styles.iconContainer, styles.totalIcon]}>
-          <Ionicons name="clipboard-outline" size={20} color="#6366F1" />
+      <View style={[styles.statCard, { backgroundColor: colors.card }, styles.totalCard, { borderLeftColor: colors.primary }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name="clipboard-outline" size={20} color={colors.primary} />
         </View>
         <View>
-          <Text style={styles.statLabel}>Total</Text>
-          <Text style={[styles.statValue, { color: textColor }]}>{totalTasks}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{totalTasks}</Text>
         </View>
       </View>
 
-      <View style={[styles.statCard, { backgroundColor }, styles.completedCard]}>
-        <View style={[styles.iconContainer, styles.completedIcon]}>
-          <Ionicons name="checkmark-done-outline" size={20} color="#22C55E" />
+      <View style={[styles.statCard, { backgroundColor: colors.card }, styles.completedCard, { borderLeftColor: colors.success }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.successBg }]}>
+          <Ionicons name="checkmark-done-outline" size={20} color={colors.success} />
         </View>
         <View>
-          <Text style={styles.statLabel}>Done</Text>
-          <Text style={[styles.statValue, { color: textColor }]}>{completedCount}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Done</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{completedCount}</Text>
         </View>
       </View>
 
-      <View style={[styles.statCard, { backgroundColor }, styles.pendingCard]}>
-        <View style={[styles.iconContainer, styles.pendingIcon]}>
-          <Ionicons name="time-outline" size={20} color="#F59E0B" />
+      <View style={[styles.statCard, { backgroundColor: colors.card }, styles.pendingCard, { borderLeftColor: colors.warning }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.warningBg }]}>
+          <Ionicons name="time-outline" size={20} color={colors.warning} />
         </View>
         <View>
-          <Text style={styles.statLabel}>Pending</Text>
-          <Text style={[styles.statValue, { color: textColor }]}>{pendingCount}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{pendingCount}</Text>
         </View>
       </View>
     </View>
@@ -68,19 +94,11 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
     gap: 8,
-  },
-  totalCard: {
     borderLeftWidth: 3,
-    borderLeftColor: '#6366F1',
   },
-  completedCard: {
-    borderLeftWidth: 3,
-    borderLeftColor: '#22C55E',
-  },
-  pendingCard: {
-    borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
-  },
+  totalCard: {},
+  completedCard: {},
+  pendingCard: {},
   iconContainer: {
     width: 36,
     height: 36,
@@ -88,21 +106,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  totalIcon: {
-    backgroundColor: '#EEF2FF',
-  },
-  completedIcon: {
-    backgroundColor: '#DCFCE7',
-  },
-  pendingIcon: {
-    backgroundColor: '#FEF3C7',
-  },
   statLabel: {
     fontSize: 11,
-    color: '#6B7280',
+    fontWeight: '500',
   },
   statValue: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
 });
