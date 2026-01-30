@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [
     '0.0.0.0',
     'backend',
     'imhoteptasks.pythonanywhere.com',
+    '192.168.100.253'
     ]
 
 if DEBUG:

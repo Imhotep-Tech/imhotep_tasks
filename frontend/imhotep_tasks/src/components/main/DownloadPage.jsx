@@ -1,278 +1,381 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePWA } from '../../hooks/usePWA';
-import Footer from '../common/Footer';
 import Logo from '../../assets/imhotep_tasks.png';
 
-const electronReleases = {
-  windows: "https://github.com/Imhotep-Tech/imhotep_tasks/releases/latest/download/Imhotep.Tasks_Setup_1.0.0.exe",
-  macos: "https://github.com/Imhotep-Tech/imhotep_tasks/releases/latest/download/Imhotep.Tasks-1.0.0.dmg",
-  linux: "https://github.com/Imhotep-Tech/imhotep_tasks/releases/latest/download/Imhotep.Tasks_1.0.0.snap"
-};
 const androidApk = "https://github.com/Imhotep-Tech/imhotep_tasks/releases/latest/download/imhotep-tasks.apk";
-const snapStore = "https://snapcraft.io/imhoteptasks";
 const webAppUrl = "https://imhotep-tasks.vercel.app";
 
 export default function DownloadPage() {
   const navigate = useNavigate();
-  const { isInstallable, installApp } = usePWA();
+  const [activeTab, setActiveTab] = useState('android');
+
+  const handleDownload = () => {
+    window.location.href = androidApk;
+  };
 
   return (
-    <>
-      <section className="bg-gradient-to-b from-indigo-50 to-white py-16 min-h-screen">
-        <div className="container mx-auto px-4 max-w-6xl">
-          {/* Hero section */}
-          <div className="text-center mb-16">
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow">
-                <img src={Logo} alt="Imhotep Tasks Logo" className="w-12 h-12" />
-              </div>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Download Imhotep Tasks</h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">Get our task management app on your preferred platform and stay productive wherever you go.</p>
+    <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-indigo-800 to-indigo-900">
+      {/* Header */}
+      <header className="container mx-auto px-4 py-6 max-w-4xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <img src={Logo} alt="Imhotep Tasks" className="w-10 h-10 rounded-lg" />
+            <span className="text-white font-bold text-xl">Imhotep Tasks</span>
+          </div>
+          <button
+            onClick={() => navigate('/')}
+            className="text-indigo-200 hover:text-white flex items-center space-x-1 transition-colors"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>
+              <a href="/">Back to Home</a>
+            </span>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white shadow-2xl mb-6">
+            <img src={Logo} alt="Imhotep Tasks Logo" className="w-16 h-16" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Get Imhotep Tasks on Mobile
+          </h1>
+          <p className="text-xl text-indigo-200 max-w-2xl mx-auto">
+            Take your productivity anywhere with our mobile app. Manage tasks, track habits, and stay organized on the go.
+          </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-indigo-800/50 rounded-xl p-1 inline-flex">
             <button
-              onClick={() => navigate(-1)}
-              className="mt-6 inline-flex items-center px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium shadow transition-all"
+              onClick={() => setActiveTab('android')}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                activeTab === 'android'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'text-indigo-200 hover:text-white hover:bg-indigo-700/50'
+              }`}
             >
-              <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
               </svg>
-              Back
+              <span>Android</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('ios')}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                activeTab === 'ios'
+                  ? 'bg-gray-800 text-white shadow-lg'
+                  : 'text-indigo-200 hover:text-white hover:bg-indigo-700/50'
+              }`}
+            >
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              <span>iOS</span>
             </button>
           </div>
-          
-          {/* Download options grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-            {/* Android */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col transition-transform transform hover:scale-105">
-              <div className="p-6 flex-grow">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Android</h2>
-                <p className="text-gray-600 text-center mb-6">Download our app from Google Play or directly as an APK file.</p>
-                <div className="text-sm text-gray-600 mt-2 mb-4 bg-gray-50 rounded-lg p-3">
-                  <p className="font-medium mb-2">Installation Instructions:</p>
-                  <ol className="list-decimal pl-5 space-y-1">
-                    <li>Download the APK file</li>
-                    <li>Enable "Install from Unknown Sources" in your device settings</li>
-                    <li>Open the downloaded APK file</li>
-                    <li>Follow the installation prompts</li>
-                  </ol>
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4 flex justify-center space-x-4">
-                <a href={androidApk} 
-                  className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded flex items-center transition-colors">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download APK
-                </a>
-              </div>
+        </div>
+
+        {/* Android Tab Content */}
+        {activeTab === 'android' && (
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            {/* Download Button Section */}
+            <div className="bg-gradient-to-r from-green-500 to-green-600 p-8 text-center">
+              <button
+                onClick={handleDownload}
+                className="inline-flex items-center space-x-3 bg-white text-green-600 px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+              >
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Download APK Now</span>
+              </button>
+              <p className="text-green-100 mt-3 text-sm">Version 1.0.0 • ~25 MB</p>
             </div>
-            {/* Windows */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col transition-transform transform hover:scale-105">
-              <div className="p-6 flex-grow">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+
+            {/* Step by Step Instructions */}
+            <div className="p-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span className="bg-green-100 text-green-600 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Windows</h2>
-                <p className="text-gray-600 text-center mb-6">Install our Windows desktop application for a seamless experience.</p>
-                <div className="text-sm text-gray-600 mt-2 mb-4 bg-gray-50 rounded-lg p-3">
-                  <p className="font-medium mb-2">Installation Instructions:</p>
-                  <ol className="list-decimal pl-5 space-y-1">
-                    <li>Download the installer (.exe) file</li>
-                    <li>Double-click the installer</li>
-                    <li>If prompted by Windows security, click "Run anyway"</li>
-                    <li>Follow the installation wizard</li>
-                  </ol>
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4 flex justify-center">
-                <a href={electronReleases.windows} 
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center transition-colors">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download for Windows
-                </a>
-              </div>
-            </div>
-            {/* macOS */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col transition-transform transform hover:scale-105">
-              <div className="p-6 flex-grow">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-800" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">macOS</h2>
-                <p className="text-gray-600 text-center mb-6">Get our macOS app for a native Apple experience.</p>
-                <div className="text-sm text-gray-600 mt-2 mb-4 bg-gray-50 rounded-lg p-3">
-                  <p className="font-medium mb-2">Installation Instructions:</p>
-                  <ol className="list-decimal pl-5 space-y-1">
-                    <li>Download the DMG file</li>
-                    <li>Double-click to open the disk image</li>
-                    <li>Drag Imhotep Tasks to Applications folder</li>
-                    <li>If you see a security warning, right-click and select "Open"</li>
-                  </ol>
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4 flex justify-center">
-                <a href={electronReleases.macos} 
-                  className="bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded flex items-center transition-colors">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download for macOS
-                </a>
-              </div>
-            </div>
-            {/* Linux */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col transition-transform transform hover:scale-105">
-              <div className="p-6 flex-grow">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-orange-600" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.898-.25 1.509.225.678.997 1.259 1.7 1.18.205-.027.49-.139.733-.275.398-.2.877-.414 1.384-.453 1.358-.106 2.2.634 3.15.634.929 0 1.77-.74 3.15-.635.51.04.989.253 1.386.453.244.136.527.248.732.276.703.08 1.475-.501 1.7-1.18.2-.61.009-1.24-.25-1.508a.425.425 0 00-.11-.136c.124-.805-.008-1.657-.287-2.488-.589-1.772-1.832-3.47-2.716-4.521-.75-1.067-.974-1.928-1.05-3.02-.066-1.49 1.055-5.964-3.171-6.297a5.13 5.13 0 00-.48-.022m-.287 2.918c1.32-.066 2.637.898 2.701 2.914 0 0-1.17-.172-1.876.395-.745.586-.339 1.336-.339 1.336s-2.32.123-3.565-1.426c-.481-.6-.76-1.383-.555-2.337.193-.912.94-.856 3.634-.882M10 6.25v.227c0 .803 1.569.803 1.569 0V6.25c0-.803-1.57-.803-1.57 0m2.55.248c-.01.043-.01.087-.01.131 0 .803 1.57.803 1.57 0 0-.803-1.57-.803-1.57 0m-4.086.131v.13c0 .803 1.569.803 1.569 0v-.13c0-.804-1.57-.804-1.57 0M19 10.327V11.251c0 3.708-4.262 6.439-7 6.439-2.738 0-7-2.73-7-6.439v-.924c0-3.708 4.262-4.472 7-4.472 2.738 0 7 .764 7 4.472m-14 .498v.426c0 3.215 3.115 5.823 7 5.823s7-2.608 7-5.823v-.426c0-.253-.022-.506-.063-.756-.5.325-.636.653-1.337.85-.697.197-2.22.175-3.55-.262-1.08-.356-2.036-1.949-4.833-1.131-.902.262-1.81.887-2.962 1.355-.146.058-.29.114-.436.164-.073.316-.12.64-.12.968v.287c0 .21.113.39.274.48a.504.504 0 00.485 0c.161-.09.274-.27.274-.48v-.287c0-.172.03-.338.084-.496a.87.87 0 00.282-.136l.9-.738c.363-.296.82-.558 1.333-.73.929-.307 1.506-.114 1.71.136a.57.57 0 01.12.37v.881c0 .211.113.39.274.48a.504.504 0 00.485 0c.162-.09.274-.269.274-.48v-.881c0-.425-.17-.824-.467-1.122-.297-.298-.696-.468-1.12-.47-.227-.001-.453.054-.657.154-.22.109-.418.258-.59.428l-.705.579v-.152c0-.385.1-.87.633-1.155 1.66-.888 2.514-.328 3.254.109 1.797 1.061 3.332.519 4.243.136.786-.33 1.182-.81 1.376-1.33.044-.117.08-.237.108-.359-.337-.506-.819-.936-1.419-1.268-2.619-1.448-7.469-1.448-10.088 0a4.072 4.072 0 00-1.418 1.268c.405 1.722 2.915 3.392 6.775 3.56a.635.635 0 00.484-.164.615.615 0 00.2-.453.626.626 0 00-.2-.454.635.635 0 00-.484-.164c-3.59-.157-5.876-1.729-5.896-2.977.064-.386.212-.696.443-.915 2.147-1.19 6.5-1.19 8.647 0 .232.219.38.529.443.915-.01.634-.851 1.449-2.218 2.007-.467.189-1.23.243-1.929.134-.7-.11-1.318-.427-1.859-.908a.635.635 0 00-.484-.164.615.615 0 00-.2.453c0 .17.065.336.185.453.667.594 1.642 1.05 2.642 1.201.338.05.687.076 1.035.076.652 0 1.304-.099 1.756-.29 1.976-.802 3.071-2.05 3.071-3.512v-.924c0-.267.04-.526.111-.77-.152-.252-.33-.494-.533-.723M5.5 13.876c0 .803 1.569.803 1.569 0 0-.803-1.57-.803-1.57 0m11.44 0c0 .803 1.569.803 1.569 0 0-.803-1.57-.803-1.57 0"/>
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Linux</h2>
-                <p className="text-gray-600 text-center mb-6">Available on the Snap Store or as a direct download.</p>
-                <div className="text-sm text-gray-600 mt-2 mb-4 bg-gray-50 rounded-lg p-3">
-                  <p className="font-medium mb-2">Installation Instructions:</p>
-                  <div className="mb-2">
-                    <p className="font-medium">Snap Store:</p>
-                    <ol className="list-decimal pl-5 space-y-1">
-                      <li>Install directly via: <code>sudo snap install imhoteptasks</code></li>
-                      <li>Or click the "Get it from the Snap Store" button below</li>
-                    </ol>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4 flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-                <a href={snapStore} className="flex justify-center">
-                  <img alt="Get it from the Snap Store" src="https://snapcraft.io/en/dark/install.svg" className="h-10" />
-                </a>
-                <a href={electronReleases.linux} className="bg-orange-600 hover:bg-orange-700 text-white py-2 px-4 rounded flex items-center transition-colors">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download .snap
-                </a>
-              </div>
-            </div>
-            {/* PWA */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col transition-transform transform hover:scale-105">
-              <div className="p-6 flex-grow">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">PWA</h2>
-                <p className="text-gray-600 text-center mb-4">Install as a Progressive Web App on any device with a modern browser.</p>
-                <div className="text-sm text-gray-600 mt-2 mb-4 bg-gray-50 rounded-lg p-3">
-                  <p className="font-medium mb-2">Installation Instructions:</p>
-                  <div className="mb-2">
-                    <p className="font-medium">Chrome/Edge:</p>
-                    <ol className="list-decimal pl-5 space-y-1">
-                      <li>Visit our website</li>
-                      <li>Click the install icon (+ symbol) in the address bar</li>
-                      <li>Click "Install"</li>
-                    </ol>
+                </span>
+                Installation Guide
+              </h2>
+
+              <div className="space-y-6">
+                {/* Step 1 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    1
                   </div>
                   <div>
-                    <p className="font-medium">Firefox:</p>
-                    <ol className="list-decimal pl-5 space-y-1">
-                      <li>Visit our website</li>
-                      <li>Click three dots menu</li>
-                      <li>Select "Install app"</li>
-                    </ol>
+                    <h3 className="font-semibold text-gray-800 text-lg">Download the APK</h3>
+                    <p className="text-gray-600 mt-1">
+                      Click the "Download APK Now" button above. The file will start downloading automatically to your device.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Enable Unknown Sources</h3>
+                    <p className="text-gray-600 mt-1">
+                      When you try to install, Android will prompt you to allow installation from unknown sources. Follow these steps:
+                    </p>
+                    <ul className="mt-2 space-y-1 text-gray-600 list-disc list-inside ml-2">
+                      <li>Go to <strong>Settings → Security</strong></li>
+                      <li>Enable <strong>"Install unknown apps"</strong> for your browser or file manager</li>
+                      <li>Some devices: <strong>Settings → Apps → Special access → Install unknown apps</strong></li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Open the Downloaded File</h3>
+                    <p className="text-gray-600 mt-1">
+                      Find the downloaded APK file in your notifications or in the <strong>Downloads</strong> folder using your file manager. Tap on it to begin installation.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    4
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Install the App</h3>
+                    <p className="text-gray-600 mt-1">
+                      Tap <strong>"Install"</strong> when prompted. Wait for the installation to complete, then tap <strong>"Open"</strong> to launch Imhotep Tasks!
+                    </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 p-4 flex justify-center">
-                <button
-                  onClick={installApp}
-                  disabled={!isInstallable}
-                  className={`bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded flex items-center transition-colors ${isInstallable ? '' : 'opacity-50 cursor-not-allowed'}`}
-                  type="button"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+
+              {/* Security Note */}
+              <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  {isInstallable ? 'Install as PWA' : 'Already Installed or Not Supported'}
-                </button>
-                <a href={webAppUrl} className="ml-3 bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 px-4 rounded flex items-center transition-colors">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Visit Web App
-                </a>
+                  <div>
+                    <h4 className="font-semibold text-blue-800">Is it safe?</h4>
+                    <p className="text-blue-700 text-sm mt-1">
+                      Yes! This APK is built directly from our open-source repository. You can verify the source code on{' '}
+                      <a href="https://github.com/Imhotep-Tech/imhotep_tasks" className="underline font-medium" target="_blank" rel="noopener noreferrer">
+                        GitHub
+                      </a>.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-            {/* iOS */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 flex flex-col transition-transform transform hover:scale-105">
-              <div className="p-6 flex-grow">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-black" viewBox="0 0 24 24" fill="currentColor">
+          </div>
+        )}
+
+        {/* iOS Tab Content */}
+        {activeTab === 'ios' && (
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            {/* Info Banner */}
+            <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-6 text-center">
+              <div className="inline-flex items-center space-x-2 bg-amber-500/20 text-amber-200 px-4 py-2 rounded-full mb-4">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium">Web App Installation</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Install as Progressive Web App</h2>
+              <p className="text-gray-300 max-w-xl mx-auto">
+                Since this is a free hobby project, there's no native iOS app on the App Store (Apple's $99/year developer fee is quite steep for a free app!). 
+                But don't worry – you can install Imhotep Tasks as a web app that works just like a native app!
+              </p>
+            </div>
+
+            {/* PWA Benefits */}
+            <div className="p-6 bg-gray-50 border-b">
+              <h3 className="font-semibold text-gray-800 mb-3">✨ Web App Benefits:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Works offline</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Home screen icon</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Full-screen experience</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Step by Step Instructions */}
+            <div className="p-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <span className="bg-gray-100 text-gray-600 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                   </svg>
+                </span>
+                Safari Installation Guide
+              </h2>
+
+              <div className="space-y-6">
+                {/* Step 1 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Open Safari Browser</h3>
+                    <p className="text-gray-600 mt-1">
+                      <strong>Important:</strong> You must use Safari browser on your iPhone or iPad. This won't work with Chrome or other browsers on iOS.
+                    </p>
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">iOS</h2>
-                <p className="text-gray-600 text-center mb-4">Install as a web app on your iPhone or iPad using Safari.</p>
-                <div className="text-sm text-gray-600 mt-2 mb-4 bg-gray-50 rounded-lg p-3">
-                  <p className="font-medium mb-2">Installation Steps:</p>
-                  <ol className="list-decimal pl-5 space-y-2">
-                    <li>Open <a href={webAppUrl} className="text-blue-600">imhotep-tasks.vercel.app</a> in Safari</li>
-                    <li>Tap the Share icon <svg className="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M13 4v2.67l-1.33.67 1.33.67V10H7V8.67l1.33-.67L7 7.33V4h6zm-2 9a1 1 0 100-2 1 1 0 000 2z"/></svg> at the bottom of the screen</li>
-                    <li>Scroll down and tap "Add to Home Screen"</li>
-                    <li>Tap "Add" in the upper right corner</li>
-                    <li>Find the app icon on your home screen</li>
-                  </ol>
+
+                {/* Step 2 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Visit Imhotep Tasks</h3>
+                    <p className="text-gray-600 mt-1">
+                      Navigate to our web app:
+                    </p>
+                    <a 
+                      href={webAppUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-2 mt-2 bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      <span>imhotep-tasks.vercel.app</span>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Tap the Share Button</h3>
+                    <p className="text-gray-600 mt-1">
+                      Look for the <strong>Share</strong> icon at the bottom of Safari (a square with an arrow pointing up). Tap on it to open the share menu.
+                    </p>
+                    <div className="mt-3 inline-flex items-center justify-center w-12 h-12 bg-blue-500 rounded-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    4
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Select "Add to Home Screen"</h3>
+                    <p className="text-gray-600 mt-1">
+                      Scroll down in the share menu and tap <strong>"Add to Home Screen"</strong>. You may need to scroll to find this option.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 5 */}
+                <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gray-800 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    5
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">Confirm Installation</h3>
+                    <p className="text-gray-600 mt-1">
+                      Tap <strong>"Add"</strong> in the upper right corner. The Imhotep Tasks icon will now appear on your home screen like any other app!
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="bg-gray-50 p-4">
-                <a href={webAppUrl} 
-                  className="block w-full bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded text-center transition-colors">
-                  Open in Safari
+
+              {/* Open Safari Button */}
+              <div className="mt-8 text-center">
+                <a
+                  href={webAppUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 bg-gray-800 hover:bg-gray-900 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                  </svg>
+                  <span>Open in Safari</span>
                 </a>
+              </div>
+
+              {/* Why No App Store */}
+              <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div className="flex items-start space-x-3">
+                  <span className="text-2xl">💡</span>
+                  <div>
+                    <h4 className="font-semibold text-amber-800">Why isn't this on the App Store?</h4>
+                    <p className="text-amber-700 text-sm mt-1">
+                      Imhotep Tasks is a free, open-source hobby project. Publishing on the Apple App Store requires a $99/year developer membership, which doesn't make sense for a completely free app. 
+                      The web app provides nearly identical functionality and is always up-to-date!
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          
-          {/* Source Code section */}
-          <div className="mb-12 text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Source Code</h2>
-            <p className="text-gray-600 mb-4">Imhotep Tasks is open source under AGPL-3.0 for non-commercial use. Check out our repository:</p>
-            <a href="https://github.com/Imhotep-Tech/imhotep_tasks" 
-              className="inline-flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-              </svg>
-              View Source Code
-            </a>
-          </div>
-          {/* GitHub repository section */}
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">All Releases</h2>
-            <p className="text-gray-600 mb-6">Want to access previous versions or see what's new? Check out our GitHub repository for all releases.</p>
-            <a href="https://github.com/Imhotep-Tech/imhotep_tasks/releases/" 
-              className="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-              </svg>
-              View on GitHub
-            </a>
-          </div>
+        )}
+
+        {/* Source Code Link */}
+        <div className="mt-12 text-center">
+          <p className="text-indigo-200 mb-4">Imhotep Tasks is open source under AGPL-3.0</p>
+          <a
+            href="https://github.com/Imhotep-Tech/imhotep_tasks"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center space-x-2 text-white hover:text-indigo-200 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+            <span>View on GitHub</span>
+          </a>
         </div>
-      </section>
-      <Footer />
-    </>
+      </main>
+    </div>
   );
 }

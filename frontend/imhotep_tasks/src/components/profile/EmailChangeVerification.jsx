@@ -1,65 +1,71 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../common/Footer';
 import Logo from '../../assets/imhotep_tasks.png';
+import { useAuth } from '../../contexts/AuthContext';
 
 const EmailChangeVerification = () => {
-  const { uid, token, new_email } = useParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error'
+  const { token } = useAuth();
+  const [otp, setOtp] = useState('');
+  const [status, setStatus] = useState('input'); // 'input', 'verifying', 'success', 'error'
   const [message, setMessage] = useState('');
-  const [countdown, setCountdown] = useState(10);
+  const [error, setError] = useState('');
+  const [countdown, setCountdown] = useState(5);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let timerId = null;
+  const verifyEmailChange = async (otpCode) => {
+    try {
+      const response = await axios.post('/api/profile/verify-email-change/', 
+        { otp: otpCode },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Verification failed. Please try again.' 
+      };
+    }
+  };
 
-    const verifyEmailChange = async () => {
-      try {
-        await axios.post('/api/profile/verify-email-change/', {
-          uid,
-          token,
-          new_email: new_email,
-        });
-
-        setStatus('success');
-        setMessage('Your email has been changed successfully!');
-
-        timerId = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev <= 1) {
-              clearInterval(timerId);
-              navigate('/login', {
-                state: { message: 'Email changed successfully! Please log in again.' }
-              });
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      } catch (error) {
-        setStatus('error');
-        setMessage(
-          error.response?.data?.error ||
-          'The verification link is invalid or has expired.'
-        );
-      }
-    };
-
-    if (uid && token && new_email) {
-      verifyEmailChange();
-    } else {
-      setStatus('error');
-      setMessage('Invalid verification link.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!otp || otp.length !== 6) {
+      setError('Please enter a valid 6-digit OTP code');
+      return;
     }
 
-    return () => {
-      if (timerId) clearInterval(timerId);
-    };
-  }, [uid, token, new_email, navigate]);
+    setStatus('verifying');
+    setError('');
+    setLoading(true);
 
-  // Helpers
-  const decodedEmail = new_email ? decodeURIComponent(new_email) : '';
+    const result = await verifyEmailChange(otp);
+
+    if (result.success) {
+      setStatus('success');
+      setMessage(result.message || 'Your email has been changed successfully!');
+      
+      // Start countdown
+      let count = 5;
+      const timerId = setInterval(() => {
+        count--;
+        setCountdown(count);
+        if (count <= 0) {
+          clearInterval(timerId);
+          navigate('/login', { state: { message: 'Email changed successfully! Please log in again.' } });
+        }
+      }, 1000);
+    } else {
+      setStatus('input');
+      setError(result.error);
+    }
+    
+    setLoading(false);
+  };
+
   const getIcon = () => {
     switch (status) {
       case 'verifying':
@@ -75,15 +81,7 @@ const EmailChangeVerification = () => {
         return (
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100">
             <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-              <path fillRule="evenodd" d="M10.97 15.03a.75.75 0 001.06 0l4.243-4.243a.75.75 0 10-1.06-1.06L11.5 13.439 9.828 11.77a.75.75 0 10-1.06 1.06l2.202 2.2z" clipRule="evenodd" />
-            </svg>
-          </div>
-        );
-      case 'error':
-        return (
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100">
-            <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-              <path fillRule="evenodd" d="M11.25 2.25a9 9 0 100 18 9 9 0 000-18zM12 8a1 1 0 10-2 0v4a1 1 0 102 0V8zm0 8a1 1 0 10-2 0 1 1 0 002 0z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </div>
         );
@@ -94,23 +92,19 @@ const EmailChangeVerification = () => {
 
   const getTitle = () => {
     switch (status) {
-      case 'verifying': return 'Updating Your Profile...';
+      case 'input': return 'Verify Email Change';
+      case 'verifying': return 'Updating...';
       case 'success': return 'Email Updated';
-      case 'error': return 'Update Failed';
       default: return '';
     }
   };
 
   const getSubtitle = () => {
     switch (status) {
-      case 'verifying':
-        return `Please wait while we update your email${decodedEmail ? ` to ${decodedEmail}` : ''}.`;
-      case 'success':
-        return `Your email has been updated${decodedEmail ? ` to ${decodedEmail}` : ''}. You will be redirected to login shortly.`;
-      case 'error':
-        return message;
-      default:
-        return '';
+      case 'input': return 'Enter the 6-digit OTP code sent to your new email address. The code expires in 10 minutes.';
+      case 'verifying': return 'Please wait while we update your email address.';
+      case 'success': return message || 'Your email has been updated. Redirecting to login shortly.';
+      default: return '';
     }
   };
 
@@ -129,11 +123,58 @@ const EmailChangeVerification = () => {
               <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">{getTitle()}</h1>
               <p className="mt-2 text-center text-sm text-gray-600">{getSubtitle()}</p>
 
-              <div className="mt-6 flex justify-center">
-                {getIcon()}
-              </div>
+              {(status === 'verifying' || status === 'success') && (
+                <div className="mt-6 flex justify-center">
+                  {getIcon()}
+                </div>
+              )}
 
               <div className="mt-6">
+                {status === 'input' && (
+                  <form onSubmit={handleSubmit} className="space-y-5">
+                    {error && (
+                      <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                        {error}
+                      </div>
+                    )}
+                    
+                    <div>
+                      <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">OTP Code</label>
+                      <input
+                        id="otp"
+                        name="otp"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
+                        value={otp}
+                        onChange={(e) => {
+                          setOtp(e.target.value.replace(/\D/g, ''));
+                          if (error) setError('');
+                        }}
+                        required
+                        className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 rounded-md text-center text-2xl tracking-widest font-mono"
+                        placeholder="000000"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || otp.length !== 6}
+                      className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? 'Verifying...' : 'Verify Email Change'}
+                    </button>
+
+                    <Link
+                      to="/profile"
+                      className="block text-sm text-gray-600 hover:text-gray-500"
+                    >
+                      ← Back to Profile
+                    </Link>
+                  </form>
+                )}
+
                 {status === 'verifying' && (
                   <>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -143,27 +184,20 @@ const EmailChangeVerification = () => {
                   </>
                 )}
 
-                {status !== 'verifying' && (
-                  <div className="mt-4">
-                    <Link
-                      to={status === 'success' ? '/login' : '/profile'}
-                      className="w-full inline-flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                    >
-                      {status === 'success' ? 'Log In Again' : 'Go to Profile'}
-                    </Link>
-                  </div>
-                )}
-
-                {status === 'success' && countdown > 0 && (
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-                    Redirecting to login in {countdown} second{countdown !== 1 ? 's' : ''}...
-                  </div>
-                )}
-
-                {status === 'error' && (
-                  <div className="mt-4 text-sm text-gray-600">
-                    If this problem persists, try updating your email again from profile settings or contact support.
-                  </div>
+                {status === 'success' && (
+                  <>
+                    <div className="mt-4">
+                      <Link
+                        to="/login"
+                        className="w-full inline-flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                      >
+                        Log In Again
+                      </Link>
+                    </div>
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700">
+                      Redirecting to login in {countdown} second{countdown !== 1 ? 's' : ''}...
+                    </div>
+                  </>
                 )}
               </div>
 

@@ -1,16 +1,12 @@
-from ..models import User
+from ..models import User, PendingOTP
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.core.mail import send_mail
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
-from django.contrib.auth.tokens import default_token_generator
-from imhotep_tasks.settings import SITE_DOMAIN, frontend_url
-from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
+from tasks.utils.otp_utils import generate_otp, is_otp_valid, OTP_VALIDITY_MINUTES
 
 #the register route
 @api_view(['POST'])
@@ -95,16 +91,31 @@ def register_view(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+        # Invalidate any existing unused OTPs for this user (registration type)
+        PendingOTP.objects.filter(
+            user=user,
+            otp_type='registration',
+            is_used=False
+        ).update(is_used=True)
+        
+        # Generate new OTP
+        otp_code = generate_otp()
+        
+        # Save OTP to database
+        PendingOTP.objects.create(
+            user=user,
+            otp_code=otp_code,
+            otp_type='registration',
+            is_used=False
+        )
+
         # Send verification email
         try:
             mail_subject = 'Activate your Imhotep Tasks account'
-            current_site = SITE_DOMAIN.rstrip('/')  # Remove trailing slash if present
             message = render_to_string('activate_mail_send.html', {
                 'user': user,
-                'domain': current_site,
-                'frontend_url': frontend_url,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': default_token_generator.make_token(user),
+                'otp_code': otp_code,
+                'validity_minutes': OTP_VALIDITY_MINUTES,
             })
             send_mail(mail_subject, message, 'imhoteptech1@gmail.com', [email], html_message=message)
         except Exception as email_error:
@@ -127,42 +138,71 @@ def register_view(request):
 @permission_classes([AllowAny])
 def verify_email(request):
     try:
-        uid = request.data.get('uid')
-        token = request.data.get('token')
-        
-        if not uid or not token:
-            return Response(
-                {'error': 'Missing verification parameters'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Decode the user ID
-        try:
-            user_id = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=user_id)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return Response(
-                {'error': 'Invalid verification link'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        otp_code = request.data.get('otp')
+        email = request.data.get('email')
 
-        # Check if the token is valid
-        if default_token_generator.check_token(user, token):
-            user.is_active = True
+        if not otp_code or not email:
+            return Response(
+                {'error': 'Missing verification parameters (email and otp required)'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if '@' in email:
+
+            # Find the user by email
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'User not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            # Find the user by username in the case of email not having '@'
+            try:
+                user = User.objects.get(username=email)
+            except User.DoesNotExist:
+                return Response(
+                    {'error': 'User not found'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        # Find the OTP record
+        try:
+            pending_otp = PendingOTP.objects.filter(
+                user=user,
+                otp_code=otp_code,
+                otp_type='registration',
+                is_used=False
+            ).latest('created_at')
+        except PendingOTP.DoesNotExist:
+            return Response(
+                {'valid': False, 'error': 'Invalid or expired OTP'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if the OTP is still valid (within 10 minutes)
+        if is_otp_valid(pending_otp):
+            # Mark OTP as used
+            pending_otp.is_used = True
+            pending_otp.save()
+            
+            # Verify the user's email
             user.email_verify = True
             user.save()
             
             return Response(
-                {'message': 'Email verified successfully'}, 
+                {'valid': True, 'message': 'Email verified successfully!', 'email': user.email}, 
                 status=status.HTTP_200_OK
             )
         else:
             return Response(
-                {'error': 'Invalid or expired verification link'}, 
+                {'valid': False, 'error': 'OTP has expired. Please request a new verification code.'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
     except Exception as e:
+        print(str(e))
         return Response(
             {'error': f'An error occurred during verification'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

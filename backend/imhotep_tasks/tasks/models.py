@@ -58,3 +58,20 @@ class Routines(models.Model):
 
     def __str__(self):
         return self.routines_title
+
+class PendingOTP(models.Model):
+    OTP_TYPE_CHOICES = [
+        ('registration', 'Registration'),
+        ('password_reset', 'Password Reset'),
+        ('email_change', 'Email Change'),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    otp_code = models.CharField(max_length=6)
+    otp_type = models.CharField(max_length=20, choices=OTP_TYPE_CHOICES, default='registration')
+    new_email = models.EmailField(null=True, blank=True)  # Used for email change OTPs
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"OTP for {self.user.username} ({self.otp_type}) - Used: {self.is_used}"
