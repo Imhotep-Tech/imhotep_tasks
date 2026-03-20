@@ -15,15 +15,13 @@ import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import {
-  TaskItem,
-  TaskStats,
-  TaskFormModal,
-  TaskDetailsModal,
-  EmptyTasks,
-  BulkActionBar,
-  Task,
-} from '@/components/tasks';
+import { TaskItem } from './TaskItem';
+import { TaskStats } from './TaskStats';
+import { TaskFormModal } from './TaskFormModal';
+import { TaskDetailsModal } from './TaskDetailsModal';
+import { EmptyTasks } from './EmptyTasks';
+import { BulkActionBar } from './BulkActionBar';
+import type { Task } from './types';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTasks, TaskPageType } from '@/hooks/use-tasks';

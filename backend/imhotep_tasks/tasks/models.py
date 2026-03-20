@@ -54,6 +54,9 @@ class Routines(models.Model):
     # the dates that this routine will be added
     routines_dates = models.JSONField(default=list)
 
+    # the category of tasks this routine creates
+    routine_category = models.CharField(max_length=100, default='general')
+
     #to set the current status of the routine if active or not
     status = models.BooleanField(default=True)
 

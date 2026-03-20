@@ -78,6 +78,7 @@ interface Routine {
   routines_title: string;
   routines_dates: string[];
   routine_type: 'weekly' | 'monthly' | 'yearly';
+  routine_category?: string;
   status: boolean;
   created_by: number;
 }
@@ -86,6 +87,16 @@ type RoutineType = 'weekly' | 'monthly' | 'yearly';
 
 const ALL_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const ALL_MONTHLY_DAYS = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
+
+const PRESET_CATEGORIES = ['general', 'study', 'work', 'personal', 'health', 'finance'];
+const CATEGORY_LABELS: Record<string, string> = {
+  general: '📋  General',
+  study: '📚  Study',
+  work: '💼  Work',
+  personal: '🏠  Personal',
+  health: '💪  Health',
+  finance: '💰  Finance',
+};
 
 export default function RoutinesScreen() {
   const colorScheme = useColorScheme();
@@ -115,6 +126,9 @@ export default function RoutinesScreen() {
   const [yearlyInput, setYearlyInput] = useState('');
   const [yearlyError, setYearlyError] = useState('');
   const [formError, setFormError] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('general');
+  const [customCategory, setCustomCategory] = useState('');
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
   const fetchRoutines = useCallback(async (pageNum: number = 1, append: boolean = false) => {
     if (!token) return;
@@ -166,6 +180,9 @@ export default function RoutinesScreen() {
     setYearlyError('');
     setFormError('');
     setEditingRoutine(null);
+    setSelectedCategory('general');
+    setCustomCategory('');
+    setShowCategoryPicker(false);
   };
 
   const openAddModal = () => {
@@ -180,6 +197,15 @@ export default function RoutinesScreen() {
     setSelectedDays(routine.routines_dates);
     if (routine.routine_type === 'yearly') {
       setYearlyInput(routine.routines_dates.join(', '));
+    }
+    // Set category
+    const existingCat = (routine.routine_category || 'general').toLowerCase();
+    if (PRESET_CATEGORIES.includes(existingCat)) {
+      setSelectedCategory(existingCat);
+      setCustomCategory('');
+    } else {
+      setSelectedCategory('__other__');
+      setCustomCategory(existingCat);
     }
     setShowModal(true);
   };
@@ -274,10 +300,12 @@ export default function RoutinesScreen() {
 
     try {
       setFormLoading(true);
+      const finalCategory = selectedCategory === '__other__' ? customCategory.trim().toLowerCase() : selectedCategory;
       const payload = {
         routines_title: title,
         routine_type: routineType,
         routines_dates: selectedDays,
+        routine_category: finalCategory || 'general',
       };
 
       if (editingRoutine) {
@@ -385,6 +413,13 @@ export default function RoutinesScreen() {
                   {item.routine_type}
                 </Text>
               </View>
+              {item.routine_category && item.routine_category !== 'general' && (
+                <View style={[styles.typeBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.typeText, { color: colors.primary, textTransform: 'capitalize' }]}>
+                    {item.routine_category}
+                  </Text>
+                </View>
+              )}
               <Text style={[styles.datesText, { color: colors.textSecondary }]}>
                 {formatDates(item)}
               </Text>
@@ -629,6 +664,86 @@ export default function RoutinesScreen() {
                     </Text>
                   )}
                 </>
+              )}
+            </View>
+
+            {/* Category Picker */}
+            <View style={styles.formGroup}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>Category</Text>
+              <TouchableOpacity
+                style={[
+                  styles.categoryButton,
+                  { backgroundColor: colors.inputBg, borderColor: colors.border },
+                ]}
+                onPress={() => setShowCategoryPicker(!showCategoryPicker)}
+              >
+                <Ionicons name="pricetag-outline" size={20} color={colors.primary} />
+                <Text style={[styles.categoryButtonText, { color: colors.text }]}>
+                  {selectedCategory === '__other__'
+                    ? (customCategory || 'Custom...')
+                    : CATEGORY_LABELS[selectedCategory] || selectedCategory}
+                </Text>
+                <Ionicons
+                  name={showCategoryPicker ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color={colors.placeholder}
+                />
+              </TouchableOpacity>
+
+              {showCategoryPicker && (
+                <View style={[styles.categoryDropdown, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+                  {PRESET_CATEGORIES.map((cat) => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.categoryOption,
+                        { borderBottomColor: colors.border },
+                        selectedCategory === cat && { backgroundColor: colors.primaryLight },
+                      ]}
+                      onPress={() => {
+                        setSelectedCategory(cat);
+                        setShowCategoryPicker(false);
+                      }}
+                    >
+                      <Text style={[styles.categoryOptionText, { color: colors.text }]}>
+                        {CATEGORY_LABELS[cat]}
+                      </Text>
+                      {selectedCategory === cat && (
+                        <Ionicons name="checkmark" size={18} color={colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={[
+                      styles.categoryOption,
+                      selectedCategory === '__other__' && { backgroundColor: colors.primaryLight },
+                    ]}
+                    onPress={() => {
+                      setSelectedCategory('__other__');
+                      setShowCategoryPicker(false);
+                    }}
+                  >
+                    <Text style={[styles.categoryOptionText, { color: colors.text }]}>
+                      🔖  Other (custom)
+                    </Text>
+                    {selectedCategory === '__other__' && (
+                      <Ionicons name="checkmark" size={18} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {selectedCategory === '__other__' && (
+                <TextInput
+                  style={[
+                    styles.textInput,
+                    { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.text, marginTop: 8 },
+                  ]}
+                  value={customCategory}
+                  onChangeText={setCustomCategory}
+                  placeholder="Enter custom category"
+                  placeholderTextColor={colors.placeholder}
+                />
               )}
             </View>
 
@@ -1054,5 +1169,35 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  categoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  categoryButtonText: {
+    flex: 1,
+    fontSize: 16,
+  },
+  categoryDropdown: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  categoryOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  categoryOptionText: {
+    fontSize: 15,
   },
 });
