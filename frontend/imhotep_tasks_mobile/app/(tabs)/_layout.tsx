@@ -46,10 +46,13 @@ export default function TabLayout() {
   const [addTaskLoading, setAddTaskLoading] = useState(false);
   const colors = themes[colorScheme ?? 'light'];
 
-  const handleAddTask = useCallback(async (formData: { task_title: string; task_details: string; due_date: string }) => {
+  const handleAddTask = useCallback(async (formData: { task_title: string; task_details: string; due_date: string; task_category: string }) => {
     setAddTaskLoading(true);
     try {
-      await api.post('api/tasks/add_task/', formData);
+      await api.post('api/tasks/add_task/', {
+        ...formData,
+        task_category: formData.task_category || 'general',
+      });
       // Call the refresh callback if registered
       if (onTaskAdded) {
         onTaskAdded();

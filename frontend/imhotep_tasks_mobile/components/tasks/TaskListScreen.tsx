@@ -1,8 +1,8 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Pressable,
-  FlatList,
+  SectionList,
   ActivityIndicator,
   RefreshControl,
   View,
@@ -64,6 +64,16 @@ const themes = {
   },
 };
 
+const CATEGORY_ICONS: Record<string, string> = {
+  study: '📚',
+  work: '💼',
+  personal: '🏠',
+  health: '💪',
+  finance: '💰',
+  general: '📋',
+};
+const DEFAULT_ICON = '🔖';
+
 interface TaskListScreenProps {
   pageType: TaskPageType;
   title: string;
@@ -115,6 +125,46 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     handleBulkComplete,
     handleBulkUpdateDate,
   } = useTasks({ pageType, sortOverdueFirst: pageType === 'today-tasks' });
+
+  // Collapsed state for category sections
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = useCallback((category: string) => {
+    setCollapsedSections(prev => ({ ...prev, [category]: !prev[category] }));
+  }, []);
+
+  // Group tasks by category, sorted: pending first within each group
+  const sections = useMemo(() => {
+    const groups: Record<string, Task[]> = {};
+    sortedTasks.forEach(task => {
+      const cat = (task.task_category || 'general').toLowerCase();
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(task);
+    });
+
+    // Sort within each group: pending first, then done
+    Object.keys(groups).forEach(cat => {
+      groups[cat].sort((a, b) => {
+        if (a.status === b.status) return 0;
+        return a.status ? 1 : -1;
+      });
+    });
+
+    // Category display order: study first, then rest alphabetically
+    const orderedKeys = Object.keys(groups).sort((a, b) => {
+      if (a === 'study') return -1;
+      if (b === 'study') return 1;
+      return a.localeCompare(b);
+    });
+
+    return orderedKeys.map(cat => ({
+      category: cat,
+      icon: CATEGORY_ICONS[cat] || DEFAULT_ICON,
+      pendingCount: groups[cat].filter(t => !t.status).length,
+      doneCount: groups[cat].filter(t => t.status).length,
+      data: collapsedSections[cat] ? [] : groups[cat],
+    }));
+  }, [sortedTasks, collapsedSections]);
 
   const { setOnTaskAdded } = useTaskModal();
 
@@ -235,9 +285,45 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <FlatList
-        data={sortedTasks}
+      <SectionList
+        sections={sections}
         renderItem={renderTask}
+        renderSectionHeader={({ section }) => (
+          <Pressable
+            onPress={() => toggleSection(section.category)}
+            style={[
+              styles.sectionHeader,
+              {
+                backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#F9FAFB',
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionIcon}>{section.icon}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {section.category.charAt(0).toUpperCase() + section.category.slice(1)}
+              </Text>
+              <View style={[styles.sectionBadge, { backgroundColor: colors.primaryLight }]}>
+                <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
+                  {section.pendingCount} pending
+                </Text>
+              </View>
+              {section.doneCount > 0 && (
+                <View style={[styles.sectionBadge, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6' }]}>
+                  <Text style={[styles.sectionBadgeText, { color: colors.textSecondary }]}>
+                    {section.doneCount} done
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Ionicons
+              name={collapsedSections[section.category] ? 'chevron-forward' : 'chevron-down'}
+              size={18}
+              color={colors.textSecondary}
+            />
+          </Pressable>
+        )}
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={<EmptyTasks onAddTask={openAddModal} />}
@@ -252,6 +338,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         contentContainerStyle={sortedTasks.length === 0 ? styles.emptyList : undefined}
+        stickySectionHeadersEnabled={false}
       />
 
       {/* Add/Edit Task Modal */}
@@ -384,5 +471,36 @@ const styles = StyleSheet.create({
   },
   emptyList: {
     flex: 1,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  sectionIcon: {
+    fontSize: 18,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sectionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  sectionBadgeText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
 });

@@ -5,6 +5,7 @@ export interface Task {
   task_title: string;
   task_details?: string;
   due_date?: string;
+  task_category?: string;
   status: boolean;
   transaction_id?: number;
   transaction_status?: string;
@@ -16,6 +17,7 @@ export interface TaskFormData {
   task_title: string;
   task_details: string;
   due_date: string;
+  task_category: string;
 }
 
 export interface TasksResponse {

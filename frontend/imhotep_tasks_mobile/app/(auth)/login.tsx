@@ -70,7 +70,6 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
@@ -155,42 +154,6 @@ export default function LoginScreen() {
     setLoading(false);
   };
 
-  const handleGoogleLogin = async () => {
-    if (googleLoading) return;
-
-    try {
-      setGoogleLoading(true);
-      const response = await axios.get('/api/auth/google/url/', {
-        params: { platform: 'mobile' },
-      });
-      const authUrl = response.data.auth_url;
-
-      const result = await WebBrowser.openAuthSessionAsync(
-        authUrl,
-        'your-app-scheme://auth/google/callback' // Replace with your app scheme
-      );
-
-      if (result.type === 'success' && result.url) {
-        // Parse the callback URL to extract tokens
-        const url = new URL(result.url);
-        const access = url.searchParams.get('access');
-        const refresh = url.searchParams.get('refresh');
-        const userParam = url.searchParams.get('user');
-
-        if (access && refresh && userParam) {
-          const userData = JSON.parse(decodeURIComponent(userParam));
-          await login({ access, refresh, user: userData });
-          router.replace('/(tabs)');
-        }
-      }
-    } catch (error) {
-      console.error('Google login failed:', error);
-      setError('Failed to initiate Google login');
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -216,18 +179,6 @@ export default function LoginScreen() {
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Sign in to continue organizing your tasks
           </Text>
-
-          {/* Google Sign-in Button */}
-          <TouchableOpacity
-            style={[styles.googleButton, { backgroundColor: colors.primary }]}
-            onPress={handleGoogleLogin}
-            disabled={loading || googleLoading}
-          >
-            <Ionicons name="logo-google" size={20} color="white" />
-            <Text style={styles.googleButtonText}>
-              {googleLoading ? 'Redirecting...' : 'Sign in with Google'}
-            </Text>
-          </TouchableOpacity>
 
           {/* Divider */}
           <View style={styles.divider}>

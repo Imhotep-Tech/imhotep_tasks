@@ -65,6 +65,7 @@ interface Task {
   task_title: string;
   task_details?: string;
   due_date?: string;
+  task_category?: string;
   status: boolean;
   transaction_id?: number;
   transaction_status?: string;
@@ -197,6 +198,19 @@ export function TaskDetailsModal({
               <View style={styles.section}>
                 <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Description</Text>
                 <Text style={[styles.description, { color: colors.description }]}>{task.task_details}</Text>
+              </View>
+            ) : null}
+
+            {/* Category */}
+            {task.task_category ? (
+              <View style={styles.section}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Category</Text>
+                <View style={[styles.transactionBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
+                  <Text style={[styles.transactionText, { color: colors.primary, textTransform: 'capitalize' }]}>
+                    {task.task_category}
+                  </Text>
+                </View>
               </View>
             ) : null}
 
