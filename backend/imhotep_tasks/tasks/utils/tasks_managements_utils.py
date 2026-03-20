@@ -11,6 +11,7 @@ def serialize_task(task):
         "task_title": task.task_title,
         "task_details": getattr(task, "task_details", None),
         "due_date": task.due_date.isoformat() if getattr(task, "due_date", None) else None,
+        "task_category": task.task_category or "",
         "status": bool(task.status),
         "done_date": task.done_date.isoformat() if getattr(task, "done_date", None) else None,
         "created_by": getattr(task.created_by, "id", None),

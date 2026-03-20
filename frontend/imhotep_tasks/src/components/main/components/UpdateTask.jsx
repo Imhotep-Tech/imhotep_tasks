@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../../config/api';
 
+const PRESET_CATEGORIES = ['general', 'study', 'work', 'personal', 'health', 'finance'];
+
 const UpdateTask = ({ task, onClose, onUpdate, url_call }) => {
+  // Detect whether the existing category is a preset or custom
+  const existingCat = (task?.task_category || 'general').toLowerCase();
+  const isPreset = PRESET_CATEGORIES.includes(existingCat);
 
   const [activeTab, setActiveTab] = useState('task');
   const [task_title, setTitle] = useState(task?.task_title || '');
   const [task_description, setDescription] = useState(task?.task_details || '');
   const [due_date, setDueDate] = useState(task?.due_date ? task.due_date.slice(0, 10) : '');
+  const [selectedCategory, setSelectedCategory] = useState(isPreset ? existingCat : '__other__');
+  const [customCategory, setCustomCategory] = useState(isPreset ? '' : existingCat);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Resolve the final category value
+  const task_category = selectedCategory === '__other__' ? customCategory.trim().toLowerCase() : selectedCategory;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,6 +29,7 @@ const UpdateTask = ({ task, onClose, onUpdate, url_call }) => {
         task_title, 
         task_details: task_description, 
         due_date, 
+        task_category,
         url_call,
       };
       const res = await axios.patch(`api/tasks/update_task/${task.id}/`, payload);
@@ -70,6 +81,33 @@ const UpdateTask = ({ task, onClose, onUpdate, url_call }) => {
                   onChange={(e) => setDueDate(e.target.value)}
                   className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                >
+                  <option value="general">General</option>
+                  <option value="study">Study</option>
+                  <option value="work">Work</option>
+                  <option value="personal">Personal</option>
+                  <option value="health">Health</option>
+                  <option value="finance">Finance</option>
+                  <option value="__other__">Other (custom)</option>
+                </select>
+                {selectedCategory === '__other__' && (
+                  <input
+                    type="text"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="mt-2 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    placeholder="Enter custom category"
+                    required
+                  />
+                )}
               </div>
             </>
           )}

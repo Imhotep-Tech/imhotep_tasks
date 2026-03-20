@@ -18,6 +18,9 @@ class Tasks(models.Model):
     # the date where this poll was created
     creation_date = models.DateTimeField(auto_now_add=True)
 
+    # task category (optional)
+    task_category = models.CharField(max_length=200, null=True, blank=True, default='')
+
     # the date where this tasks is due by (optional)
     due_date = models.DateTimeField(default=timezone.now)
 

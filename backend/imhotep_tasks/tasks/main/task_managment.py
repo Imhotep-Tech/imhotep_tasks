@@ -138,6 +138,7 @@ def add_task(request):
         task_title = request.data.get("task_title")
         task_details = request.data.get("task_details")
         due_date_raw = request.data.get("due_date")
+        task_category = request.data.get("task_category", "general")
         due_date = tasks_managements_utils._parse_date_input(due_date_raw) or today
 
         task = Tasks.objects.create(
@@ -145,6 +146,7 @@ def add_task(request):
             task_details=task_details,
             due_date=due_date,
             created_by=request.user,
+            task_category=task_category
         )
 
         task_data = tasks_managements_utils.serialize_task(task)
@@ -178,9 +180,11 @@ def update_task(request, task_id):
         task_title = request.data.get("task_title", task.task_title)
         task_details = request.data.get("task_details", task.task_details)
         due_date_raw = request.data.get("due_date", None)
+        task_category = request.data.get("task_category", "general")
     
         task.task_title = task_title
         task.task_details = task_details
+        task.task_category = task_category
         if due_date_raw is not None:
             parsed = tasks_managements_utils._parse_date_input(due_date_raw)
             task.due_date = parsed

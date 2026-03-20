@@ -5,6 +5,54 @@ import UpdateTask from './UpdateTask';
 import DetailsModal from './DetailsModal';
 import DateComponent from "./DateComponent";
 
+/* ─── colour palette per category ─── */
+const CATEGORY_STYLES = {
+  study:    { border: "border-blue-400",   bg: "bg-blue-50",   badge: "bg-blue-100  text-blue-700  border-blue-200",   icon: "📚" },
+  work:     { border: "border-amber-400",  bg: "bg-amber-50",  badge: "bg-amber-100 text-amber-700 border-amber-200",  icon: "💼" },
+  personal: { border: "border-pink-400",   bg: "bg-pink-50",   badge: "bg-pink-100  text-pink-700  border-pink-200",   icon: "🏠" },
+  health:   { border: "border-green-400",  bg: "bg-green-50",  badge: "bg-green-100 text-green-700 border-green-200",  icon: "💪" },
+  finance:  { border: "border-emerald-400",bg: "bg-emerald-50",badge: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: "💰" },
+  general:  { border: "border-gray-300",   bg: "bg-gray-50",   badge: "bg-gray-100  text-gray-600  border-gray-200",   icon: "📋" },
+  other:    { border: "border-purple-400", bg: "bg-purple-50", badge: "bg-purple-100 text-purple-700 border-purple-200", icon: "🔖" },
+};
+
+const getStyle = (cat) => CATEGORY_STYLES[cat] || CATEGORY_STYLES.general;
+
+/* ─── Collapsible category header ─── */
+const CategoryHeader = ({ category, pendingCount, doneCount, isOpen, onToggle }) => {
+  const s = getStyle(category);
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-l-4 ${s.border} ${s.bg} transition-colors hover:brightness-95 focus:outline-none`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-lg">{s.icon}</span>
+        <h3 className="text-sm font-semibold capitalize text-gray-800">{category}</h3>
+        <span className={`ml-1 text-xs px-2 py-0.5 rounded-full border ${s.badge}`}>
+          {pendingCount} pending
+        </span>
+        {doneCount > 0 && (
+          <span className="text-xs px-2 py-0.5 rounded-full border bg-gray-100 text-gray-500 border-gray-200">
+            {doneCount} done
+          </span>
+        )}
+      </div>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  );
+};
+
+/* ─── single task row (unchanged logic) ─── */
 const TaskRow = ({
   task,
   url_call,
@@ -87,6 +135,7 @@ const TaskRow = ({
   );
 };
 
+/* ─── main component ─── */
 const TasksData = ({
   tasks = [],
   loading,
@@ -102,11 +151,49 @@ const TasksData = ({
 }) => {
   const [detailsTask, setDetailsTask] = useState(null);
   const [updateTask, setUpdateTask] = useState(null);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
 
   const allSelected = useMemo(
     () => tasks.length > 0 && selectedIds.length === tasks.length,
     [tasks, selectedIds]
   );
+
+  /* Group tasks by category → sort each group: pending first, then done */
+  const groupedTasks = useMemo(() => {
+    const groups = {};
+    tasks.forEach((task) => {
+      const cat = (task.task_category || "general").toLowerCase();
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(task);
+    });
+
+    // Sort tasks inside each group: pending (status=false) first, then done (status=true)
+    Object.keys(groups).forEach((cat) => {
+      groups[cat].sort((a, b) => {
+        if (a.status === b.status) return 0;
+        return a.status ? 1 : -1;
+      });
+    });
+
+    // Determine display order for the categories:
+    // "study" first, then the rest alphabetically
+    const categoryOrder = Object.keys(groups).sort((a, b) => {
+      if (a === "study") return -1;
+      if (b === "study") return 1;
+      return a.localeCompare(b);
+    });
+
+    return categoryOrder.map((cat) => ({
+      category: cat,
+      tasks: groups[cat],
+      pendingCount: groups[cat].filter((t) => !t.status).length,
+      doneCount: groups[cat].filter((t) => t.status).length,
+    }));
+  }, [tasks]);
+
+  const toggleCategory = (cat) => {
+    setCollapsedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
 
   const handleUpdate = () => {
     setUpdateTask(null);
@@ -193,21 +280,42 @@ const TasksData = ({
         </button>
       </div>
 
-      <ul className="divide-y divide-gray-200">
-        {tasks.map((task) => (
-          <TaskRow
-            key={task.id}
-            task={task}
-            url_call={url_call}
-            onCompleteTask={onCompleteTask}
-            onDeleteTask={onDeleteTask}
-            onOpenDetails={setDetailsTask}
-            onOpenUpdate={setUpdateTask}
-            isSelected={selectedIds.includes(task.id)}
-            onToggleSelect={onToggleSelect}
-          />
-        ))}
-      </ul>
+      {/* Category-grouped task list */}
+      <div className="divide-y divide-gray-200">
+        {groupedTasks.map(({ category, tasks: catTasks, pendingCount, doneCount }) => {
+          const isOpen = !collapsedCategories[category];
+          return (
+            <div key={category} className="py-2 px-3">
+              <CategoryHeader
+                category={category}
+                pendingCount={pendingCount}
+                doneCount={doneCount}
+                isOpen={isOpen}
+                onToggle={() => toggleCategory(category)}
+              />
+
+              {isOpen && (
+                <ul className="mt-1 divide-y divide-gray-100">
+                  {catTasks.map((task) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      url_call={url_call}
+                      onCompleteTask={onCompleteTask}
+                      onDeleteTask={onDeleteTask}
+                      onOpenDetails={setDetailsTask}
+                      onOpenUpdate={setUpdateTask}
+                      isSelected={selectedIds.includes(task.id)}
+                      onToggleSelect={onToggleSelect}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {detailsTask && (
         <DetailsModal task={detailsTask} onClose={() => setDetailsTask(null)} />
       )}
