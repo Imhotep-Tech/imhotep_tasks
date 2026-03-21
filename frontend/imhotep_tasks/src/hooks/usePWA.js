@@ -98,12 +98,49 @@ export const usePWA = () => {
     }
   };
 
+  const refreshAppAndClearCache = async () => {
+    // Keep auth/session keys so users stay logged in.
+    const preserved = {
+      access: localStorage.getItem('access_token'),
+      refresh: localStorage.getItem('refresh_token'),
+      user: localStorage.getItem('user'),
+    };
+
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations.map(async (registration) => {
+          try {
+            await registration.update();
+            if (registration.waiting) {
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+          } catch (error) {
+            console.log('Service worker update failed:', error);
+          }
+        })
+      );
+    }
+
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+    }
+
+    if (preserved.access) localStorage.setItem('access_token', preserved.access);
+    if (preserved.refresh) localStorage.setItem('refresh_token', preserved.refresh);
+    if (preserved.user) localStorage.setItem('user', preserved.user);
+
+    window.location.reload();
+  };
+
   return {
     isInstallable,
     isInstalled,
     isOnline,
     updateAvailable,
     installApp,
-    reloadApp
+    reloadApp,
+    refreshAppAndClearCache
   };
 };

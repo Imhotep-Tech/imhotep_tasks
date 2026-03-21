@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../common/Footer';
+import { usePWA } from '../../hooks/usePWA';
 
 const Profile = () => {
   const { user, logout, updateUser, token } = useAuth();
@@ -39,6 +40,8 @@ const Profile = () => {
     new: false,
     confirm: false,
   });
+  const [refreshingApp, setRefreshingApp] = useState(false);
+  const { refreshAppAndClearCache } = usePWA();
 
   // Load profile data on component mount
   useEffect(() => {
@@ -172,6 +175,17 @@ const Profile = () => {
       ...prev,
       [field]: !prev[field]
     }));
+  };
+
+  const handleRefreshApp = async () => {
+    setRefreshingApp(true);
+    try {
+      await refreshAppAndClearCache();
+    } catch (error) {
+      console.error('Failed to refresh app:', error);
+      setError('Failed to refresh app cache. Please try again.');
+      setRefreshingApp(false);
+    }
   };
 
   return (
@@ -461,8 +475,25 @@ const Profile = () => {
                 )}
 
                 <p className="mt-6 text-center text-sm text-gray-600">
-                  <Link to="/today-tasks" className="font-medium text-blue-600 hover:text-blue-500">Back to Today Tasks</Link> • <button onClick={logout} className="text-red-600">Logout</button>
+                  <Link to="/today-tasks" className="font-medium text-blue-600 hover:text-blue-500">Back to Today Tasks</Link>
                 </p>
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleRefreshApp}
+                    disabled={refreshingApp}
+                    className={`flex-1 py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white ${refreshingApp ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} transition-all`}
+                  >
+                    {refreshingApp ? 'Refreshing...' : 'Update App & Clear Cache'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="flex-1 py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all"
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
             </div>
           </div>

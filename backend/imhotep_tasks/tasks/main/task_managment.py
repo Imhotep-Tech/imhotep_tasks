@@ -239,6 +239,48 @@ def multiple_update_task_dates(request):
         return Response({"error": "An error occurred", "success": False},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def multiple_update_task_category(request):
+    try:
+        url_call = request.data.get("url_call", "all")
+        task_ids = request.data.get("task_ids", [])
+
+        if not isinstance(task_ids, list):
+            return Response({"error": "task_ids should be a list of IDs", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not task_ids:
+            return Response({"error": "task_ids list is empty", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+        if not tasks_qs.exists():
+            return Response({"error": "No tasks found", "success": False},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        task_category = (request.data.get("task_category", "") or "").strip().lower()
+        if not task_category:
+            return Response({"error": "task_category is required", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        for t in tasks_qs:
+            t.task_category = task_category
+        Tasks.objects.bulk_update(tasks_qs, ['task_category'])
+
+        tasks_data = [tasks_managements_utils.serialize_task(t) for t in tasks_qs]
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
+
+        return Response({
+            "success": True,
+            "tasks": tasks_data,
+            "total_number_tasks": total,
+            "completed_tasks_count": completed,
+            "pending_tasks": pending
+        }, status=status.HTTP_200_OK)
+    except Exception:
+        return Response({"error": "An error occurred", "success": False},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_task(request, task_id):

@@ -70,6 +70,7 @@ interface UseTasksReturn {
   handleBulkDelete: () => Promise<void>;
   handleBulkComplete: () => Promise<void>;
   handleBulkUpdateDate: (newDate: string) => Promise<void>;
+  handleBulkUpdateCategory: (newCategory: string) => Promise<void>;
 }
 
 const API_ENDPOINTS: Record<TaskPageType, string> = {
@@ -494,6 +495,27 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     }
   }, [selectedIds, url_call, page, fetchTasks, clearSelection]);
 
+  const handleBulkUpdateCategory = useCallback(async (newCategory: string) => {
+    const category = (newCategory || '').trim().toLowerCase();
+    if (selectedIds.length === 0 || !category) return;
+
+    setBulkLoading(true);
+    try {
+      await api.patch('api/tasks/multiple_update_task_category/', {
+        task_ids: selectedIds,
+        task_category: category,
+        url_call
+      });
+      await fetchTasks(page);
+      clearSelection();
+    } catch (err) {
+      console.error('Error bulk updating category:', err);
+      Alert.alert('Error', 'Failed to update task category.');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, url_call, page, fetchTasks, clearSelection]);
+
   return {
     // Data
     tasks,
@@ -543,5 +565,6 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     handleBulkDelete,
     handleBulkComplete,
     handleBulkUpdateDate,
+    handleBulkUpdateCategory,
   };
 }

@@ -22,6 +22,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useUpdateChecker } from '@/hooks/use-update-checker';
 import api from '@/constants/api';
+import * as Updates from 'expo-updates';
+import * as LegacyFileSystem from 'expo-file-system/legacy';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Theme colors
 const themes = {
@@ -114,6 +117,7 @@ export default function ProfileScreen() {
     new: false,
     confirm: false,
   });
+  const [refreshingFrontend, setRefreshingFrontend] = useState(false);
 
   // Load profile data on component mount
   useEffect(() => {
@@ -242,6 +246,50 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleRefreshFrontend = async () => {
+    setRefreshingFrontend(true);
+    try {
+      const authEntries = await AsyncStorage.multiGet(['access_token', 'refresh_token', 'user']);
+      const authMap = new Map(authEntries);
+
+      if (LegacyFileSystem.cacheDirectory) {
+        await LegacyFileSystem.deleteAsync(LegacyFileSystem.cacheDirectory, { idempotent: true });
+        await LegacyFileSystem.makeDirectoryAsync(LegacyFileSystem.cacheDirectory, { intermediates: true });
+      }
+
+      const restorePairs: [string, string][] = [];
+      const access = authMap.get('access_token');
+      const refresh = authMap.get('refresh_token');
+      const userValue = authMap.get('user');
+      if (access) restorePairs.push(['access_token', access]);
+      if (refresh) restorePairs.push(['refresh_token', refresh]);
+      if (userValue) restorePairs.push(['user', userValue]);
+      if (restorePairs.length > 0) {
+        await AsyncStorage.multiSet(restorePairs);
+      }
+
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+        }
+      } catch (error) {
+        console.log('Update check failed during refresh:', error);
+      }
+
+      Alert.alert(
+        'Frontend Refreshed',
+        'Cache was cleared and the app will reload now.',
+        [{ text: 'OK', onPress: () => Updates.reloadAsync() }]
+      );
+    } catch (error) {
+      console.error('Frontend refresh failed:', error);
+      Alert.alert('Error', 'Failed to refresh frontend cache. Please try again.');
+    } finally {
+      setRefreshingFrontend(false);
+    }
   };
 
   return (
@@ -491,6 +539,21 @@ export default function ProfileScreen() {
             <>
               <Ionicons name="cloud-download-outline" size={24} color="#fff" />
               <ThemedText style={styles.updateButtonText}>Check for Updates</ThemedText>
+            </>
+          )}
+        </Pressable>
+
+        <Pressable
+          style={[styles.updateButton, { backgroundColor: colors.warning }]}
+          onPress={handleRefreshFrontend}
+          disabled={refreshingFrontend}
+        >
+          {refreshingFrontend ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="refresh-outline" size={24} color="#fff" />
+              <ThemedText style={styles.updateButtonText}>Update Frontend & Clear Cache</ThemedText>
             </>
           )}
         </Pressable>

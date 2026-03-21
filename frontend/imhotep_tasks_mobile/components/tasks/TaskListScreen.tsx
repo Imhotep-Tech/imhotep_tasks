@@ -122,6 +122,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     handleBulkDelete,
     handleBulkComplete,
     handleBulkUpdateDate,
+    handleBulkUpdateCategory,
   } = useTasks({ pageType, sortOverdueFirst: pageType === 'today-tasks' });
 
   // Collapsed state for category sections
@@ -433,6 +434,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
         onDelete={handleBulkDelete}
         onToggleComplete={handleBulkComplete}
         onChangeDueDate={handleBulkUpdateDate}
+        onChangeCategory={handleBulkUpdateCategory}
       />
     </SafeAreaView>
   );

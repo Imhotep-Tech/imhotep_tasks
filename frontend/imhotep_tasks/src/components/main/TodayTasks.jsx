@@ -66,7 +66,7 @@ const TodayTasks = () => {
     else setSelectedIds(tasks.map(t => t.id));
   };
 
-  const handleBulkAction = async (action, dateValue) => {
+  const handleBulkAction = async (action, value) => {
     if (selectedIds.length === 0) return;
     try {
       setBulkLoading(true);
@@ -81,7 +81,13 @@ const TodayTasks = () => {
       } else if (action === 'update_date') {
         await axios.patch('api/tasks/multiple_update_task_dates/', {
           task_ids: selectedIds,
-          due_date: dateValue,
+          due_date: value,
+          url_call
+        });
+      } else if (action === 'update_category') {
+        await axios.patch('api/tasks/multiple_update_task_category/', {
+          task_ids: selectedIds,
+          task_category: value,
           url_call
         });
       }

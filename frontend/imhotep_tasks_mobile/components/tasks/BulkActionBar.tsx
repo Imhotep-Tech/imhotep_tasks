@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -51,7 +52,18 @@ interface BulkActionBarProps {
   onDelete: () => void;
   onToggleComplete: () => void;
   onChangeDueDate: (date: string) => void;
+  onChangeCategory: (category: string) => void;
 }
+
+const PRESET_CATEGORIES = ['general', 'study', 'work', 'personal', 'health', 'finance'];
+const CATEGORY_LABELS: Record<string, string> = {
+  general: 'General',
+  study: 'Study',
+  work: 'Work',
+  personal: 'Personal',
+  health: 'Health',
+  finance: 'Finance',
+};
 
 export function BulkActionBar({
   selectedCount,
@@ -62,17 +74,24 @@ export function BulkActionBar({
   onDelete,
   onToggleComplete,
   onChangeDueDate,
+  onChangeCategory,
 }: BulkActionBarProps) {
   const colorScheme = useColorScheme();
   const colors = themes[colorScheme ?? 'light'];
   
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   
   const allSelected = selectedCount === totalCount && totalCount > 0;
   
   const handleDateSelect = (date: string) => {
     setShowDatePicker(false);
     onChangeDueDate(date);
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setShowCategoryPicker(false);
+    onChangeCategory(category);
   };
 
   if (selectedCount === 0) {
@@ -137,6 +156,14 @@ export function BulkActionBar({
                 <Text style={[styles.actionText, { color: colors.warning }]}>Date</Text>
               </TouchableOpacity>
 
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: colors.primaryLight }]}
+                onPress={() => setShowCategoryPicker(true)}
+              >
+                <Ionicons name="pricetag" size={20} color={colors.primary} />
+                <Text style={[styles.actionText, { color: colors.primary }]}>Category</Text>
+              </TouchableOpacity>
+
               {/* Delete */}
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: colors.errorBg }]}
@@ -158,6 +185,36 @@ export function BulkActionBar({
         onSelect={handleDateSelect}
         minimumDate={new Date()}
       />
+
+      <Modal
+        visible={showCategoryPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCategoryPicker(false)}
+      >
+        <View style={styles.categoryOverlay}>
+          <View style={[styles.categoryModal, { backgroundColor: colors.background, borderColor: colors.border }]}>
+            <Text style={[styles.categoryTitle, { color: colors.text }]}>Change Category</Text>
+            {PRESET_CATEGORIES.map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={[styles.categoryOption, { borderBottomColor: colors.border }]}
+                onPress={() => handleCategorySelect(category)}
+              >
+                <Text style={[styles.categoryOptionText, { color: colors.text }]}>
+                  {CATEGORY_LABELS[category]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={[styles.categoryCancel, { borderColor: colors.border }]}
+              onPress={() => setShowCategoryPicker(false)}
+            >
+              <Text style={[styles.categoryCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -214,6 +271,49 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 12,
+    fontWeight: '600',
+  },
+  categoryOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  categoryModal: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  categoryOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  categoryOptionText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  categoryCancel: {
+    margin: 12,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  categoryCancelText: {
+    fontSize: 14,
     fontWeight: '600',
   },
 });
