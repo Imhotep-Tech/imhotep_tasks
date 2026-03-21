@@ -24,6 +24,10 @@ const DetailsModal = ({ task, onClose }) => {
             <span className="ml-2">{task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}</span>
           </div>
           <div>
+            <span className="font-medium text-gray-700">Category:</span>
+            <span className="ml-2 capitalize">{task.task_category || 'General'}</span>
+          </div>
+          <div>
             <span className="font-medium text-gray-700">Status:</span>
             <span className="ml-2">{task.status ? 'Completed' : 'Pending'}</span>
           </div>

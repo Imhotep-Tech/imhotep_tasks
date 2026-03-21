@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DueDate } from './DueDate';
@@ -39,6 +39,7 @@ interface Task {
   task_title: string;
   task_details?: string;
   due_date?: string;
+  task_category?: string;
   status: boolean;
   transaction_id?: number;
   transaction_status?: string;
@@ -55,6 +56,7 @@ interface TaskItemProps {
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (taskId: number) => void;
+  showDoneCategoryLabel?: boolean;
 }
 
 export function TaskItem({ 
@@ -67,6 +69,7 @@ export function TaskItem({
   selectionMode = false,
   isSelected = false,
   onToggleSelect,
+  showDoneCategoryLabel = false,
 }: TaskItemProps) {
   const colorScheme = useColorScheme();
   const colors = themes[colorScheme ?? 'light'];
@@ -129,11 +132,14 @@ export function TaskItem({
             styles.checkbox,
             { borderColor: colors.primary },
             task.status && [styles.checkboxCompleted, { backgroundColor: colors.success, borderColor: colors.success }],
+            loading && { borderColor: colors.primary, backgroundColor: 'transparent' },
           ]}
         >
-          {task.status && (
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : task.status ? (
             <Ionicons name="checkmark" size={16} color="#fff" />
-          )}
+          ) : null}
         </View>
       </Pressable>
 
@@ -150,6 +156,13 @@ export function TaskItem({
         </Text>
         
         <View style={styles.metaRow}>
+          {showDoneCategoryLabel && task.status && (
+            <View style={[styles.categoryBadge, { borderColor: colors.border }]}>
+              <Text style={[styles.categoryBadgeText, { color: colors.textSecondary }]}>
+                {(task.task_category || 'general').charAt(0).toUpperCase() + (task.task_category || 'general').slice(1)}
+              </Text>
+            </View>
+          )}
           {task.due_date && (
             <DueDate dueDate={task.due_date} isCompleted={task.status} />
           )}
@@ -245,6 +258,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 12,
     gap: 4,
+  },
+  categoryBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   transactionText: {
     fontSize: 11,

@@ -57,6 +57,7 @@ urlpatterns = [
     path('tasks/multiple_delete_task/', task_managment.multiple_delete_task, name='multiple_delete_task'),
     path('tasks/multiple_task_complete/', task_managment.multiple_task_complete, name='multiple_task_complete'),
     path('tasks/multiple_update_task_dates/', task_managment.multiple_update_task_dates, name='multiple_update_task_dates'),
+    path('tasks/multiple_update_task_category/', task_managment.multiple_update_task_category, name='multiple_update_task_category'),
 
     # Routine management URLs
     path('routines/', routine_managment.show_routines, name='show_routines'),

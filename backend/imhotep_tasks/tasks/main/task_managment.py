@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from ..models import Tasks
 from ..utils import tasks_managements_utils
+from django.views.decorators.csrf import csrf_exempt
 
 #the user today_tasks function
 @api_view(['GET'])
@@ -25,14 +26,7 @@ def today_tasks(request):
         Q(due_date__date__lt=today, status=False)
     ).order_by('status', 'due_date').all()
 
-    paginator = Paginator(user_tasks_qs, 20)
-    page_num = request.GET.get('page', 1)
-    try:
-        page_obj = paginator.page(page_num)
-    except (PageNotAnInteger, EmptyPage):
-        page_obj = paginator.page(1)
-
-    tasks_list = [tasks_managements_utils.serialize_task(t) for t in page_obj.object_list]
+    tasks_list = [tasks_managements_utils.serialize_task(t) for t in user_tasks_qs]
     completed_tasks_count = user_tasks_qs.filter(status=True).count()
     total_number_tasks = user_tasks_qs.count()
 
@@ -40,12 +34,6 @@ def today_tasks(request):
         'success': True,
         "username": request.user.username,
         "user_tasks": tasks_list,
-        "pagination": {
-            "page": page_obj.number,
-            "num_pages": paginator.num_pages,
-            "per_page": paginator.per_page,
-            "total": paginator.count,
-        },
         "total_number_tasks": total_number_tasks,
         "completed_tasks_count": completed_tasks_count,
         "pending_tasks": total_number_tasks - completed_tasks_count,
@@ -126,6 +114,7 @@ def next_week_tasks(request):
     }
     return Response(response_data, status=status.HTTP_200_OK)
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_task(request):
@@ -136,6 +125,7 @@ def add_task(request):
         task_title = request.data.get("task_title")
         task_details = request.data.get("task_details")
         due_date_raw = request.data.get("due_date")
+        task_category = request.data.get("task_category", "general")
         due_date = tasks_managements_utils._parse_date_input(due_date_raw) or today
 
         task = Tasks.objects.create(
@@ -143,6 +133,7 @@ def add_task(request):
             task_details=task_details,
             due_date=due_date,
             created_by=request.user,
+            task_category=task_category
         )
 
         task_data = tasks_managements_utils.serialize_task(task)
@@ -176,9 +167,11 @@ def update_task(request, task_id):
         task_title = request.data.get("task_title", task.task_title)
         task_details = request.data.get("task_details", task.task_details)
         due_date_raw = request.data.get("due_date", None)
+        task_category = request.data.get("task_category", "general")
     
         task.task_title = task_title
         task.task_details = task_details
+        task.task_category = task_category
         if due_date_raw is not None:
             parsed = tasks_managements_utils._parse_date_input(due_date_raw)
             task.due_date = parsed
@@ -231,6 +224,48 @@ def multiple_update_task_dates(request):
             for t in tasks_qs:
                 t.due_date = parsed
             Tasks.objects.bulk_update(tasks_qs, ['due_date'])
+
+        tasks_data = [tasks_managements_utils.serialize_task(t) for t in tasks_qs]
+        total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)
+
+        return Response({
+            "success": True,
+            "tasks": tasks_data,
+            "total_number_tasks": total,
+            "completed_tasks_count": completed,
+            "pending_tasks": pending
+        }, status=status.HTTP_200_OK)
+    except Exception:
+        return Response({"error": "An error occurred", "success": False},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def multiple_update_task_category(request):
+    try:
+        url_call = request.data.get("url_call", "all")
+        task_ids = request.data.get("task_ids", [])
+
+        if not isinstance(task_ids, list):
+            return Response({"error": "task_ids should be a list of IDs", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not task_ids:
+            return Response({"error": "task_ids list is empty", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        tasks_qs = Tasks.objects.filter(id__in=task_ids, created_by=request.user)
+        if not tasks_qs.exists():
+            return Response({"error": "No tasks found", "success": False},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        task_category = (request.data.get("task_category", "") or "").strip().lower()
+        if not task_category:
+            return Response({"error": "task_category is required", "success": False},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        for t in tasks_qs:
+            t.task_category = task_category
+        Tasks.objects.bulk_update(tasks_qs, ['task_category'])
 
         tasks_data = [tasks_managements_utils.serialize_task(t) for t in tasks_qs]
         total, completed, pending = tasks_managements_utils.tasks_count(url_call, request)

@@ -70,6 +70,7 @@ def apply_routines(request, target_date, manually=False):
                 due_date=target_date,
                 created_by=request.user,
                 status=False,
+                task_category=routine.routine_category or "general",
             )
             routine.last_applied = target_date_only
             routine.save()

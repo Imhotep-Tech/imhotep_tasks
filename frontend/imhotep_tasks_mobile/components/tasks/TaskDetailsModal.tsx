@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -64,6 +65,7 @@ interface Task {
   task_title: string;
   task_details?: string;
   due_date?: string;
+  task_category?: string;
   status: boolean;
   transaction_id?: number;
   transaction_status?: string;
@@ -76,9 +78,19 @@ interface TaskDetailsModalProps {
   task: Task | null;
   onClose: () => void;
   onEdit: (task: Task) => void;
-  onToggleComplete: (task: Task) => void;
+  onToggleComplete: (task: Task) => Promise<void>;
   onDelete: (taskId: number) => void;
+  minLoadingTime?: number;
 }
+
+// Minimum delay helper to ensure loading state is visible
+const withMinDelay = async <T,>(promise: Promise<T>, minMs: number): Promise<T> => {
+  const [result] = await Promise.all([
+    promise,
+    new Promise(resolve => setTimeout(resolve, minMs)),
+  ]);
+  return result;
+};
 
 export function TaskDetailsModal({
   visible,
@@ -87,11 +99,25 @@ export function TaskDetailsModal({
   onEdit,
   onToggleComplete,
   onDelete,
+  minLoadingTime = 500,
 }: TaskDetailsModalProps) {
   const colorScheme = useColorScheme();
   const colors = themes[colorScheme ?? 'light'];
+  const [completeLoading, setCompleteLoading] = useState(false);
 
   if (!task) return null;
+
+  const handleToggleComplete = async () => {
+    setCompleteLoading(true);
+    try {
+      await withMinDelay(onToggleComplete(task), minLoadingTime);
+      onClose();
+    } catch (error) {
+      console.error('Failed to toggle task:', error);
+    } finally {
+      setCompleteLoading(false);
+    }
+  };
 
   const formatDateTime = (iso?: string) => {
     if (!iso) return 'N/A';
@@ -175,6 +201,19 @@ export function TaskDetailsModal({
               </View>
             ) : null}
 
+            {/* Category */}
+            {task.task_category ? (
+              <View style={styles.section}>
+                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Category</Text>
+                <View style={[styles.transactionBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
+                  <Text style={[styles.transactionText, { color: colors.primary, textTransform: 'capitalize' }]}>
+                    {task.task_category}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             {/* Transaction Info */}
             {task.transaction_id && (
               <View style={styles.section}>
@@ -230,20 +269,25 @@ export function TaskDetailsModal({
                     backgroundColor: task.status ? colors.warningBg : colors.successBg,
                     borderColor: task.status ? colors.warningBorder : colors.successBorder,
                   },
+                  completeLoading && styles.actionButtonDisabled,
                 ]}
-                onPress={() => {
-                  onToggleComplete(task);
-                  onClose();
-                }}
+                onPress={handleToggleComplete}
+                disabled={completeLoading}
               >
-                <Ionicons
-                  name={task.status ? 'close-circle' : 'checkmark-circle'}
-                  size={18}
-                  color={task.status ? colors.warning : colors.success}
-                />
-                <Text style={[styles.actionButtonText, { color: task.status ? colors.warning : colors.success }]}>
-                  {task.status ? 'Undo' : 'Done'}
-                </Text>
+                {completeLoading ? (
+                  <ActivityIndicator size="small" color={task.status ? colors.warning : colors.success} />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={task.status ? 'close-circle' : 'checkmark-circle'}
+                      size={18}
+                      color={task.status ? colors.warning : colors.success}
+                    />
+                    <Text style={[styles.actionButtonText, { color: task.status ? colors.warning : colors.success }]}>
+                      {task.status ? 'Undo' : 'Done'}
+                    </Text>
+                  </>
+                )}
               </Pressable>
 
               <Pressable
@@ -378,5 +422,8 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  actionButtonDisabled: {
+    opacity: 0.7,
   },
 });

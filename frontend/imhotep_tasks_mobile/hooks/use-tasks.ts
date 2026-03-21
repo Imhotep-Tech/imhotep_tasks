@@ -6,6 +6,16 @@ import { isOverdue } from '@/components/tasks';
 
 export type TaskPageType = 'today-tasks' | 'next-week' | 'all';
 
+// Minimum delay helper to ensure loading state is visible for better UX
+const MIN_LOADING_TIME = 500;
+const withMinDelay = async <T,>(promise: Promise<T>, minMs: number = MIN_LOADING_TIME): Promise<T> => {
+  const [result] = await Promise.all([
+    promise,
+    new Promise(resolve => setTimeout(resolve, minMs)),
+  ]);
+  return result;
+};
+
 interface UseTasksOptions {
   pageType: TaskPageType;
   sortOverdueFirst?: boolean;
@@ -20,24 +30,24 @@ interface UseTasksReturn {
   totalTasks: number;
   completedCount: number;
   pendingCount: number;
-  
+
   // Selection state
   selectedIds: number[];
   selectionMode: boolean;
-  
+
   // Loading states
   loading: boolean;
   refreshing: boolean;
   formLoading: boolean;
   actionLoading: number | null;
   bulkLoading: boolean;
-  
+
   // Modal states
   showFormModal: boolean;
   formMode: 'add' | 'edit';
   editingTask: Task | null;
   detailsTask: Task | null;
-  
+
   // Actions
   fetchTasks: (pageNum?: number, isRefresh?: boolean) => Promise<void>;
   onRefresh: () => void;
@@ -49,17 +59,18 @@ interface UseTasksReturn {
   handleFormSubmit: (taskData: TaskFormData) => Promise<void>;
   handleToggleComplete: (task: Task) => Promise<void>;
   handleDeleteTask: (taskId: number) => Promise<void>;
-  
+
   // Selection actions
   toggleSelect: (id: number) => void;
   selectAll: () => void;
   clearSelection: () => void;
   toggleSelectionMode: () => void;
-  
+
   // Bulk actions
   handleBulkDelete: () => Promise<void>;
   handleBulkComplete: () => Promise<void>;
   handleBulkUpdateDate: (newDate: string) => Promise<void>;
+  handleBulkUpdateCategory: (newCategory: string) => Promise<void>;
 }
 
 const API_ENDPOINTS: Record<TaskPageType, string> = {
@@ -76,18 +87,18 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
   const [totalTasks, setTotalTasks] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
-  
+
   // Selection state
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [selectionMode, setSelectionMode] = useState(false);
-  
+
   // Loading states
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
-  
+
   // Modal states
   const [showFormModal, setShowFormModal] = useState(false);
   const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
@@ -103,21 +114,21 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
   // Sort tasks with overdue at the top - only on initial load
   const sortedTasks = useMemo(() => {
     if (!sortOverdueFirst || initialOrder.length === 0) return tasks;
-    
+
     // Maintain the initial order established on fetch
     return [...tasks].sort((a, b) => {
       const aIndex = initialOrder.indexOf(a.id);
       const bIndex = initialOrder.indexOf(b.id);
-      
+
       // If both are in the initial order, maintain that order
       if (aIndex !== -1 && bIndex !== -1) {
         return aIndex - bIndex;
       }
-      
+
       // New tasks (not in initial order) go to the top
       if (aIndex === -1 && bIndex !== -1) return -1;
       if (aIndex !== -1 && bIndex === -1) return 1;
-      
+
       return 0;
     });
   }, [tasks, sortOverdueFirst, initialOrder]);
@@ -131,10 +142,13 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     }
 
     try {
-      const res = await api.get<TasksResponse>(`${endpoint}?page=${pageNum}`);
+      const url = pageType === 'today-tasks' ? endpoint : `${endpoint}?page=${pageNum}`;
+      const res = await api.get<TasksResponse>(url);
       const data = res.data;
       const fetchedTasks = data.user_tasks || [];
-      
+
+      const shouldAppend = pageType !== 'today-tasks' && pageNum > 1 && !isRefresh;
+
       // Sort tasks with overdue first on initial fetch
       if (sortOverdueFirst) {
         const sorted = [...fetchedTasks].sort((a, b) => {
@@ -151,15 +165,53 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
 
           return 0;
         });
-        
-        // Store the initial sorted order
-        setInitialOrder(sorted.map(t => t.id));
-        setTasks(sorted);
+
+        if (shouldAppend) {
+          setTasks((prev) => {
+            const seen = new Set(prev.map((t) => t.id));
+            const merged = [...prev];
+            sorted.forEach((t) => {
+              if (!seen.has(t.id)) merged.push(t);
+            });
+            return merged;
+          });
+          setInitialOrder((prev) => {
+            const seen = new Set(prev);
+            const next = [...prev];
+            sorted.forEach((t) => {
+              if (!seen.has(t.id)) next.push(t.id);
+            });
+            return next;
+          });
+        } else {
+          // Store the initial sorted order
+          setInitialOrder(sorted.map(t => t.id));
+          setTasks(sorted);
+        }
       } else {
-        setInitialOrder(fetchedTasks.map(t => t.id));
-        setTasks(fetchedTasks);
+        if (shouldAppend) {
+          setTasks((prev) => {
+            const seen = new Set(prev.map((t) => t.id));
+            const merged = [...prev];
+            fetchedTasks.forEach((t) => {
+              if (!seen.has(t.id)) merged.push(t);
+            });
+            return merged;
+          });
+          setInitialOrder((prev) => {
+            const seen = new Set(prev);
+            const next = [...prev];
+            fetchedTasks.forEach((t) => {
+              if (!seen.has(t.id)) next.push(t.id);
+            });
+            return next;
+          });
+        } else {
+          setInitialOrder(fetchedTasks.map(t => t.id));
+          setTasks(fetchedTasks);
+        }
       }
-      
+
       setPage(data.pagination?.page || 1);
       setNumPages(data.pagination?.num_pages || 1);
       setTotalTasks(data.total_number_tasks ?? 0);
@@ -172,19 +224,20 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
       setLoading(false);
       setRefreshing(false);
     }
-  }, [endpoint, sortOverdueFirst]);
+  }, [endpoint, sortOverdueFirst, pageType]);
 
   const onRefresh = useCallback(() => {
     fetchTasks(1, true);
   }, [fetchTasks]);
 
   const handleLoadMore = useCallback(() => {
+    if (pageType === 'today-tasks') return;
     if (page < numPages && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
       fetchTasks(nextPage);
     }
-  }, [page, numPages, loading, fetchTasks]);
+  }, [pageType, page, numPages, loading, fetchTasks]);
 
   // Modal handlers
   const openAddModal = useCallback(() => {
@@ -212,6 +265,7 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
         task_title: taskData.task_title,
         task_details: taskData.task_details,
         due_date: taskData.due_date || null,
+        task_category: taskData.task_category || 'general',
         url_call,
       };
       const res = await api.post('api/tasks/add_task/', payload);
@@ -243,6 +297,7 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
         task_title: taskData.task_title,
         task_details: taskData.task_details,
         due_date: taskData.due_date || null,
+        task_category: taskData.task_category || 'general',
         url_call,
       };
       const res = await api.patch(`api/tasks/update_task/${editingTask.id}/`, payload);
@@ -283,9 +338,12 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
   const handleToggleComplete = useCallback(async (task: Task) => {
     setActionLoading(task.id);
     try {
-      const res = await api.post(`api/tasks/task_complete/${task.id}/`, {
-        url_call,
-      });
+      // Use minimum delay to ensure loading state is visible for better UX
+      const res = await withMinDelay(
+        api.post(`api/tasks/task_complete/${task.id}/`, {
+          url_call,
+        })
+      );
       const data = res.data;
       const updatedTask = data.task ?? { ...task, status: !task.status };
 
@@ -339,7 +397,7 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
 
   // Selection handlers
   const toggleSelect = useCallback((id: number) => {
-    setSelectedIds(prev => 
+    setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   }, []);
@@ -437,6 +495,27 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     }
   }, [selectedIds, url_call, page, fetchTasks, clearSelection]);
 
+  const handleBulkUpdateCategory = useCallback(async (newCategory: string) => {
+    const category = (newCategory || '').trim().toLowerCase();
+    if (selectedIds.length === 0 || !category) return;
+
+    setBulkLoading(true);
+    try {
+      await api.patch('api/tasks/multiple_update_task_category/', {
+        task_ids: selectedIds,
+        task_category: category,
+        url_call
+      });
+      await fetchTasks(page);
+      clearSelection();
+    } catch (err) {
+      console.error('Error bulk updating category:', err);
+      Alert.alert('Error', 'Failed to update task category.');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, url_call, page, fetchTasks, clearSelection]);
+
   return {
     // Data
     tasks,
@@ -446,24 +525,24 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     totalTasks,
     completedCount,
     pendingCount,
-    
+
     // Selection state
     selectedIds,
     selectionMode,
-    
+
     // Loading states
     loading,
     refreshing,
     formLoading,
     actionLoading,
     bulkLoading,
-    
+
     // Modal states
     showFormModal,
     formMode,
     editingTask,
     detailsTask,
-    
+
     // Actions
     fetchTasks,
     onRefresh,
@@ -475,16 +554,17 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     handleFormSubmit,
     handleToggleComplete,
     handleDeleteTask,
-    
+
     // Selection actions
     toggleSelect,
     selectAll,
     clearSelection,
     toggleSelectionMode,
-    
+
     // Bulk actions
     handleBulkDelete,
     handleBulkComplete,
     handleBulkUpdateDate,
+    handleBulkUpdateCategory,
   };
 }

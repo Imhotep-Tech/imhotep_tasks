@@ -29,6 +29,7 @@ def show_routines(request):
             "routines_title": r.routines_title,
             "routines_dates": r.routines_dates,
             "routine_type": r.routine_type,
+            "routine_category": r.routine_category or "general",
             "status": r.status,
             "created_by": r.created_by.id,
         }
@@ -52,6 +53,7 @@ def add_routine(request):
     routines_title = request.data.get("routines_title")
     routines_dates = request.data.get("routines_dates")
     routine_type = request.data.get("routine_type")
+    routine_category = request.data.get("routine_category", "general")
 
     # Validate required fields
     if not routines_title:
@@ -85,6 +87,7 @@ def add_routine(request):
             routines_title=routines_title,
             routine_type=routine_type,
             routines_dates=routines_dates,
+            routine_category=routine_category,
             created_by=request.user,
         )
     else:
@@ -100,6 +103,7 @@ def add_routine(request):
             "routines_title": routine.routines_title,
             "routines_dates": routine.routines_dates,
             "routine_type": routine.routine_type,
+            "routine_category": routine.routine_category or "general",
             "status": routine.status,
             "created_by": routine.created_by.id,
         }
@@ -112,6 +116,7 @@ def update_routine(request, routine_id):
     routines_title = request.data.get("routines_title")
     routines_dates = request.data.get("routines_dates")
     routine_type = request.data.get("routine_type")
+    routine_category = request.data.get("routine_category")
     
     # Add validation for routines_dates as a list
     if routines_dates is not None and not isinstance(routines_dates, list):
@@ -136,6 +141,8 @@ def update_routine(request, routine_id):
         routine.routines_dates = routines_dates
     if routine_type is not None:
         routine.routine_type = routine_type
+    if routine_category is not None:
+        routine.routine_category = routine_category
 
     routine.save()
     return Response({
@@ -145,6 +152,7 @@ def update_routine(request, routine_id):
             "routines_title": routine.routines_title,
             "routines_dates": routine.routines_dates,
             "routine_type": routine.routine_type,
+            "routine_category": routine.routine_category or "general",
             "status": routine.status,
             "created_by": routine.created_by.id,
         }
@@ -169,6 +177,7 @@ def update_routine_status(request, routine_id):
             "id": routine.id,
             "routines_title": routine.routines_title,
             "routines_dates": routine.routines_dates,
+            "routine_category": routine.routine_category or "general",
             "status": routine.status,
             "created_by": routine.created_by.id,
         }

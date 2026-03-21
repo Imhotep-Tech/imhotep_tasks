@@ -12,13 +12,17 @@ const TasksInfo = ({
   // local state for dropdown + date
   const [action, setAction] = useState('');
   const [dateValue, setDateValue] = useState('');
+  const [categoryValue, setCategoryValue] = useState('');
 
   const handleApply = () => {
     if (!action) return;
     if (action === 'update_date' && !dateValue) return;
-    onBulkAction && onBulkAction(action, dateValue);
+    if (action === 'update_category' && !categoryValue.trim()) return;
+    const value = action === 'update_date' ? dateValue : action === 'update_category' ? categoryValue : '';
+    onBulkAction && onBulkAction(action, value);
     setAction('');
     setDateValue('');
+    setCategoryValue('');
   };
 
   return (
@@ -89,12 +93,23 @@ const TasksInfo = ({
                 <option value="complete_toggle">Toggle Complete</option>
                 <option value="delete">Delete</option>
                 <option value="update_date">Change Due Date</option>
+                <option value="update_category">Change Category</option>
               </select>
               {action === 'update_date' && (
                 <input
                   type="date"
                   value={dateValue}
                   onChange={(e) => setDateValue(e.target.value)}
+                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  disabled={bulkLoading}
+                />
+              )}
+              {action === 'update_category' && (
+                <input
+                  type="text"
+                  value={categoryValue}
+                  onChange={(e) => setCategoryValue(e.target.value)}
+                  placeholder="New category"
                   className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   disabled={bulkLoading}
                 />
@@ -106,7 +121,8 @@ const TasksInfo = ({
                   selectedCount === 0 ||
                   !action ||
                   bulkLoading ||
-                  (action === 'update_date' && !dateValue)
+                  (action === 'update_date' && !dateValue) ||
+                  (action === 'update_category' && !categoryValue.trim())
                 }
                 className="bg-indigo-600 disabled:opacity-50 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm shadow transition-colors"
               >

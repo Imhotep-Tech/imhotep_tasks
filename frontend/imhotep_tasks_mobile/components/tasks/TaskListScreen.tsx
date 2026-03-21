@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Pressable,
-  FlatList,
+  SectionList,
   ActivityIndicator,
   RefreshControl,
   View,
@@ -15,19 +15,17 @@ import { useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import {
-  TaskItem,
-  TaskStats,
-  TaskFormModal,
-  TaskDetailsModal,
-  EmptyTasks,
-  BulkActionBar,
-  Task,
-} from '@/components/tasks';
+import { TaskItem } from './TaskItem';
+import { TaskStats } from './TaskStats';
+import { TaskFormModal } from './TaskFormModal';
+import { TaskDetailsModal } from './TaskDetailsModal';
+import { EmptyTasks } from './EmptyTasks';
+import { BulkActionBar } from './BulkActionBar';
+import type { Task } from './types';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTasks, TaskPageType } from '@/hooks/use-tasks';
-
+import { useTaskModal } from '@/contexts/TaskModalContext';
 // Theme colors matching routines.tsx and auth pages
 const themes = {
   light: {
@@ -63,6 +61,16 @@ const themes = {
     statsCard: '#1F2937',
   },
 };
+
+const CATEGORY_ICONS: Record<string, string> = {
+  study: '📚',
+  work: '💼',
+  personal: '🏠',
+  health: '💪',
+  finance: '💰',
+  general: '📋',
+};
+const DEFAULT_ICON = '🔖';
 
 interface TaskListScreenProps {
   pageType: TaskPageType;
@@ -114,7 +122,114 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     handleBulkDelete,
     handleBulkComplete,
     handleBulkUpdateDate,
+    handleBulkUpdateCategory,
   } = useTasks({ pageType, sortOverdueFirst: pageType === 'today-tasks' });
+
+  // Collapsed state for category sections
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = useCallback((category: string) => {
+    setCollapsedSections(prev => ({ ...prev, [category]: !prev[category] }));
+  }, []);
+
+  const formatCategory = useCallback((value: string) => {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }, []);
+
+  // Group tasks by category, with optional consolidated "Done" section for today page.
+  const sections = useMemo(() => {
+    const categoryOrderSort = (a: string, b: string) => {
+      if (a === 'study') return -1;
+      if (b === 'study') return 1;
+      return a.localeCompare(b);
+    };
+
+    if (pageType === 'today-tasks') {
+      const pendingGroups: Record<string, Task[]> = {};
+      const doneTasks: Task[] = [];
+
+      sortedTasks.forEach(task => {
+        const cat = (task.task_category || 'general').toLowerCase();
+        if (task.status) {
+          doneTasks.push(task);
+          return;
+        }
+        if (!pendingGroups[cat]) pendingGroups[cat] = [];
+        pendingGroups[cat].push(task);
+      });
+
+      const pendingSections = Object.keys(pendingGroups)
+        .sort(categoryOrderSort)
+        .map(cat => ({
+          category: cat,
+          icon: CATEGORY_ICONS[cat] || DEFAULT_ICON,
+          pendingCount: pendingGroups[cat].length,
+          doneCount: 0,
+          doneGroup: false,
+          data: collapsedSections[cat] ? [] : pendingGroups[cat],
+        }));
+
+      if (doneTasks.length > 0) {
+        doneTasks.sort((a, b) => {
+          const aCat = (a.task_category || 'general').toLowerCase();
+          const bCat = (b.task_category || 'general').toLowerCase();
+          return categoryOrderSort(aCat, bCat);
+        });
+        pendingSections.push({
+          category: 'done',
+          icon: '✅',
+          pendingCount: 0,
+          doneCount: doneTasks.length,
+          doneGroup: true,
+          data: collapsedSections.done ? [] : doneTasks,
+        });
+      }
+
+      return pendingSections;
+    }
+
+    const groups: Record<string, Task[]> = {};
+    sortedTasks.forEach(task => {
+      const cat = (task.task_category || 'general').toLowerCase();
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(task);
+    });
+
+    // Sort within each group: pending first, then done
+    Object.keys(groups).forEach(cat => {
+      groups[cat].sort((a, b) => {
+        if (a.status === b.status) return 0;
+        return a.status ? 1 : -1;
+      });
+    });
+
+    // Category display order: study first, then rest alphabetically
+    const orderedKeys = Object.keys(groups).sort(categoryOrderSort);
+
+    return orderedKeys.map(cat => ({
+      category: cat,
+      icon: CATEGORY_ICONS[cat] || DEFAULT_ICON,
+      pendingCount: groups[cat].filter(t => !t.status).length,
+      doneCount: groups[cat].filter(t => t.status).length,
+      doneGroup: false,
+      data: collapsedSections[cat] ? [] : groups[cat],
+    }));
+  }, [sortedTasks, collapsedSections, pageType]);
+
+  const { setOnTaskAdded } = useTaskModal();
+
+  // Register the refresh callback when a task is added from the global modal
+  useEffect(() => {
+    const refreshCallback = () => {
+      fetchTasks(1);
+    };
+    setOnTaskAdded(refreshCallback);
+    
+    // Cleanup on unmount
+    return () => {
+      setOnTaskAdded(null);
+    };
+  }, [fetchTasks, setOnTaskAdded]);
 
   useEffect(() => {
     fetchTasks(1);
@@ -124,7 +239,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     setDetailsTask(task);
   };
 
-  const renderTask = ({ item }: { item: Task }) => (
+  const renderTask = ({ item, section }: { item: Task; section: { doneGroup?: boolean } }) => (
     <TaskItem
       task={item}
       onToggleComplete={handleToggleComplete}
@@ -135,6 +250,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
       selectionMode={selectionMode}
       isSelected={selectedIds.includes(item.id)}
       onToggleSelect={toggleSelect}
+      showDoneCategoryLabel={!!section.doneGroup}
     />
   );
 
@@ -220,9 +336,54 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <FlatList
-        data={sortedTasks}
+      <SectionList
+        sections={sections}
         renderItem={renderTask}
+        renderSectionHeader={({ section }) => (
+          <Pressable
+            onPress={() => toggleSection(section.category)}
+            style={[
+              styles.sectionHeader,
+              {
+                backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#F9FAFB',
+                borderBottomColor: colors.border,
+              },
+            ]}
+          >
+            <View style={styles.sectionHeaderLeft}>
+              <Text style={styles.sectionIcon}>{section.icon}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {section.doneGroup ? 'Done' : formatCategory(section.category)}
+              </Text>
+              {!section.doneGroup && (
+                <View style={[styles.sectionBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
+                    {section.pendingCount} pending
+                  </Text>
+                </View>
+              )}
+              {!section.doneGroup && section.doneCount > 0 && (
+                <View style={[styles.sectionBadge, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6' }]}>
+                  <Text style={[styles.sectionBadgeText, { color: colors.textSecondary }]}>
+                    {section.doneCount} done
+                  </Text>
+                </View>
+              )}
+              {section.doneGroup && (
+                <View style={[styles.sectionBadge, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6' }]}>
+                  <Text style={[styles.sectionBadgeText, { color: colors.textSecondary }]}>
+                    {section.doneCount} done
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Ionicons
+              name={collapsedSections[section.category] ? 'chevron-forward' : 'chevron-down'}
+              size={18}
+              color={colors.textSecondary}
+            />
+          </Pressable>
+        )}
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={<EmptyTasks onAddTask={openAddModal} />}
@@ -237,6 +398,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         contentContainerStyle={sortedTasks.length === 0 ? styles.emptyList : undefined}
+        stickySectionHeadersEnabled={false}
       />
 
       {/* Add/Edit Task Modal */}
@@ -272,6 +434,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
         onDelete={handleBulkDelete}
         onToggleComplete={handleBulkComplete}
         onChangeDueDate={handleBulkUpdateDate}
+        onChangeCategory={handleBulkUpdateCategory}
       />
     </SafeAreaView>
   );
@@ -369,5 +532,36 @@ const styles = StyleSheet.create({
   },
   emptyList: {
     flex: 1,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+    flexWrap: 'wrap',
+  },
+  sectionIcon: {
+    fontSize: 18,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sectionBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  sectionBadgeText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
 });

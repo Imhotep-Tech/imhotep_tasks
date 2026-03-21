@@ -50,6 +50,7 @@ interface Task {
   task_title: string;
   task_details?: string;
   due_date?: string;
+  task_category?: string;
   status: boolean;
 }
 
@@ -58,9 +59,29 @@ interface TaskFormModalProps {
   mode: 'add' | 'edit';
   task?: Task | null;
   onClose: () => void;
-  onSubmit: (task: { task_title: string; task_details: string; due_date: string }) => Promise<void>;
+  onSubmit: (task: { task_title: string; task_details: string; due_date: string; task_category: string }) => Promise<void>;
   loading?: boolean;
+  minLoadingTime?: number; // Minimum time to show loading state (ms)
 }
+
+// Minimum delay helper to ensure loading state is visible
+const withMinDelay = async <T,>(promise: Promise<T>, minMs: number): Promise<T> => {
+  const [result] = await Promise.all([
+    promise,
+    new Promise(resolve => setTimeout(resolve, minMs)),
+  ]);
+  return result;
+};
+
+const PRESET_CATEGORIES = ['general', 'study', 'work', 'personal', 'health', 'finance'];
+const CATEGORY_LABELS: Record<string, string> = {
+  general: '📋  General',
+  study: '📚  Study',
+  work: '💼  Work',
+  personal: '🏠  Personal',
+  health: '💪  Health',
+  finance: '💰  Finance',
+};
 
 export function TaskFormModal({
   visible,
@@ -68,7 +89,8 @@ export function TaskFormModal({
   task,
   onClose,
   onSubmit,
-  loading,
+  loading: externalLoading,
+  minLoadingTime = 500,
 }: TaskFormModalProps) {
   const colorScheme = useColorScheme();
   const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -76,8 +98,18 @@ export function TaskFormModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('general');
+  const [customCategory, setCustomCategory] = useState('');
   const [error, setError] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [internalLoading, setInternalLoading] = useState(false);
+  
+  // Use internal loading state if external is not provided
+  const loading = externalLoading !== undefined ? externalLoading : internalLoading;
+
+  // Resolve the final category value
+  const resolvedCategory = selectedCategory === '__other__' ? customCategory.trim().toLowerCase() : selectedCategory;
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -87,10 +119,20 @@ export function TaskFormModal({
         setDescription(task.task_details || '');
         // Slice date to YYYY-MM-DD format (first 10 chars)
         setDueDate(task.due_date ? task.due_date.slice(0, 10) : '');
+        const existingCat = (task.task_category || 'general').toLowerCase();
+        if (PRESET_CATEGORIES.includes(existingCat)) {
+          setSelectedCategory(existingCat);
+          setCustomCategory('');
+        } else {
+          setSelectedCategory('__other__');
+          setCustomCategory(existingCat);
+        }
       } else {
         setTitle('');
         setDescription('');
         setDueDate('');
+        setSelectedCategory('general');
+        setCustomCategory('');
       }
       setError('');
     }
@@ -103,20 +145,31 @@ export function TaskFormModal({
     }
 
     setError('');
+    setInternalLoading(true);
+    
     try {
-      await onSubmit({
-        task_title: title.trim(),
-        task_details: description.trim(),
-        due_date: dueDate,
-      });
+      // Use minimum delay to ensure loading state is visible for better UX
+      await withMinDelay(
+        onSubmit({
+          task_title: title.trim(),
+          task_details: description.trim(),
+          due_date: dueDate,
+          task_category: resolvedCategory || 'general',
+        }),
+        minLoadingTime
+      );
       // Reset form and close only on success
       setTitle('');
       setDescription('');
       setDueDate('');
+      setSelectedCategory('general');
+      setCustomCategory('');
       onClose();
     } catch (err) {
       // Don't close on error, show error message
       setError(mode === 'edit' ? 'Failed to update task' : 'Failed to create task');
+    } finally {
+      setInternalLoading(false);
     }
   };
 
@@ -124,6 +177,8 @@ export function TaskFormModal({
     setTitle('');
     setDescription('');
     setDueDate('');
+    setSelectedCategory('general');
+    setCustomCategory('');
     setError('');
     onClose();
   };
@@ -240,6 +295,97 @@ export function TaskFormModal({
                     <Ionicons name="chevron-forward" size={20} color={colors.placeholder} />
                   )}
                 </Pressable>
+              </View>
+
+              {/* Category Picker */}
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Category</Text>
+                <Pressable
+                  style={[styles.dateButton, { 
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  }]}
+                  onPress={() => setShowCategoryPicker(!showCategoryPicker)}
+                >
+                  <Ionicons
+                    name="pricetag-outline"
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <Text
+                    style={[
+                      styles.dateButtonText,
+                      { color: colors.text },
+                    ]}
+                  >
+                    {selectedCategory === '__other__'
+                      ? (customCategory || 'Custom...')
+                      : CATEGORY_LABELS[selectedCategory] || selectedCategory}
+                  </Text>
+                  <Ionicons
+                    name={showCategoryPicker ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={colors.placeholder}
+                  />
+                </Pressable>
+
+                {showCategoryPicker && (
+                  <View style={[styles.categoryDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    {PRESET_CATEGORIES.map((cat) => (
+                      <Pressable
+                        key={cat}
+                        style={[
+                          styles.categoryOption,
+                          { borderBottomColor: colors.borderLight },
+                          selectedCategory === cat && { backgroundColor: colors.primaryLight },
+                        ]}
+                        onPress={() => {
+                          setSelectedCategory(cat);
+                          setShowCategoryPicker(false);
+                        }}
+                      >
+                        <Text style={[styles.categoryOptionText, { color: colors.text }]}>
+                          {CATEGORY_LABELS[cat]}
+                        </Text>
+                        {selectedCategory === cat && (
+                          <Ionicons name="checkmark" size={18} color={colors.primary} />
+                        )}
+                      </Pressable>
+                    ))}
+                    <Pressable
+                      style={[
+                        styles.categoryOption,
+                        selectedCategory === '__other__' && { backgroundColor: colors.primaryLight },
+                      ]}
+                      onPress={() => {
+                        setSelectedCategory('__other__');
+                        setShowCategoryPicker(false);
+                      }}
+                    >
+                      <Text style={[styles.categoryOptionText, { color: colors.text }]}>
+                        🔖  Other (custom)
+                      </Text>
+                      {selectedCategory === '__other__' && (
+                        <Ionicons name="checkmark" size={18} color={colors.primary} />
+                      )}
+                    </Pressable>
+                  </View>
+                )}
+
+                {selectedCategory === '__other__' && (
+                  <TextInput
+                    style={[styles.input, { 
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      color: colors.text,
+                      marginTop: 8,
+                    }]}
+                    value={customCategory}
+                    onChangeText={setCustomCategory}
+                    placeholder="Enter custom category"
+                    placeholderTextColor={colors.placeholder}
+                  />
+                )}
               </View>
 
               {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
@@ -378,5 +524,22 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
+  },
+  categoryDropdown: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  categoryOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  categoryOptionText: {
+    fontSize: 15,
   },
 });

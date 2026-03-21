@@ -72,7 +72,7 @@ const AllTasks = () => {
     else setSelectedIds(tasks.map(t => t.id));
   };
 
-  const handleBulkAction = async (action, dateValue) => {
+  const handleBulkAction = async (action, value) => {
     if (!selectedIds.length) return;
     try {
       setBulkLoading(true);
@@ -81,7 +81,9 @@ const AllTasks = () => {
       } else if (action === 'complete_toggle') {
         await axios.post('api/tasks/multiple_task_complete/', { task_ids: selectedIds, url_call });
       } else if (action === 'update_date') {
-        await axios.patch('api/tasks/multiple_update_task_dates/', { task_ids: selectedIds, due_date: dateValue, url_call });
+        await axios.patch('api/tasks/multiple_update_task_dates/', { task_ids: selectedIds, due_date: value, url_call });
+      } else if (action === 'update_category') {
+        await axios.patch('api/tasks/multiple_update_task_category/', { task_ids: selectedIds, task_category: value, url_call });
       }
       await fetchTasks(page);
       clearSelection();

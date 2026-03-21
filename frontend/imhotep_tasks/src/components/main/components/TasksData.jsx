@@ -5,6 +5,61 @@ import UpdateTask from './UpdateTask';
 import DetailsModal from './DetailsModal';
 import DateComponent from "./DateComponent";
 
+/* ─── colour palette per category ─── */
+const CATEGORY_STYLES = {
+  study:    { border: "border-blue-400",   bg: "bg-blue-50",   badge: "bg-blue-100  text-blue-700  border-blue-200",   icon: "📚" },
+  work:     { border: "border-amber-400",  bg: "bg-amber-50",  badge: "bg-amber-100 text-amber-700 border-amber-200",  icon: "💼" },
+  personal: { border: "border-pink-400",   bg: "bg-pink-50",   badge: "bg-pink-100  text-pink-700  border-pink-200",   icon: "🏠" },
+  health:   { border: "border-green-400",  bg: "bg-green-50",  badge: "bg-green-100 text-green-700 border-green-200",  icon: "💪" },
+  finance:  { border: "border-emerald-400",bg: "bg-emerald-50",badge: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: "💰" },
+  general:  { border: "border-gray-300",   bg: "bg-gray-50",   badge: "bg-gray-100  text-gray-600  border-gray-200",   icon: "📋" },
+  other:    { border: "border-purple-400", bg: "bg-purple-50", badge: "bg-purple-100 text-purple-700 border-purple-200", icon: "🔖" },
+};
+
+const getStyle = (cat) => CATEGORY_STYLES[cat] || CATEGORY_STYLES.general;
+const formatCategoryName = (cat) => {
+  const value = (cat || "general").toLowerCase();
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
+/* ─── Collapsible category header ─── */
+const CategoryHeader = ({ category, pendingCount, doneCount, isOpen, onToggle, isDoneGroup = false }) => {
+  const s = isDoneGroup ? getStyle("general") : getStyle(category);
+  const title = isDoneGroup ? "Done" : category;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-l-4 ${s.border} ${s.bg} transition-colors hover:brightness-95 focus:outline-none`}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-lg">{s.icon}</span>
+        <h3 className="text-sm font-semibold capitalize text-gray-800">{title}</h3>
+        {!isDoneGroup && (
+          <span className={`ml-1 text-xs px-2 py-0.5 rounded-full border ${s.badge}`}>
+            {pendingCount} pending
+          </span>
+        )}
+        {(isDoneGroup || doneCount > 0) && (
+          <span className="text-xs px-2 py-0.5 rounded-full border bg-gray-100 text-gray-500 border-gray-200">
+            {isDoneGroup ? doneCount : `${doneCount} done`}
+          </span>
+        )}
+      </div>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  );
+};
+
+/* ─── single task row (unchanged logic) ─── */
 const TaskRow = ({
   task,
   url_call,
@@ -13,7 +68,8 @@ const TaskRow = ({
   onOpenDetails,
   onOpenUpdate,
   isSelected,
-  onToggleSelect
+  onToggleSelect,
+  showDoneCategory = false,
 }) => {
   return (
     <li
@@ -48,6 +104,11 @@ const TaskRow = ({
                 {task.transaction_status || 'Transaction'}
               </span>
         
+            </div>
+          )}
+          {showDoneCategory && task.status && (
+            <div className="mt-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 border border-gray-200">
+              {formatCategoryName(task.task_category)}
             </div>
           )}
         </div>
@@ -87,6 +148,7 @@ const TaskRow = ({
   );
 };
 
+/* ─── main component ─── */
 const TasksData = ({
   tasks = [],
   loading,
@@ -99,14 +161,94 @@ const TasksData = ({
   selectedIds = [],
   onToggleSelect,
   onSelectAll
+  ,
+  consolidateDone = false
 }) => {
   const [detailsTask, setDetailsTask] = useState(null);
   const [updateTask, setUpdateTask] = useState(null);
+  const [collapsedCategories, setCollapsedCategories] = useState({});
 
   const allSelected = useMemo(
     () => tasks.length > 0 && selectedIds.length === tasks.length,
     [tasks, selectedIds]
   );
+
+  /* Group tasks by category or consolidate done tasks (today page). */
+  const groupedTasks = useMemo(() => {
+    const categoryOrderSort = (a, b) => {
+      if (a === "study") return -1;
+      if (b === "study") return 1;
+      return a.localeCompare(b);
+    };
+
+    if (consolidateDone) {
+      const pendingGroups = {};
+      const doneTasks = [];
+
+      tasks.forEach((task) => {
+        const cat = (task.task_category || "general").toLowerCase();
+        if (task.status) {
+          doneTasks.push(task);
+          return;
+        }
+        if (!pendingGroups[cat]) pendingGroups[cat] = [];
+        pendingGroups[cat].push(task);
+      });
+
+      const pendingSections = Object.keys(pendingGroups)
+        .sort(categoryOrderSort)
+        .map((cat) => ({
+          category: cat,
+          tasks: pendingGroups[cat],
+          pendingCount: pendingGroups[cat].length,
+          doneCount: 0,
+          isDoneGroup: false,
+        }));
+
+      if (doneTasks.length > 0) {
+        doneTasks.sort((a, b) => {
+          const aCat = (a.task_category || "general").toLowerCase();
+          const bCat = (b.task_category || "general").toLowerCase();
+          return categoryOrderSort(aCat, bCat);
+        });
+        pendingSections.push({
+          category: "done",
+          tasks: doneTasks,
+          pendingCount: 0,
+          doneCount: doneTasks.length,
+          isDoneGroup: true,
+        });
+      }
+
+      return pendingSections;
+    }
+
+    const groups = {};
+    tasks.forEach((task) => {
+      const cat = (task.task_category || "general").toLowerCase();
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(task);
+    });
+
+    Object.keys(groups).forEach((cat) => {
+      groups[cat].sort((a, b) => {
+        if (a.status === b.status) return 0;
+        return a.status ? 1 : -1;
+      });
+    });
+
+    return Object.keys(groups).sort(categoryOrderSort).map((cat) => ({
+      category: cat,
+      tasks: groups[cat],
+      pendingCount: groups[cat].filter((t) => !t.status).length,
+      doneCount: groups[cat].filter((t) => t.status).length,
+      isDoneGroup: false,
+    }));
+  }, [tasks, consolidateDone]);
+
+  const toggleCategory = (cat) => {
+    setCollapsedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
 
   const handleUpdate = () => {
     setUpdateTask(null);
@@ -193,21 +335,44 @@ const TasksData = ({
         </button>
       </div>
 
-      <ul className="divide-y divide-gray-200">
-        {tasks.map((task) => (
-          <TaskRow
-            key={task.id}
-            task={task}
-            url_call={url_call}
-            onCompleteTask={onCompleteTask}
-            onDeleteTask={onDeleteTask}
-            onOpenDetails={setDetailsTask}
-            onOpenUpdate={setUpdateTask}
-            isSelected={selectedIds.includes(task.id)}
-            onToggleSelect={onToggleSelect}
-          />
-        ))}
-      </ul>
+      {/* Category-grouped task list */}
+      <div className="divide-y divide-gray-200">
+        {groupedTasks.map(({ category, tasks: catTasks, pendingCount, doneCount, isDoneGroup }) => {
+          const isOpen = !collapsedCategories[category];
+          return (
+            <div key={category} className="py-2 px-3">
+              <CategoryHeader
+                category={category}
+                pendingCount={pendingCount}
+                doneCount={doneCount}
+                isOpen={isOpen}
+                onToggle={() => toggleCategory(category)}
+                isDoneGroup={isDoneGroup}
+              />
+
+              {isOpen && (
+                <ul className="mt-1 divide-y divide-gray-100">
+                  {catTasks.map((task) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      url_call={url_call}
+                      onCompleteTask={onCompleteTask}
+                      onDeleteTask={onDeleteTask}
+                      onOpenDetails={setDetailsTask}
+                      onOpenUpdate={setUpdateTask}
+                      isSelected={selectedIds.includes(task.id)}
+                      onToggleSelect={onToggleSelect}
+                      showDoneCategory={isDoneGroup}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {detailsTask && (
         <DetailsModal task={detailsTask} onClose={() => setDetailsTask(null)} />
       )}

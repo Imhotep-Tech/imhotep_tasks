@@ -15,6 +15,30 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const PRESET_CATEGORIES = ['general', 'study', 'work', 'personal', 'health', 'finance'];
+  const CATEGORY_LABELS = {
+    general: '📋 General',
+    study: '📚 Study',
+    work: '💼 Work',
+    personal: '🏠 Personal',
+    health: '💪 Health',
+    finance: '💰 Finance',
+  };
+
+  const getInitialCategory = () => {
+    const existing = (routine?.routine_category || 'general').toLowerCase();
+    if (PRESET_CATEGORIES.includes(existing)) return existing;
+    return '__other__';
+  };
+  const getInitialCustom = () => {
+    const existing = (routine?.routine_category || 'general').toLowerCase();
+    if (PRESET_CATEGORIES.includes(existing)) return '';
+    return existing;
+  };
+
+  const [selectedCategory, setSelectedCategory] = useState(getInitialCategory());
+  const [customCategory, setCustomCategory] = useState(getInitialCustom());
+
   const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   const allMonthlyDays = Array.from({ length: 31 }, (_, i) => i + 1); // New: For monthly (1-31)
 
@@ -139,10 +163,12 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
     }
     
     try {
+      const finalCategory = selectedCategory === '__other__' ? customCategory.trim().toLowerCase() : selectedCategory;
       const payload = {
         routines_title: title,
         routine_type: routineType,
         routines_dates: days,
+        routine_category: finalCategory || 'general',
       };
       let res;
       if (routine) {
@@ -180,6 +206,29 @@ const AddOrUpdateRoutineModal = ({ routine, onClose, onSave }) => {
                   className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   required
                 />
+              </div>
+              {/* Category Selector */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                >
+                  {PRESET_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
+                  ))}
+                  <option value="__other__">🔖 Other (custom)</option>
+                </select>
+                {selectedCategory === '__other__' && (
+                  <input
+                    type="text"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Enter custom category"
+                    className="mt-2 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  />
+                )}
               </div>
               {/* New: Routine Type Tabs */}
               <div>
@@ -448,6 +497,11 @@ const Routines = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-gray-800">{routine.routines_title}</p>
+                      {routine.routine_category && routine.routine_category !== 'general' && (
+                        <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-700 capitalize">
+                          {routine.routine_category}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
