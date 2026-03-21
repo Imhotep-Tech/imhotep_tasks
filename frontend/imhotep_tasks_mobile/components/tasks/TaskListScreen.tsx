@@ -131,8 +131,62 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     setCollapsedSections(prev => ({ ...prev, [category]: !prev[category] }));
   }, []);
 
-  // Group tasks by category, sorted: pending first within each group
+  const formatCategory = useCallback((value: string) => {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }, []);
+
+  // Group tasks by category, with optional consolidated "Done" section for today page.
   const sections = useMemo(() => {
+    const categoryOrderSort = (a: string, b: string) => {
+      if (a === 'study') return -1;
+      if (b === 'study') return 1;
+      return a.localeCompare(b);
+    };
+
+    if (pageType === 'today-tasks') {
+      const pendingGroups: Record<string, Task[]> = {};
+      const doneTasks: Task[] = [];
+
+      sortedTasks.forEach(task => {
+        const cat = (task.task_category || 'general').toLowerCase();
+        if (task.status) {
+          doneTasks.push(task);
+          return;
+        }
+        if (!pendingGroups[cat]) pendingGroups[cat] = [];
+        pendingGroups[cat].push(task);
+      });
+
+      const pendingSections = Object.keys(pendingGroups)
+        .sort(categoryOrderSort)
+        .map(cat => ({
+          category: cat,
+          icon: CATEGORY_ICONS[cat] || DEFAULT_ICON,
+          pendingCount: pendingGroups[cat].length,
+          doneCount: 0,
+          doneGroup: false,
+          data: collapsedSections[cat] ? [] : pendingGroups[cat],
+        }));
+
+      if (doneTasks.length > 0) {
+        doneTasks.sort((a, b) => {
+          const aCat = (a.task_category || 'general').toLowerCase();
+          const bCat = (b.task_category || 'general').toLowerCase();
+          return categoryOrderSort(aCat, bCat);
+        });
+        pendingSections.push({
+          category: 'done',
+          icon: '✅',
+          pendingCount: 0,
+          doneCount: doneTasks.length,
+          doneGroup: true,
+          data: collapsedSections.done ? [] : doneTasks,
+        });
+      }
+
+      return pendingSections;
+    }
+
     const groups: Record<string, Task[]> = {};
     sortedTasks.forEach(task => {
       const cat = (task.task_category || 'general').toLowerCase();
@@ -149,20 +203,17 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     });
 
     // Category display order: study first, then rest alphabetically
-    const orderedKeys = Object.keys(groups).sort((a, b) => {
-      if (a === 'study') return -1;
-      if (b === 'study') return 1;
-      return a.localeCompare(b);
-    });
+    const orderedKeys = Object.keys(groups).sort(categoryOrderSort);
 
     return orderedKeys.map(cat => ({
       category: cat,
       icon: CATEGORY_ICONS[cat] || DEFAULT_ICON,
       pendingCount: groups[cat].filter(t => !t.status).length,
       doneCount: groups[cat].filter(t => t.status).length,
+      doneGroup: false,
       data: collapsedSections[cat] ? [] : groups[cat],
     }));
-  }, [sortedTasks, collapsedSections]);
+  }, [sortedTasks, collapsedSections, pageType]);
 
   const { setOnTaskAdded } = useTaskModal();
 
@@ -187,7 +238,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     setDetailsTask(task);
   };
 
-  const renderTask = ({ item }: { item: Task }) => (
+  const renderTask = ({ item, section }: { item: Task; section: { doneGroup?: boolean } }) => (
     <TaskItem
       task={item}
       onToggleComplete={handleToggleComplete}
@@ -198,6 +249,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
       selectionMode={selectionMode}
       isSelected={selectedIds.includes(item.id)}
       onToggleSelect={toggleSelect}
+      showDoneCategoryLabel={!!section.doneGroup}
     />
   );
 
@@ -300,14 +352,23 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
             <View style={styles.sectionHeaderLeft}>
               <Text style={styles.sectionIcon}>{section.icon}</Text>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {section.category.charAt(0).toUpperCase() + section.category.slice(1)}
+                {section.doneGroup ? 'Done' : formatCategory(section.category)}
               </Text>
-              <View style={[styles.sectionBadge, { backgroundColor: colors.primaryLight }]}>
-                <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
-                  {section.pendingCount} pending
-                </Text>
-              </View>
-              {section.doneCount > 0 && (
+              {!section.doneGroup && (
+                <View style={[styles.sectionBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.sectionBadgeText, { color: colors.primary }]}>
+                    {section.pendingCount} pending
+                  </Text>
+                </View>
+              )}
+              {!section.doneGroup && section.doneCount > 0 && (
+                <View style={[styles.sectionBadge, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6' }]}>
+                  <Text style={[styles.sectionBadgeText, { color: colors.textSecondary }]}>
+                    {section.doneCount} done
+                  </Text>
+                </View>
+              )}
+              {section.doneGroup && (
                 <View style={[styles.sectionBadge, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6' }]}>
                   <Text style={[styles.sectionBadgeText, { color: colors.textSecondary }]}>
                     {section.doneCount} done

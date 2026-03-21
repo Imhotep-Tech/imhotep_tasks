@@ -22,7 +22,7 @@ export interface TaskFormData {
 
 export interface TasksResponse {
   user_tasks: Task[];
-  pagination: {
+  pagination?: {
     page: number;
     num_pages: number;
   };

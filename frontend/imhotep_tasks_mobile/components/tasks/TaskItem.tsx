@@ -56,6 +56,7 @@ interface TaskItemProps {
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelect?: (taskId: number) => void;
+  showDoneCategoryLabel?: boolean;
 }
 
 export function TaskItem({ 
@@ -68,6 +69,7 @@ export function TaskItem({
   selectionMode = false,
   isSelected = false,
   onToggleSelect,
+  showDoneCategoryLabel = false,
 }: TaskItemProps) {
   const colorScheme = useColorScheme();
   const colors = themes[colorScheme ?? 'light'];
@@ -154,6 +156,13 @@ export function TaskItem({
         </Text>
         
         <View style={styles.metaRow}>
+          {showDoneCategoryLabel && task.status && (
+            <View style={[styles.categoryBadge, { borderColor: colors.border }]}>
+              <Text style={[styles.categoryBadgeText, { color: colors.textSecondary }]}>
+                {(task.task_category || 'general').charAt(0).toUpperCase() + (task.task_category || 'general').slice(1)}
+              </Text>
+            </View>
+          )}
           {task.due_date && (
             <DueDate dueDate={task.due_date} isCompleted={task.status} />
           )}
@@ -249,6 +258,16 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 12,
     gap: 4,
+  },
+  categoryBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   transactionText: {
     fontSize: 11,

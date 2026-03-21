@@ -141,9 +141,12 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
     }
 
     try {
-      const res = await api.get<TasksResponse>(`${endpoint}?page=${pageNum}`);
+      const url = pageType === 'today-tasks' ? endpoint : `${endpoint}?page=${pageNum}`;
+      const res = await api.get<TasksResponse>(url);
       const data = res.data;
       const fetchedTasks = data.user_tasks || [];
+
+      const shouldAppend = pageType !== 'today-tasks' && pageNum > 1 && !isRefresh;
 
       // Sort tasks with overdue first on initial fetch
       if (sortOverdueFirst) {
@@ -162,12 +165,50 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
           return 0;
         });
 
-        // Store the initial sorted order
-        setInitialOrder(sorted.map(t => t.id));
-        setTasks(sorted);
+        if (shouldAppend) {
+          setTasks((prev) => {
+            const seen = new Set(prev.map((t) => t.id));
+            const merged = [...prev];
+            sorted.forEach((t) => {
+              if (!seen.has(t.id)) merged.push(t);
+            });
+            return merged;
+          });
+          setInitialOrder((prev) => {
+            const seen = new Set(prev);
+            const next = [...prev];
+            sorted.forEach((t) => {
+              if (!seen.has(t.id)) next.push(t.id);
+            });
+            return next;
+          });
+        } else {
+          // Store the initial sorted order
+          setInitialOrder(sorted.map(t => t.id));
+          setTasks(sorted);
+        }
       } else {
-        setInitialOrder(fetchedTasks.map(t => t.id));
-        setTasks(fetchedTasks);
+        if (shouldAppend) {
+          setTasks((prev) => {
+            const seen = new Set(prev.map((t) => t.id));
+            const merged = [...prev];
+            fetchedTasks.forEach((t) => {
+              if (!seen.has(t.id)) merged.push(t);
+            });
+            return merged;
+          });
+          setInitialOrder((prev) => {
+            const seen = new Set(prev);
+            const next = [...prev];
+            fetchedTasks.forEach((t) => {
+              if (!seen.has(t.id)) next.push(t.id);
+            });
+            return next;
+          });
+        } else {
+          setInitialOrder(fetchedTasks.map(t => t.id));
+          setTasks(fetchedTasks);
+        }
       }
 
       setPage(data.pagination?.page || 1);
@@ -182,19 +223,20 @@ export function useTasks({ pageType, sortOverdueFirst = true }: UseTasksOptions)
       setLoading(false);
       setRefreshing(false);
     }
-  }, [endpoint, sortOverdueFirst]);
+  }, [endpoint, sortOverdueFirst, pageType]);
 
   const onRefresh = useCallback(() => {
     fetchTasks(1, true);
   }, [fetchTasks]);
 
   const handleLoadMore = useCallback(() => {
+    if (pageType === 'today-tasks') return;
     if (page < numPages && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
       fetchTasks(nextPage);
     }
-  }, [page, numPages, loading, fetchTasks]);
+  }, [pageType, page, numPages, loading, fetchTasks]);
 
   // Modal handlers
   const openAddModal = useCallback(() => {

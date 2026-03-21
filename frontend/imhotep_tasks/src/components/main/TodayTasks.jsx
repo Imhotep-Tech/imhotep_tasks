@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from '../../config/api';
 import Footer from '../common/Footer';
-import Pagination from '../common/Pagination';
 import AddTask from './components/AddTask';
 import TasksInfo from './components/TasksInfo';
 import TasksData from './components/TasksData';
@@ -12,8 +11,6 @@ const TodayTasks = () => {
 
   // state
   const [tasks, setTasks] = useState([]);
-  const [page, setPage] = useState(1);
-  const [numPages, setNumPages] = useState(1);
   const [totalTasks, setTotalTasks] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
@@ -25,15 +22,13 @@ const TodayTasks = () => {
   const url_call = "today-tasks";
 
   // fetch tasks
-  const fetchTasks = async (pageNum = 1) => {
+  const fetchTasks = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`api/tasks/today_tasks/?page=${pageNum}`);
+      const res = await axios.get('api/tasks/today_tasks/');
       const data = res.data;
       setTasks(data.user_tasks || []);
-      setPage(data.pagination?.page || 1);
-      setNumPages(data.pagination?.num_pages || 1);
       setTotalTasks(data.total_number_tasks ?? 0);
       setCompletedCount(data.completed_tasks_count ?? 0);
       setPendingCount(data.pending_tasks ?? 0);
@@ -46,19 +41,12 @@ const TodayTasks = () => {
   };
 
   useEffect(() => {
-    fetchTasks(page);
+    fetchTasks();
   }, []);
-
-  const changePage = (newPage) => {
-    if (newPage < 1 || newPage > numPages) return;
-    fetchTasks(newPage);
-  };
 
   const handleCreate = (serverResponse) => {
     const created = serverResponse.task ?? serverResponse;
-    if (page === 1) {
-      setTasks((prev) => [created, ...prev]);
-    }
+    setTasks((prev) => [created, ...prev]);
     // update counts
     setTotalTasks((prev) => (serverResponse.total_number_tasks ?? prev));
     setCompletedCount((prev) => (serverResponse.completed_tasks_count ?? prev));
@@ -97,7 +85,7 @@ const TodayTasks = () => {
           url_call
         });
       }
-      await fetchTasks(page);
+      await fetchTasks();
       clearSelection();
     } catch (e) {
       console.error(e);
@@ -125,7 +113,7 @@ const TodayTasks = () => {
 
   // Add this handler for update
   const handleUpdate = () => {
-    fetchTasks(page);
+    fetchTasks();
   };
 
   const formatDate = (iso) => {
@@ -184,13 +172,7 @@ const TodayTasks = () => {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             onSelectAll={selectAll}
-          />
-
-          <Pagination
-            currentPage={page}
-            totalPages={numPages}
-            totalItems={totalTasks}
-            onPageChange={changePage}
+            consolidateDone
           />
         </div>
 

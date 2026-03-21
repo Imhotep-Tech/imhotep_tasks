@@ -26,14 +26,7 @@ def today_tasks(request):
         Q(due_date__date__lt=today, status=False)
     ).order_by('status', 'due_date').all()
 
-    paginator = Paginator(user_tasks_qs, 20)
-    page_num = request.GET.get('page', 1)
-    try:
-        page_obj = paginator.page(page_num)
-    except (PageNotAnInteger, EmptyPage):
-        page_obj = paginator.page(1)
-
-    tasks_list = [tasks_managements_utils.serialize_task(t) for t in page_obj.object_list]
+    tasks_list = [tasks_managements_utils.serialize_task(t) for t in user_tasks_qs]
     completed_tasks_count = user_tasks_qs.filter(status=True).count()
     total_number_tasks = user_tasks_qs.count()
 
@@ -41,12 +34,6 @@ def today_tasks(request):
         'success': True,
         "username": request.user.username,
         "user_tasks": tasks_list,
-        "pagination": {
-            "page": page_obj.number,
-            "num_pages": paginator.num_pages,
-            "per_page": paginator.per_page,
-            "total": paginator.count,
-        },
         "total_number_tasks": total_number_tasks,
         "completed_tasks_count": completed_tasks_count,
         "pending_tasks": total_number_tasks - completed_tasks_count,
