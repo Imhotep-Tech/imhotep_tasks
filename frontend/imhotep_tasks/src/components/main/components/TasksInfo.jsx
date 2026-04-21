@@ -28,7 +28,7 @@ const TasksInfo = ({
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border-l-4 border-indigo-500 border border-transparent dark:border-slate-700">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-indigo-100 text-indigo-500 mr-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,13 +36,13 @@ const TasksInfo = ({
                 </svg>
               </div>
               <div>
-                <p className="text-gray-500 text-sm">Total Tasks</p>
-                <p className="text-2xl font-bold text-gray-800">{totalTasks}</p>
+                <p className="text-gray-500 dark:text-slate-400 text-sm">Total Tasks</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{totalTasks}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border-l-4 border-green-500 border border-transparent dark:border-slate-700">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-green-100 text-green-500 mr-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -50,13 +50,13 @@ const TasksInfo = ({
                 </svg>
               </div>
               <div>
-                <p className="text-gray-500 text-sm">Completed</p>
-                <p className="text-2xl font-bold text-gray-800">{completedCount}</p>
+                <p className="text-gray-500 dark:text-slate-400 text-sm">Completed</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{completedCount}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border-l-4 border-yellow-500 border border-transparent dark:border-slate-700">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-yellow-100 text-yellow-500 mr-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -64,8 +64,8 @@ const TasksInfo = ({
                 </svg>
               </div>
               <div>
-                <p className="text-gray-500 text-sm">Pending</p>
-                <p className="text-2xl font-bold text-gray-800">{pendingCount}</p>
+                <p className="text-gray-500 dark:text-slate-400 text-sm">Pending</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{pendingCount}</p>
               </div>
             </div>
           </div>
@@ -73,10 +73,10 @@ const TasksInfo = ({
 
       {/* Bulk actions section */}
       <div className="mb-8">
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-4 border border-transparent dark:border-slate-700">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-slate-300">
                 {selectedCount > 0
                   ? `${selectedCount} task${selectedCount > 1 ? 's' : ''} selected`
                   : 'Select tasks to enable bulk actions'}
@@ -86,7 +86,7 @@ const TasksInfo = ({
               <select
                 value={action}
                 onChange={(e) => setAction(e.target.value)}
-                className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100"
                 disabled={selectedCount === 0 || bulkLoading}
               >
                 <option value="">Bulk Action</option>
@@ -100,7 +100,7 @@ const TasksInfo = ({
                   type="date"
                   value={dateValue}
                   onChange={(e) => setDateValue(e.target.value)}
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100"
                   disabled={bulkLoading}
                 />
               )}
@@ -110,7 +110,7 @@ const TasksInfo = ({
                   value={categoryValue}
                   onChange={(e) => setCategoryValue(e.target.value)}
                   placeholder="New category"
-                  className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                   disabled={bulkLoading}
                 />
               )}

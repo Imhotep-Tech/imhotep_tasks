@@ -20,6 +20,7 @@ import UpdatePrompt from './components/pwa/UpdatePrompt'
 import DownloadPage from './components/main/DownloadPage'
 import { useEffect } from 'react';
 import DesktopAuthHandler from './desktop/DesktopAuthHandler'
+import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
   useEffect(() => {
@@ -29,12 +30,13 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-        <OfflineIndicator />
-        <Router>
-          <div>
-            <DesktopAuthHandler />
-            <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+          <OfflineIndicator />
+          <Router>
+            <div>
+              <DesktopAuthHandler />
+              <Routes>
               <Route 
                 path="/" 
                 element={
@@ -127,12 +129,13 @@ function App() {
               element={<DownloadPage />} 
             />
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-            <InstallPrompt />
-            <UpdatePrompt />
-          </div>
-        </Router>
-    </AuthProvider>
+              </Routes>
+              <InstallPrompt />
+              <UpdatePrompt />
+            </div>
+          </Router>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../common/Footer';
 import { usePWA } from '../../hooks/usePWA';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Profile = () => {
   const { user, logout, updateUser, token } = useAuth();
@@ -42,6 +43,7 @@ const Profile = () => {
   });
   const [refreshingApp, setRefreshingApp] = useState(false);
   const { refreshAppAndClearCache } = usePWA();
+  const { isDark, toggleTheme } = useTheme();
 
   // Load profile data on component mount
   useEffect(() => {
@@ -190,12 +192,21 @@ const Profile = () => {
 
   return (
     <>
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden md:max-w-2xl">
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden md:max-w-2xl border border-transparent dark:border-slate-700">
           <div className="md:flex">
             <div className="p-8 w-full">
+              <div className="flex justify-end mb-4">
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs sm:text-sm font-medium border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                </button>
+              </div>
               <div className="flex justify-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-slate-800">
                   {/* small logo */}
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -203,20 +214,20 @@ const Profile = () => {
                 </div>
               </div>
 
-              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">My Profile</h1>
-              <p className="mt-2 text-center text-sm text-gray-600">Manage your account and preferences</p>
+              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900 dark:text-gray-100">My Profile</h1>
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">Manage your account and preferences</p>
 
               <div className="mt-6">
                 {/* Tabs */}
-                <div className="rounded-md bg-gray-50 p-1 grid grid-cols-2 gap-2">
+                <div className="rounded-md bg-gray-50 dark:bg-slate-800 p-1 grid grid-cols-2 gap-2">
                   <button
-                    className={`py-2 px-3 rounded-md text-sm font-medium transition ${activeTab === 'profile' ? 'bg-white shadow text-gray-900' : 'text-gray-700 hover:bg-white/80'}`}
+                    className={`py-2 px-3 rounded-md text-sm font-medium transition ${activeTab === 'profile' ? 'bg-white dark:bg-slate-700 shadow text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-700'}`}
                     onClick={() => setActiveTab('profile')}
                   >
                     Profile Information
                   </button>
                   <button
-                    className={`py-2 px-3 rounded-md text-sm font-medium transition ${activeTab === 'password' ? 'bg-white shadow text-gray-900' : 'text-gray-700 hover:bg-white/80'}`}
+                    className={`py-2 px-3 rounded-md text-sm font-medium transition ${activeTab === 'password' ? 'bg-white dark:bg-slate-700 shadow text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-700'}`}
                     onClick={() => setActiveTab('password')}
                   >
                     Change Password
@@ -474,10 +485,10 @@ const Profile = () => {
                   </form>
                 )}
 
-                <p className="mt-6 text-center text-sm text-gray-600">
-                  <Link to="/today-tasks" className="font-medium text-blue-600 hover:text-blue-500">Back to Today Tasks</Link>
+                <p className="mt-6 text-center text-sm text-gray-600 dark:text-slate-300">
+                  <Link to="/today-tasks" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Back to Today Tasks</Link>
                 </p>
-                <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                   <button
                     type="button"
                     onClick={handleRefreshApp}
@@ -492,6 +503,13 @@ const Profile = () => {
                     className="flex-1 py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all"
                   >
                     Logout
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="flex-1 py-3 px-4 rounded-md shadow-sm text-sm font-medium border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-100 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
+                  >
+                    {isDark ? 'Use Light Mode' : 'Use Dark Mode'}
                   </button>
                 </div>
               </div>

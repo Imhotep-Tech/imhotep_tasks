@@ -118,8 +118,8 @@ const Next7DaysTasks = () => {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Next 7 Days Tasks</h1>
-            <p className="text-gray-600 mt-1">Hello, {user?.username || 'User'}!</p>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Next 7 Days Tasks</h1>
+            <p className="text-gray-600 dark:text-slate-300 mt-1">Hello, {user?.username || 'User'}!</p>
           </div>
           <div className="mt-4 md:mt-0">
             <button
@@ -143,9 +143,9 @@ const Next7DaysTasks = () => {
           bulkLoading={bulkLoading}
         />
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">Next 7 Days Tasks</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md overflow-hidden border border-transparent dark:border-slate-700">
+          <div className="p-4 bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Next 7 Days Tasks</h2>
           </div>
 
           <TasksData

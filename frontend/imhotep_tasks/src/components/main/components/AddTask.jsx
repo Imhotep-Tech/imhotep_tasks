@@ -51,10 +51,10 @@ const AddTask = ({ onClose, onCreate, url_call }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-5">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-md mx-auto p-5 border border-transparent dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Add New Task</h3>
-          <button aria-label="Close" onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add New Task</h3>
+          <button aria-label="Close" onClick={onClose} className="text-gray-500 dark:text-slate-300 hover:text-gray-700 dark:hover:text-gray-100">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -62,44 +62,44 @@ const AddTask = ({ onClose, onCreate, url_call }) => {
           {activeTab === 'task' && (
             <>
               <div>
-                <label className="text-sm font-medium text-gray-700">Title</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Title</label>
                 <input
                   type="text"
                   value={task_title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="mt-1 w-full border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                   placeholder="e.g. Write project proposal"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Brief / Description</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Brief / Description</label>
                 <textarea
                   value={task_description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="mt-1 w-full border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                   placeholder="Optional details to help you remember"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Due date</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Due date</label>
                 <input
                   type="date"
                   value={due_date}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  className="mt-1 w-full border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Category</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Category</label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="mt-1 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                  className="mt-1 w-full border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="general">General</option>
                   <option value="study">Study</option>
@@ -114,7 +114,7 @@ const AddTask = ({ onClose, onCreate, url_call }) => {
                     type="text"
                     value={customCategory}
                     onChange={(e) => setCustomCategory(e.target.value)}
-                    className="mt-2 w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                    className="mt-2 w-full border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                     placeholder="Enter custom category"
                     required
                   />
@@ -123,7 +123,7 @@ const AddTask = ({ onClose, onCreate, url_call }) => {
             </>
           )}
 
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && <div className="text-sm text-red-600 dark:text-red-400">{error}</div>}
 
           <div className="flex items-center justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="chef-button-secondary px-3 py-2 rounded">Cancel</button>

@@ -30,25 +30,25 @@ const CategoryHeader = ({ category, pendingCount, doneCount, isOpen, onToggle, i
     <button
       type="button"
       onClick={onToggle}
-      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-l-4 ${s.border} ${s.bg} transition-colors hover:brightness-95 focus:outline-none`}
+      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-l-4 ${s.border} ${s.bg} dark:bg-slate-800 transition-colors hover:brightness-95 focus:outline-none`}
     >
       <div className="flex items-center gap-2">
         <span className="text-lg">{s.icon}</span>
-        <h3 className="text-sm font-semibold capitalize text-gray-800">{title}</h3>
+        <h3 className="text-sm font-semibold capitalize text-gray-800 dark:text-gray-100">{title}</h3>
         {!isDoneGroup && (
           <span className={`ml-1 text-xs px-2 py-0.5 rounded-full border ${s.badge}`}>
             {pendingCount} pending
           </span>
         )}
         {(isDoneGroup || doneCount > 0) && (
-          <span className="text-xs px-2 py-0.5 rounded-full border bg-gray-100 text-gray-500 border-gray-200">
+          <span className="text-xs px-2 py-0.5 rounded-full border bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-300 border-gray-200 dark:border-slate-600">
             {isDoneGroup ? doneCount : `${doneCount} done`}
           </span>
         )}
       </div>
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className={`h-4 w-4 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        className={`h-4 w-4 text-gray-500 dark:text-slate-300 transition-transform ${isOpen ? "rotate-180" : ""}`}
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -74,7 +74,7 @@ const TaskRow = ({
   return (
     <li
       key={task.id}
-      className={`p-4 hover:bg-gray-50 transition-all ${task.status ? "bg-gray-50" : ""} flex items-center`}
+      className={`p-4 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all ${task.status ? "bg-gray-50 dark:bg-slate-800/70" : ""} flex items-center`}
     >
       {/* Unified row for checkbox + complete toggle + title */}
       <div className="flex items-center flex-1">
@@ -92,14 +92,14 @@ const TaskRow = ({
         <div>
           <p
             onClick={() => onOpenDetails(task)}
-            className={`font-medium text-gray-800 cursor-pointer hover:underline ${
-              task.status ? "line-through text-gray-500" : ""
+            className={`font-medium text-gray-800 dark:text-gray-100 cursor-pointer hover:underline ${
+              task.status ? "line-through text-gray-500 dark:text-slate-400" : ""
             }`}
           >
             {task.task_title}
           </p>
           {task.transaction_id && (
-            <div className="mt-1 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 border border-emerald-100">
+            <div className="mt-1 inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900">
               <span className="mr-1">
                 {task.transaction_status || 'Transaction'}
               </span>
@@ -107,7 +107,7 @@ const TaskRow = ({
             </div>
           )}
           {showDoneCategory && task.status && (
-            <div className="mt-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 border border-gray-200">
+            <div className="mt-1 inline-flex items-center rounded-full bg-gray-100 dark:bg-slate-700 px-2 py-0.5 text-xs text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600">
               {formatCategoryName(task.task_category)}
             </div>
           )}
@@ -256,16 +256,16 @@ const TasksData = ({
   };
 
   if (loading) {
-    return <div className="p-6 text-center">Loading...</div>;
+    return <div className="p-6 text-center text-gray-700 dark:text-slate-300">Loading...</div>;
   }
 
   if (!tasks || tasks.length === 0) {
     return (
       <div className="p-8 text-center">
-        <div className="inline-flex rounded-full bg-yellow-100 p-4">
+        <div className="inline-flex rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8 text-yellow-600"
+            className="h-8 w-8 text-yellow-600 dark:text-yellow-300"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -278,10 +278,10 @@ const TasksData = ({
             />
           </svg>
         </div>
-        <h3 className="mt-4 text-lg font-medium text-gray-900">
+        <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
           No tasks for today
         </h3>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-gray-500 dark:text-slate-300">
           You don't have any tasks scheduled for today. Enjoy your free time or
           create a new task!
         </p>
@@ -311,17 +311,17 @@ const TasksData = ({
   return (
     <>
       {/* Select All Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b">
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => onSelectAll(allSelected)}
-            className="text-xs bg-white border px-3 py-1.5 rounded shadow-sm hover:bg-gray-100 transition"
+            className="text-xs bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 px-3 py-1.5 rounded shadow-sm hover:bg-gray-100 dark:hover:bg-slate-600 transition text-gray-700 dark:text-gray-100"
           >
             {allSelected ? 'Clear All' : 'Select All'}
           </button>
           {selectedIds.length > 0 && (
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-gray-600 dark:text-slate-300">
               {selectedIds.length} selected
             </span>
           )}
@@ -336,7 +336,7 @@ const TasksData = ({
       </div>
 
       {/* Category-grouped task list */}
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-gray-200 dark:divide-slate-700">
         {groupedTasks.map(({ category, tasks: catTasks, pendingCount, doneCount, isDoneGroup }) => {
           const isOpen = !collapsedCategories[category];
           return (
@@ -351,7 +351,7 @@ const TasksData = ({
               />
 
               {isOpen && (
-                <ul className="mt-1 divide-y divide-gray-100">
+                <ul className="mt-1 divide-y divide-gray-100 dark:divide-slate-700">
                   {catTasks.map((task) => (
                     <TaskRow
                       key={task.id}

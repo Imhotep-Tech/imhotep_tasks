@@ -167,7 +167,7 @@ const ForgotPassword = () => {
   const renderEmailStep = () => (
     <form onSubmit={handleEmailSubmit} className="mt-4 space-y-5">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Email address</label>
         <div className="mt-1 relative rounded-md shadow-sm">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -181,7 +181,7 @@ const ForgotPassword = () => {
             value={email}
             onChange={handleEmailChange}
             required
-            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 rounded-md"
+            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
             placeholder="you@example.com"
           />
         </div>
@@ -197,21 +197,21 @@ const ForgotPassword = () => {
         </button>
       </div>
 
-      <p className="mt-2 text-center text-sm text-gray-600">
+      <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">
         Remembered your password?{' '}
-        <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">Sign in</Link>
+        <Link to="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Sign in</Link>
       </p>
     </form>
   );
 
   const renderOtpStep = () => (
     <form onSubmit={handleOtpSubmit} className="mt-4 space-y-5">
-      <div className="p-3 bg-blue-50 border border-blue-200 rounded mb-4 text-sm text-blue-700">
+      <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded mb-4 text-sm text-blue-700 dark:text-blue-300">
         We've sent a 6-digit OTP code to <strong>{email}</strong>. The code expires in 10 minutes.
       </div>
 
       <div>
-        <label htmlFor="otp" className="block text-sm font-medium text-gray-700">OTP Code</label>
+        <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-slate-200">OTP Code</label>
         <div className="mt-1">
           <input
             id="otp"
@@ -226,14 +226,14 @@ const ForgotPassword = () => {
               if (error) setError('');
             }}
             required
-            className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 rounded-md text-center text-2xl tracking-widest font-mono"
+            className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 dark:border-slate-600 rounded-md text-center text-2xl tracking-widest font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
             placeholder="000000"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
+        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 dark:text-slate-200">New Password</label>
         <div className="mt-1 relative rounded-md shadow-sm">
           <input
             id="newPassword"
@@ -245,7 +245,7 @@ const ForgotPassword = () => {
               if (error) setError('');
             }}
             required
-            className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 rounded-md pr-10"
+            className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 dark:border-slate-600 rounded-md pr-10 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
             placeholder="Enter new password"
           />
           <button
@@ -268,7 +268,7 @@ const ForgotPassword = () => {
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password</label>
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Confirm Password</label>
         <div className="mt-1 relative rounded-md shadow-sm">
           <input
             id="confirmPassword"
@@ -280,7 +280,7 @@ const ForgotPassword = () => {
               if (error) setError('');
             }}
             required
-            className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 rounded-md pr-10"
+            className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 dark:border-slate-600 rounded-md pr-10 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
             placeholder="Confirm new password"
           />
           <button
@@ -333,7 +333,7 @@ const ForgotPassword = () => {
             setConfirmPassword('');
             setError('');
           }}
-          className="text-sm text-gray-600 hover:text-gray-500"
+          className="text-sm text-gray-600 dark:text-slate-300 hover:text-gray-500 dark:hover:text-slate-200"
         >
           ← Use a different email
         </button>
@@ -348,8 +348,8 @@ const ForgotPassword = () => {
           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
         </svg>
       </div>
-      <p className="text-gray-600 mb-4">{message || 'Your password has been reset successfully!'}</p>
-      <p className="text-sm text-gray-500 mb-4">Redirecting to login...</p>
+      <p className="text-gray-600 dark:text-slate-300 mb-4">{message || 'Your password has been reset successfully!'}</p>
+      <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">Redirecting to login...</p>
       <Link
         to="/login"
         className="inline-flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
@@ -379,26 +379,26 @@ const ForgotPassword = () => {
 
   return (
     <>
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden md:max-w-2xl">
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden md:max-w-2xl border border-transparent dark:border-slate-700">
           <div className="md:flex">
             <div className="p-8 w-full">
               <div className="flex justify-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-slate-800">
                   <img src={Logo} alt="logo" className="w-8 h-8" />
                 </div>
               </div>
 
-              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">
+              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900 dark:text-gray-100">
                 {getTitle()}
               </h1>
-              <p className="mt-2 text-center text-sm text-gray-600">
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">
                 {getSubtitle()}
               </p>
 
               <div className="mt-6">
                 {error && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded mb-4 text-sm text-red-700">
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded mb-4 text-sm text-red-700 dark:text-red-300">
                     {error}
                   </div>
                 )}

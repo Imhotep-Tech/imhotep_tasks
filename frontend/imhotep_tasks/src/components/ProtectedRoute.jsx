@@ -24,18 +24,18 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden md:max-w-2xl">
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden md:max-w-2xl border border-transparent dark:border-slate-700">
           <div className="md:flex">
             <div className="p-8 w-full">
               <div className="flex justify-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-slate-800">
                   <img src={Logo} alt="logo" className="w-8 h-8" />
                 </div>
               </div>
 
-              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">Imhotep Tasks</h1>
-              <p className="mt-2 text-center text-sm text-gray-600">Loading your workspace...</p>
+              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900 dark:text-gray-100">Imhotep Tasks</h1>
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">Loading your workspace...</p>
 
               <div className="mt-6 flex justify-center">
                 <svg className="w-10 h-10 text-blue-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +55,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-indigo-100 to-blue-100 bg-chef-pattern">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-indigo-100 to-blue-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 bg-chef-pattern transition-colors">
       <Navbar onToggle={setNavbarOpen} />
       <div 
         className={`transition-all duration-300 ease-in-out min-h-screen ${

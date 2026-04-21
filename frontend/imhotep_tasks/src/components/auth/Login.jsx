@@ -139,18 +139,22 @@ const Login = () => {
 
   return (
     <>
-    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden md:max-w-2xl">
+    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+      <div className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden md:max-w-2xl border border-transparent dark:border-slate-700">
         <div className="md:flex">
           <div className="p-8 w-full">
             <div className="flex justify-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50">
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-slate-800 hover:bg-blue-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Go to landing page"
+              >
                 <img src={Logo} alt="logo" className="w-8 h-8" />
-              </div>
+              </Link>
             </div>
 
-            <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">Welcome Back</h1>
-            <p className="mt-2 text-center text-sm text-gray-600">Sign in to continue organizing your tasks</p>
+            <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900 dark:text-gray-100">Welcome Back</h1>
+            <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">Sign in to continue organizing your tasks</p>
 
             {/* Google sign-in button */}
             <div className="mt-6">
@@ -172,20 +176,20 @@ const Login = () => {
 
             <div className="mt-6 relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-300 dark:border-slate-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or sign in with email</span>
+                <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-300">Or sign in with email</span>
               </div>
             </div>
 
             {/* Login form */}
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-              {error && <div className="p-3 bg-red-50 border border-red-200 rounded">{error}</div>}
-              {info && <div className="p-3 bg-blue-50 border border-blue-200 rounded">{info}</div>}
+              {error && <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded text-red-700 dark:text-red-300">{error}</div>}
+              {info && <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded text-blue-700 dark:text-blue-300">{info}</div>}
 
               <div>
-                <label htmlFor="Email" className="block text-sm font-medium text-gray-700">Username or Email</label>
+                <label htmlFor="Email" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Username or Email</label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -198,7 +202,7 @@ const Login = () => {
                     id="Email"
                     value={formData.username}
                     onChange={handleChange}
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                     placeholder="Username or Email"
                     required
                   />
@@ -207,8 +211,8 @@ const Login = () => {
 
               <div>
                 <div className="flex justify-between">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                  <Link to="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-500">Forgot password?</Link>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Password</label>
+                  <Link to="/forgot-password" className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Forgot password?</Link>
                 </div>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -222,7 +226,7 @@ const Login = () => {
                     id="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border-gray-300 rounded-md"
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                     placeholder="Enter your password"
                     required
                   />
@@ -252,7 +256,7 @@ const Login = () => {
               </div>
             </form>
 
-            <p className="mt-6 text-center text-sm text-gray-600">Don't have an account? <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">Sign up</Link></p>
+            <p className="mt-6 text-center text-sm text-gray-600 dark:text-slate-300">Don't have an account? <Link to="/register" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Sign up</Link></p>
           </div>
         </div>
       </div>

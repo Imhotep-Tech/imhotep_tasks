@@ -155,8 +155,8 @@ const Register = () => {
 
   return (
     <>
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden md:max-w-2xl">
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden md:max-w-2xl border border-transparent dark:border-slate-700">
           <div className="md:flex">
             <div className="p-8 w-full">
               <div className="flex justify-center">
@@ -165,13 +165,13 @@ const Register = () => {
                 </svg>
               </div>
 
-              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">Join Imhotep Tasks</h1>
-              <p className="mt-2 text-center text-sm text-gray-600">Organize your work. Achieve more. Stay focused.</p>
+              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900 dark:text-gray-100">Join Imhotep Tasks</h1>
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">Organize your work. Achieve more. Stay focused.</p>
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-5">
                 {/* Username */}
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Username</label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,7 +185,7 @@ const Register = () => {
                       value={formData.username}
                       onChange={handleChange}
                       required
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 rounded-md"
+                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                       placeholder="Choose a username"
                     />
                   </div>
@@ -193,7 +193,7 @@ const Register = () => {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Email</label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -207,7 +207,7 @@ const Register = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 rounded-md"
+                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                       placeholder="your.email@example.com"
                     />
                   </div>
@@ -215,7 +215,7 @@ const Register = () => {
 
                 {/* Password */}
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Password</label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -229,7 +229,7 @@ const Register = () => {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border-gray-300 rounded-md"
+                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                       placeholder="Create a strong password"
                     />
                     <button type="button" onClick={ShowPassword} className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-500">
@@ -249,7 +249,7 @@ const Register = () => {
 
                 {/* Confirm Password */}
                 <div>
-                  <label htmlFor="password2" className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                  <label htmlFor="password2" className="block text-sm font-medium text-gray-700 dark:text-slate-200">Confirm Password</label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -263,7 +263,7 @@ const Register = () => {
                       value={formData.password2}
                       onChange={handleChange}
                       required
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border-gray-300 rounded-md"
+                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
                       placeholder="Confirm your password"
                     />
                     <button type="button" onClick={ShowPassword2} className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-500">
@@ -283,7 +283,7 @@ const Register = () => {
 
                 {/* Error message (kept above submit if exists) */}
                 {error && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-md text-red-700 dark:text-red-300 text-sm">
                     {error}
                   </div>
                 )}
@@ -299,9 +299,9 @@ const Register = () => {
                 </div>
               </form>
 
-              <p className="mt-6 text-center text-sm text-gray-600">
+              <p className="mt-6 text-center text-sm text-gray-600 dark:text-slate-300">
                 Already have an account?{' '}
-                <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">Sign in</Link>
+                <Link to="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Sign in</Link>
               </p>
             </div>
           </div>

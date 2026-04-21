@@ -60,13 +60,13 @@ const Navbar = ({ onToggle }) => {
 
       {/* Toggle Button */}
       <button 
-        className="fixed top-4 left-4 z-50 w-12 h-12 bg-white/80 backdrop-blur-xl border border-white/30 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+        className="fixed top-4 left-4 z-50 w-12 h-12 bg-white/80 dark:bg-slate-800/90 backdrop-blur-xl border border-white/30 dark:border-slate-700 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"
         onClick={toggleNavbar}
         aria-label="Toggle navigation"
         title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
       >
         <svg 
-          className={`w-6 h-6 text-gray-700 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''} group-hover:text-blue-600`}
+          className={`w-6 h-6 text-gray-700 dark:text-gray-100 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''} group-hover:text-blue-600 dark:group-hover:text-blue-400`}
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -85,10 +85,10 @@ const Navbar = ({ onToggle }) => {
           ? (isOpen ? 'translate-x-0' : '-translate-x-full') 
           : (isOpen ? 'translate-x-0' : '-translate-x-64')
       }`}>
-        <div className="h-full w-64 bg-gradient-to-b from-white/95 via-white/90 to-white/95 backdrop-blur-2xl border-r border-white/30 shadow-2xl">
+        <div className="h-full w-64 bg-gradient-to-b from-white/95 via-white/90 to-white/95 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-900/95 backdrop-blur-2xl border-r border-white/30 dark:border-slate-700 shadow-2xl">
           <div className="flex flex-col h-full">
             {/* Scrollable Content Container */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 p-6">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-slate-500 p-6">
               {/* Logo/Brand Section */}
               <div className="mb-8 pt-12">
                 <div className="flex items-center justify-center mb-4">
@@ -110,31 +110,31 @@ const Navbar = ({ onToggle }) => {
                 >
                   Imhotep Tasks
                 </div>
-                <p className="text-center text-gray-500 text-sm font-medium mt-1">
+                <p className="text-center text-gray-500 dark:text-slate-300 text-sm font-medium mt-1">
                   Manage Your Daily Tasks Efficiently
                 </p>
               </div>
 
               {/* User Info Card */}
               <div className="mb-8">
-                <div className="chef-card rounded-2xl p-4 shadow-lg border border-white/30 backdrop-blur-xl bg-white/90">
+                <div className="chef-card rounded-2xl p-4 shadow-lg border border-white/30 dark:border-slate-700 backdrop-blur-xl bg-white/90 dark:bg-slate-800/90">
                   <div className="flex items-center space-x-3 mb-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl shadow-md flex items-center justify-center text-white font-bold text-lg">
                       {user?.first_name ? user.first_name.charAt(0).toUpperCase() : user?.username?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-gray-800 font-semibold text-sm truncate">
+                      <p className="text-gray-800 dark:text-gray-100 font-semibold text-sm truncate">
                         {user?.first_name && user?.last_name 
                           ? `${user.first_name} ${user.last_name}`
                           : user?.username || 'User'
                         }
                       </p>
-                      <p className="text-gray-600 text-xs truncate">{user?.email}</p>
+                      <p className="text-gray-600 dark:text-slate-300 text-xs truncate">{user?.email}</p>
                     </div>
                   </div>
                   {!user?.email_verify && (
-                    <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                      <span className="text-amber-700 text-xs font-medium flex items-center">
+                    <div className="mb-3 p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-lg">
+                      <span className="text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center">
                         <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
@@ -152,14 +152,14 @@ const Navbar = ({ onToggle }) => {
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
                     isActive('/today-tasks') 
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105' 
-                      : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
+                      : 'text-gray-700 dark:text-slate-200 hover:bg-white/70 dark:hover:bg-slate-800 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 transition-colors duration-300 ${
                     isActive('/today-tasks') 
                       ? 'bg-white/20' 
-                      : 'bg-blue-100 group-hover:bg-blue-200'
+                      : 'bg-blue-100 dark:bg-slate-700 group-hover:bg-blue-200 dark:group-hover:bg-slate-600'
                   }`}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -173,14 +173,14 @@ const Navbar = ({ onToggle }) => {
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
                     isActive('/next-week-tasks') 
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105' 
-                      : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
+                      : 'text-gray-700 dark:text-slate-200 hover:bg-white/70 dark:hover:bg-slate-800 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 transition-colors duration-300 ${
                     isActive('/next-week-tasks') 
                       ? 'bg-white/20' 
-                      : 'bg-blue-100 group-hover:bg-blue-200'
+                      : 'bg-blue-100 dark:bg-slate-700 group-hover:bg-blue-200 dark:group-hover:bg-slate-600'
                   }`}>
                     {/* Calendar icon */}
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,14 +196,14 @@ const Navbar = ({ onToggle }) => {
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
                     isActive('/all-tasks') 
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105' 
-                      : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
+                      : 'text-gray-700 dark:text-slate-200 hover:bg-white/70 dark:hover:bg-slate-800 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 transition-colors duration-300 ${
                     isActive('/all-tasks') 
                       ? 'bg-white/20' 
-                      : 'bg-blue-100 group-hover:bg-blue-200'
+                      : 'bg-blue-100 dark:bg-slate-700 group-hover:bg-blue-200 dark:group-hover:bg-slate-600'
                   }`}>
                     {/* List icon */}
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,14 +218,14 @@ const Navbar = ({ onToggle }) => {
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
                     isActive('/routines') 
                       ? 'bg-gradient-to-r from-green-500 to-indigo-500 text-white shadow-lg transform scale-105' 
-                      : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
+                      : 'text-gray-700 dark:text-slate-200 hover:bg-white/70 dark:hover:bg-slate-800 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 transition-colors duration-300 ${
                     isActive('/routines') 
                       ? 'bg-white/20' 
-                      : 'bg-green-100 group-hover:bg-green-200'
+                      : 'bg-green-100 dark:bg-slate-700 group-hover:bg-green-200 dark:group-hover:bg-slate-600'
                   }`}>
                     {/* Routines icon */}
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,14 +240,14 @@ const Navbar = ({ onToggle }) => {
                   className={`navbar-link group flex items-center p-4 rounded-2xl transition-all duration-300 ${
                     isActive('/profile') 
                       ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg transform scale-105' 
-                      : 'text-gray-700 hover:bg-white/70 hover:shadow-md hover:scale-105'
+                      : 'text-gray-700 dark:text-slate-200 hover:bg-white/70 dark:hover:bg-slate-800 hover:shadow-md hover:scale-105'
                   }`}
                   onClick={closeNavbar}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 transition-colors duration-300 ${
                     isActive('/profile') 
                       ? 'bg-white/20' 
-                      : 'bg-indigo-100 group-hover:bg-indigo-200'
+                      : 'bg-indigo-100 dark:bg-slate-700 group-hover:bg-indigo-200 dark:group-hover:bg-slate-600'
                   }`}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -260,12 +260,12 @@ const Navbar = ({ onToggle }) => {
             </div>
 
             {/* Fixed Bottom Section - Logout Button and Footer */}
-            <div className="flex-shrink-0 border-t border-gray-200/50 p-6 bg-gradient-to-t from-white/95 to-transparent">
+            <div className="flex-shrink-0 border-t border-gray-200/50 dark:border-slate-700 p-6 bg-gradient-to-t from-white/95 dark:from-slate-900/95 to-transparent">
               <button
                 onClick={handleLogout}
-                className="w-full group flex items-center p-4 rounded-2xl text-gray-700 hover:bg-red-50 hover:text-red-600 hover:shadow-md transition-all duration-300 hover:scale-105 mb-4"
+                className="w-full group flex items-center p-4 rounded-2xl text-gray-700 dark:text-slate-200 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-300 hover:shadow-md transition-all duration-300 hover:scale-105 mb-4"
               >
-                <div className="w-10 h-10 rounded-xl bg-gray-100 group-hover:bg-red-100 flex items-center justify-center mr-3 transition-colors duration-300">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-700 group-hover:bg-red-100 dark:group-hover:bg-red-900/40 flex items-center justify-center mr-3 transition-colors duration-300">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
@@ -273,7 +273,7 @@ const Navbar = ({ onToggle }) => {
                 <span className="font-semibold">Logout</span>
               </button>
               <div className="text-center">
-                <p className="text-gray-500 text-xs font-medium">
+                <p className="text-gray-500 dark:text-slate-400 text-xs font-medium">
                    Organize Your Productivity
                 </p>
               </div>

@@ -69,9 +69,9 @@ function LandingPage() {
 
   return (
     <>
-      <div className="min-h-screen relative overflow-hidden bg-gray-50">
+      <div className="min-h-screen relative overflow-hidden bg-gray-50 dark:bg-slate-900 transition-colors">
         {/* Hero Section - dark indigo like Django template */}
-        <section className="bg-gradient-to-br from-indigo-900 to-indigo-800 text-white">
+        <section className="bg-gradient-to-br from-indigo-900 to-indigo-800 dark:from-slate-950 dark:to-indigo-950 text-white transition-colors">
           <div className="container mx-auto px-4 py-16 md:py-24 max-w-7xl">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="md:w-1/2 mb-8 md:mb-0 md:pr-8">
@@ -94,7 +94,7 @@ function LandingPage() {
               </div>
 
               <div className="md:w-1/2 relative">
-                <div className="bg-white p-4 rounded-lg shadow-2xl transform rotate-1 inline-block">
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-2xl transform rotate-1 inline-block border border-transparent dark:border-slate-700">
                   <img src={Logo} alt="Imhotep Tasks preview" className="rounded-md w-72 h-auto" />
                 </div>
                 <div className="absolute -bottom-4 -left-4 bg-indigo-500 w-16 h-16 rounded-full flex items-center justify-center shadow-lg">
@@ -106,18 +106,18 @@ function LandingPage() {
         </section>
 
         {/* Features Section - mirrors Django features area */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-gray-50 dark:bg-slate-950 transition-colors">
           <div className="container mx-auto px-4 max-w-7xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12">Features That Empower Your Workflow</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-gray-100 mb-12">Features That Empower Your Workflow</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto max-w-5xl">
               {features.slice(0,3).map((f, idx) => (
-                <div key={idx} className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                  <div className="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                <div key={idx} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow border border-transparent dark:border-slate-700">
+                  <div className="bg-indigo-100 dark:bg-indigo-900/40 w-16 h-16 rounded-full flex items-center justify-center mb-6">
                     <span className="text-2xl">{f.icon}</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">{f.title}</h3>
-                  <p className="text-gray-600">{f.description}</p>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{f.title}</h3>
+                  <p className="text-gray-600 dark:text-slate-300">{f.description}</p>
                 </div>
               ))}
             </div>
@@ -125,9 +125,9 @@ function LandingPage() {
         </section>
 
         {/* How It Works (3 steps) */}
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-slate-900 transition-colors">
           <div className="container mx-auto px-4 max-w-6xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12">How It Works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-gray-100 mb-12">How It Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 { step: "1", icon: "🤖", title: "Create an Account", description: "Sign up for free and set up your personalized dashboard in just minutes." },
@@ -136,8 +136,8 @@ function LandingPage() {
               ].map((item, index) => (
                 <div key={index} className="flex flex-col items-center text-center">
                   <div className="bg-indigo-800 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold mb-6">{item.step}</div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-3">{item.title}</h3>
-                  <p className="text-gray-600">{item.description}</p>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">{item.title}</h3>
+                  <p className="text-gray-600 dark:text-slate-300">{item.description}</p>
                 </div>
               ))}
             </div>
@@ -145,7 +145,7 @@ function LandingPage() {
         </section>
 
         {/* Mobile App Download Section */}
-        <section className="py-16 bg-gradient-to-br from-green-600 to-green-700 relative overflow-hidden">
+        <section className="py-16 bg-gradient-to-br from-green-600 to-green-700 dark:from-slate-900 dark:to-emerald-950 relative overflow-hidden transition-colors">
           {/* Background decoration */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full"></div>
@@ -157,7 +157,7 @@ function LandingPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-8">
               {/* Left side - Content */}
               <div className="md:w-1/2 text-white">
-                <div className="inline-flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-full mb-4">
+                <div className="inline-flex items-center space-x-2 bg-white/20 dark:bg-white/10 px-4 py-2 rounded-full mb-4">
                   <span className="text-2xl">📱</span>
                   <span className="font-medium">Now Available on Mobile</span>
                 </div>
@@ -170,7 +170,7 @@ function LandingPage() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link
                     to="/download"
-                    className="inline-flex items-center justify-center space-x-2 bg-white text-green-700 px-6 py-3 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                    className="inline-flex items-center justify-center space-x-2 bg-white text-green-700 dark:bg-emerald-100 dark:text-emerald-900 px-6 py-3 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                   >
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/>
@@ -193,27 +193,27 @@ function LandingPage() {
               <div className="md:w-1/2 flex justify-center">
                 <div className="relative">
                   {/* Phone frame */}
-                  <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                    <div className="bg-white rounded-[2.5rem] overflow-hidden w-56 h-[28rem] relative">
+                  <div className="bg-gray-900 dark:bg-slate-700 rounded-[3rem] p-3 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                    <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden w-56 h-[28rem] relative">
                       {/* Status bar */}
-                      <div className="bg-gray-100 h-6 flex items-center justify-center">
-                        <div className="w-16 h-1 bg-gray-300 rounded-full"></div>
+                      <div className="bg-gray-100 dark:bg-slate-700 h-6 flex items-center justify-center">
+                        <div className="w-16 h-1 bg-gray-300 dark:bg-slate-500 rounded-full"></div>
                       </div>
                       {/* App content */}
                       <div className="p-4">
                         <div className="flex items-center space-x-3 mb-4">
                           <img src={Logo} alt="App" className="w-10 h-10 rounded-lg" />
                           <div>
-                            <p className="font-bold text-gray-800 text-sm">Imhotep Tasks</p>
-                            <p className="text-xs text-gray-500">Your tasks, anywhere</p>
+                            <p className="font-bold text-gray-800 dark:text-gray-100 text-sm">Imhotep Tasks</p>
+                            <p className="text-xs text-gray-500 dark:text-slate-300">Your tasks, anywhere</p>
                           </div>
                         </div>
                         {/* Task items */}
                         <div className="space-y-2">
                           {['Complete project', 'Review notes', 'Team meeting'].map((task, i) => (
-                            <div key={i} className="flex items-center space-x-2 bg-gray-50 p-2 rounded-lg">
-                              <div className={`w-4 h-4 rounded-full border-2 ${i === 0 ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}></div>
-                              <span className={`text-xs ${i === 0 ? 'line-through text-gray-400' : 'text-gray-700'}`}>{task}</span>
+                            <div key={i} className="flex items-center space-x-2 bg-gray-50 dark:bg-slate-700 p-2 rounded-lg">
+                              <div className={`w-4 h-4 rounded-full border-2 ${i === 0 ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-slate-500'}`}></div>
+                              <span className={`text-xs ${i === 0 ? 'line-through text-gray-400 dark:text-slate-400' : 'text-gray-700 dark:text-slate-100'}`}>{task}</span>
                             </div>
                           ))}
                         </div>

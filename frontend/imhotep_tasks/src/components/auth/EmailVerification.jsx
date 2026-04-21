@@ -133,18 +133,18 @@ const EmailVerification = () => {
 
   return (
     <>
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden md:max-w-2xl">
+      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden md:max-w-2xl border border-transparent dark:border-slate-700">
           <div className="md:flex">
             <div className="p-8 w-full text-center">
               <div className="flex justify-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-slate-800">
                   <img src={Logo} alt="logo" className="w-8 h-8" />
                 </div>
               </div>
 
-              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900">{getTitle()}</h1>
-              <p className="mt-2 text-center text-sm text-gray-600">{getSubtitle()}</p>
+              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900 dark:text-gray-100">{getTitle()}</h1>
+              <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">{getSubtitle()}</p>
 
               {(status === 'verifying' || status === 'success') && (
                 <div className="mt-6 flex justify-center">
@@ -156,13 +156,13 @@ const EmailVerification = () => {
                 {status === 'input' && (
                   <form onSubmit={handleSubmit} className="space-y-5">
                     {error && (
-                      <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                      <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded text-sm text-red-700 dark:text-red-300">
                         {error}
                       </div>
                     )}
                     
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Email Address</label>
                       <input
                         id="email"
                         name="email"
@@ -174,13 +174,13 @@ const EmailVerification = () => {
                         }}
                         required
                         readOnly={true}
-                        className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 rounded-md"
+                        className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                         placeholder="Enter your email"
                       />
                     </div>
                     
                     <div>
-                      <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">OTP Code</label>
+                      <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">OTP Code</label>
                       <input
                         id="otp"
                         name="otp"
@@ -194,7 +194,7 @@ const EmailVerification = () => {
                           if (error) setError('');
                         }}
                         required
-                        className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 rounded-md text-center text-2xl tracking-widest font-mono"
+                        className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-3 border-gray-300 dark:border-slate-600 rounded-md text-center text-2xl tracking-widest font-mono bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                         placeholder="000000"
                       />
                     </div>
@@ -207,9 +207,9 @@ const EmailVerification = () => {
                       {loading ? 'Verifying...' : 'Verify Email'}
                     </button>
 
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-slate-300">
                       Didn't receive the code?{' '}
-                      <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                      <Link to="/login" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                         Login to resend
                       </Link>
                     </p>
@@ -218,10 +218,10 @@ const EmailVerification = () => {
 
                 {status === 'verifying' && (
                   <>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                       <div className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full animate-pulse" style={{ width: '60%' }} />
                     </div>
-                    <p className="text-gray-500 text-sm mt-2">Processing verification...</p>
+                    <p className="text-gray-500 dark:text-slate-400 text-sm mt-2">Processing verification...</p>
                   </>
                 )}
 
