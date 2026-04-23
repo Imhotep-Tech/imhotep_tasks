@@ -18,8 +18,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNetwork } from '@/contexts/NetworkContext';
 import api from '@/constants/api';
 import axios from 'axios';
+import { cacheSet, cacheGet, buildCacheKey } from '@/utils/cache';
+import { enqueue } from '@/utils/mutation-queue';
 
 // Theme colors
 const themes = {
@@ -102,6 +105,8 @@ export default function RoutinesScreen() {
   const colorScheme = useColorScheme();
   const colors = themes[colorScheme ?? 'light'];
   const { user, token } = useAuth();
+  const { isOnline, refreshPendingCount } = useNetwork();
+  const userId = user?.id || user?.pk || 'unknown';
 
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [loading, setLoading] = useState(false);
@@ -135,26 +140,73 @@ export default function RoutinesScreen() {
     
     try {
       setLoading(true);
-      const response = await axios.get(`api/routines/?page=${pageNum}`);
-      const data = response.data;
-      const newRoutines = data.user_routines || [];
 
-      setRoutines(append ? [...routines, ...newRoutines] : newRoutines);
-      setPage(data.pagination?.page || 1);
-      setTotalPages(data.pagination?.num_pages || 1);
-      setTotalRoutines(data.pagination?.total || 0);
-      
-      // Calculate counts
-      const active = newRoutines.filter((r: Routine) => r.status).length;
-      setActiveCount(append ? activeCount + active : active);
-      setInactiveCount(append ? inactiveCount + (newRoutines.length - active) : newRoutines.length - active);
-    } catch (error) {
-      console.error('Failed to fetch routines:', error);
+      if (isOnline) {
+        // Online: fetch from API, save to cache
+        const response = await axios.get(`api/routines/?page=${pageNum}`);
+        const data = response.data;
+        const newRoutines = data.user_routines || [];
+
+        setRoutines(append ? [...routines, ...newRoutines] : newRoutines);
+        setPage(data.pagination?.page || 1);
+        setTotalPages(data.pagination?.num_pages || 1);
+        setTotalRoutines(data.pagination?.total || 0);
+        
+        // Calculate counts
+        const active = newRoutines.filter((r: Routine) => r.status).length;
+        setActiveCount(append ? activeCount + active : active);
+        setInactiveCount(append ? inactiveCount + (newRoutines.length - active) : newRoutines.length - active);
+
+        // Save to cache in background
+        const cacheKey = buildCacheKey(userId, `routines:page${pageNum}`);
+        cacheSet(cacheKey, data).catch(() => {});
+      } else {
+        // Offline: load from cache
+        const cacheKey = buildCacheKey(userId, `routines:page${pageNum}`);
+        const cached = await cacheGet(cacheKey);
+
+        if (cached) {
+          console.log(`[Routines] Loaded page ${pageNum} from cache (saved: ${cached.timestamp})`);
+          const data = cached.data;
+          const newRoutines = data.user_routines || [];
+
+          setRoutines(append ? [...routines, ...newRoutines] : newRoutines);
+          setPage(data.pagination?.page || 1);
+          setTotalPages(data.pagination?.num_pages || 1);
+          setTotalRoutines(data.pagination?.total || 0);
+
+          const active = newRoutines.filter((r: Routine) => r.status).length;
+          setActiveCount(append ? activeCount + active : active);
+          setInactiveCount(append ? inactiveCount + (newRoutines.length - active) : newRoutines.length - active);
+        } else {
+          console.log('[Routines] No cached data available for offline use');
+        }
+      }
+    } catch (error: any) {
+      // Network error while supposedly online — try cache fallback
+      const isNetworkError = !error?.response;
+      if (isNetworkError) {
+        const cacheKey = buildCacheKey(userId, `routines:page${pageNum}`);
+        const cached = await cacheGet(cacheKey);
+        if (cached) {
+          const data = cached.data;
+          const newRoutines = data.user_routines || [];
+          setRoutines(append ? [...routines, ...newRoutines] : newRoutines);
+          setPage(data.pagination?.page || 1);
+          setTotalPages(data.pagination?.num_pages || 1);
+          setTotalRoutines(data.pagination?.total || 0);
+          const active = newRoutines.filter((r: Routine) => r.status).length;
+          setActiveCount(append ? activeCount + active : active);
+          setInactiveCount(append ? inactiveCount + (newRoutines.length - active) : newRoutines.length - active);
+        }
+      } else {
+        console.error('Failed to fetch routines:', error);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [token, routines, activeCount, inactiveCount]);
+  }, [token, routines, activeCount, inactiveCount, isOnline, userId]);
 
   useEffect(() => {
     fetchRoutines(1);
@@ -308,10 +360,31 @@ export default function RoutinesScreen() {
         routine_category: finalCategory || 'general',
       };
 
-      if (editingRoutine) {
-        await api.post(`api/update_routine/${editingRoutine.id}/`, payload);
+      if (isOnline) {
+        if (editingRoutine) {
+          await api.post(`api/update_routine/${editingRoutine.id}/`, payload);
+        } else {
+          await api.post('api/add_routine/', payload);
+        }
       } else {
-        await api.post('api/add_routine/', payload);
+        // Offline: queue the mutation
+        if (editingRoutine) {
+          await enqueue({
+            action: 'update_task', // reusing action type for routines
+            endpoint: `api/update_routine/${editingRoutine.id}/`,
+            method: 'POST',
+            payload,
+            taskId: editingRoutine.id,
+          });
+        } else {
+          await enqueue({
+            action: 'add_task', // reusing action type for routines
+            endpoint: 'api/add_routine/',
+            method: 'POST',
+            payload,
+          });
+        }
+        await refreshPendingCount();
       }
 
       closeModal();
@@ -326,8 +399,21 @@ export default function RoutinesScreen() {
   const handleToggleStatus = async (routine: Routine) => {
     try {
       setActionLoading(routine.id);
-      await api.post(`api/update_routine_status/${routine.id}/`);
-      fetchRoutines(1);
+      if (isOnline) {
+        await api.post(`api/update_routine_status/${routine.id}/`);
+      } else {
+        await enqueue({
+          action: 'toggle_complete',
+          endpoint: `api/update_routine_status/${routine.id}/`,
+          method: 'POST',
+          payload: {},
+          taskId: routine.id,
+        });
+        await refreshPendingCount();
+        // Optimistic update
+        setRoutines(prev => prev.map(r => r.id === routine.id ? { ...r, status: !r.status } : r));
+      }
+      if (isOnline) fetchRoutines(1);
     } catch (error) {
       console.error('Failed to toggle routine status:', error);
     } finally {
@@ -347,8 +433,21 @@ export default function RoutinesScreen() {
           onPress: async () => {
             try {
               setActionLoading(routine.id);
-              await api.post(`api/delete_routine/${routine.id}/`);
-              fetchRoutines(1);
+              if (isOnline) {
+                await api.post(`api/delete_routine/${routine.id}/`);
+              } else {
+                await enqueue({
+                  action: 'delete_task',
+                  endpoint: `api/delete_routine/${routine.id}/`,
+                  method: 'POST',
+                  payload: {},
+                  taskId: routine.id,
+                });
+                await refreshPendingCount();
+                // Optimistic update
+                setRoutines(prev => prev.filter(r => r.id !== routine.id));
+              }
+              if (isOnline) fetchRoutines(1);
             } catch (error) {
               console.error('Failed to delete routine:', error);
             } finally {
@@ -361,6 +460,10 @@ export default function RoutinesScreen() {
   };
 
   const handleApplyRoutines = async () => {
+    if (!isOnline) {
+      Alert.alert('Offline', 'Routines can only be applied while online.');
+      return;
+    }
     try {
       setApplyLoading(true);
       await api.post('api/apply_routines/');

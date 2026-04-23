@@ -9,8 +9,10 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTaskModal } from '@/contexts/TaskModalContext';
+import { useNetwork } from '@/contexts/NetworkContext';
 import { TaskFormModal } from '@/components/tasks';
 import api from '@/constants/api';
+import { enqueue } from '@/utils/mutation-queue';
 
 // Theme colors for the layout
 const themes = {
@@ -42,6 +44,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { isAuthenticated, loading, token } = useAuth();
   const { onTaskAdded } = useTaskModal();
+  const { isOnline, refreshPendingCount } = useNetwork();
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [addTaskLoading, setAddTaskLoading] = useState(false);
   const colors = themes[colorScheme ?? 'light'];
@@ -49,10 +52,24 @@ export default function TabLayout() {
   const handleAddTask = useCallback(async (formData: { task_title: string; task_details: string; due_date: string; task_category: string }) => {
     setAddTaskLoading(true);
     try {
-      await api.post('api/tasks/add_task/', {
+      const payload = {
         ...formData,
         task_category: formData.task_category || 'general',
-      });
+      };
+
+      if (isOnline) {
+        await api.post('api/tasks/add_task/', payload);
+      } else {
+        // Offline: queue the mutation
+        await enqueue({
+          action: 'add_task',
+          endpoint: 'api/tasks/add_task/',
+          method: 'POST',
+          payload,
+        });
+        await refreshPendingCount();
+      }
+
       // Call the refresh callback if registered
       if (onTaskAdded) {
         onTaskAdded();
@@ -64,7 +81,7 @@ export default function TabLayout() {
     } finally {
       setAddTaskLoading(false);
     }
-  }, [onTaskAdded]);
+  }, [onTaskAdded, isOnline, refreshPendingCount]);
 
   // Show loading screen while checking auth
   if (loading) {

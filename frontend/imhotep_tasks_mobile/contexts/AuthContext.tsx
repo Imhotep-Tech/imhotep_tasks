@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 // Assuming you have an axios instance configured similarly to your web app
 import api from '../constants/api'; 
+import { cacheClearAll } from '@/utils/cache';
+import { clearQueue } from '@/utils/mutation-queue';
 
 interface AuthContextType {
   user: any;
@@ -149,7 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Axios interceptor (Logic is identical to Web, just adapted slightly)
   useEffect(() => {
-    const createInterceptor = (axiosInstance: typeof axios) => {
+    const createInterceptor = (axiosInstance: AxiosInstance) => {
       return axiosInstance.interceptors.response.use(
         (response) => response,
         async (error) => {
@@ -208,8 +211,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const currentRefreshToken = refreshTokenRef.current;
 
       if (currentAccessToken) {
+        // Check if we're online before trying to verify with the server
+        const netState = await NetInfo.fetch();
+        const isOnline = !!(netState.isConnected && netState.isInternetReachable !== false);
+
+        if (!isOnline) {
+          // Offline: trust stored user data, skip API verification
+          console.log('[Auth] Offline — using cached user data');
+          // User data was already loaded from AsyncStorage in loadStorageData
+          setLoading(false);
+          return;
+        }
+
         try {
-          // Verify the token by fetching user data
+          // Online: Verify the token by fetching user data
           const response = await api.get('/api/user-data/');
           setUser(response.data);
           await AsyncStorage.setItem('user', JSON.stringify(response.data));
@@ -262,6 +277,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Logout request failed:', error);
     }
+
+    // Clear offline cache and mutation queue to prevent data leaks
+    await cacheClearAll();
+    await clearQueue();
 
     await logoutInternal();
   };

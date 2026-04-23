@@ -2,6 +2,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack, Redirect } from 'expo-router';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { TaskModalProvider } from '@/contexts/TaskModalContext';
+import { NetworkProvider } from '@/contexts/NetworkContext';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
@@ -29,11 +31,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthProvider>
-        <TaskModalProvider>
-          <RootLayoutNav />
-          <UpdateChecker />
-          <StatusBar style="auto" />
-        </TaskModalProvider>
+        <NetworkProvider>
+          <TaskModalProvider>
+            <RootLayoutNav />
+            <OfflineIndicator />
+            <UpdateChecker />
+            <StatusBar style="auto" />
+          </TaskModalProvider>
+        </NetworkProvider>
       </AuthProvider>
     </ThemeProvider>
   );

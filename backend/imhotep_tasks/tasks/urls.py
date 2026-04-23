@@ -1,8 +1,8 @@
 from django.urls import path, include
 
 from .main import routine_managment
-
 from .main import task_managment
+from .main import sync
 from . import views
 from .auth import login, register, logout, google_auth, forget_password, profile
 
@@ -58,6 +58,9 @@ urlpatterns = [
     path('tasks/multiple_task_complete/', task_managment.multiple_task_complete, name='multiple_task_complete'),
     path('tasks/multiple_update_task_dates/', task_managment.multiple_update_task_dates, name='multiple_update_task_dates'),
     path('tasks/multiple_update_task_category/', task_managment.multiple_update_task_category, name='multiple_update_task_category'),
+
+    # Offline sync endpoint made by anti gravity AI from google
+    path('tasks/sync/', sync.sync_mutations, name='sync_mutations'),
 
     # Routine management URLs
     path('routines/', routine_managment.show_routines, name='show_routines'),
