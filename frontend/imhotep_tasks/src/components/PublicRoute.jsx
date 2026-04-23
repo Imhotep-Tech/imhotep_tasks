@@ -18,18 +18,18 @@ const PublicRoute = ({ children }) => {
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs sm:text-sm font-medium border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                  className="inline-flex items-center justify-center p-2 rounded-md font-medium border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                  aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 >
                   {isDark ? (
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4V2m0 20v-2m8-8h2M2 12h2m12.364 5.657l1.414 1.414M4.222 4.222l1.414 1.414m10.728-1.414l-1.414 1.414M5.636 17.657l-1.414 1.414M12 17a5 5 0 100-10 5 5 0 000 10z" />
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
                     </svg>
                   ) : (
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
                     </svg>
                   )}
-                  <span>{isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
                 </button>
               </div>
 
@@ -78,18 +78,18 @@ const PublicRoute = ({ children }) => {
         <button
           type="button"
           onClick={toggleTheme}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs sm:text-sm font-medium border border-gray-300 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90 backdrop-blur text-gray-700 dark:text-gray-100 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+          className="inline-flex items-center justify-center p-2 rounded-md font-medium border border-gray-300 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90 backdrop-blur text-gray-700 dark:text-gray-100 hover:bg-white dark:hover:bg-slate-700 transition-colors"
+          aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {isDark ? (
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4V2m0 20v-2m8-8h2M2 12h2m12.364 5.657l1.414 1.414M4.222 4.222l1.414 1.414m10.728-1.414l-1.414 1.414M5.636 17.657l-1.414 1.414M12 17a5 5 0 100-10 5 5 0 000 10z" />
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
             </svg>
           ) : (
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
             </svg>
           )}
-          <span>{isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
         </button>
       </div>
       {children}
