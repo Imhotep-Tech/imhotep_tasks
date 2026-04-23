@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { AppState, AppStateStatus } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '@/constants/api';
 import {
   getQueue,
@@ -11,6 +12,7 @@ import {
   getQueueLength,
   QueuedMutation,
 } from '@/utils/mutation-queue';
+import { setAllLocalTasks } from '@/utils/local-store';
 
 interface NetworkContextType {
   isOnline: boolean;
@@ -110,8 +112,43 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
     } finally {
       await refreshPendingCount();
       isSyncing.current = false;
+
+      // After sync, do a full background data refresh to rebuild local store
+      fullBackgroundSync();
     }
   }, [refreshPendingCount]);
+
+  // Full background sync — fetches ALL tasks and rebuilds local store
+  const fullBackgroundSync = useCallback(async () => {
+    try {
+      // Get current user ID from AsyncStorage
+      const userRaw = await AsyncStorage.getItem('user');
+      if (!userRaw) return;
+      const userData = JSON.parse(userRaw);
+      const userId = userData?.id || userData?.pk;
+      if (!userId) return;
+
+      console.log('[SyncManager] Starting full background sync...');
+      let allTasks: any[] = [];
+      let currentPage = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const res = await api.get(`api/tasks/all_tasks/?page=${currentPage}`);
+        const tasks = res.data.user_tasks || [];
+        allTasks = allTasks.concat(tasks);
+
+        const numPages = res.data.pagination?.num_pages || 1;
+        hasMore = currentPage < numPages;
+        currentPage++;
+      }
+
+      await setAllLocalTasks(userId, allTasks);
+      console.log(`[SyncManager] Full sync complete — ${allTasks.length} tasks stored locally`);
+    } catch (error) {
+      console.warn('[SyncManager] Full background sync failed:', error);
+    }
+  }, []);
 
   // Monitor network state
   useEffect(() => {
@@ -133,6 +170,8 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
       setIsOnline(online);
       if (online) {
         processMutationQueue();
+        // Also do a full background sync on startup
+        fullBackgroundSync();
       }
     });
 

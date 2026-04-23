@@ -145,3 +145,22 @@ export async function incrementRetry(id: string): Promise<void> {
     await saveQueue(queue);
   }
 }
+
+/**
+ * Check if a toggle_complete mutation for this taskId already exists in the queue.
+ * If yes, remove it (they cancel out) and return true.
+ * If no, return false (caller should enqueue a new toggle).
+ */
+export async function cancelToggleIfExists(taskId: number): Promise<boolean> {
+  const queue = await getQueue();
+  const existingToggle = queue.find(
+    (m) => m.action === 'toggle_complete' && m.taskId === taskId
+  );
+
+  if (existingToggle) {
+    await dequeue(existingToggle.id);
+    return true; // Cancelled — no net change
+  }
+
+  return false; // No existing toggle found
+}

@@ -114,7 +114,7 @@ export default function LoginScreen() {
         needsVerification,
         info:
           error.response?.data?.message &&
-          error.response.data.error !== error.response.data.message
+            error.response.data.error !== error.response.data.message
             ? error.response.data.message
             : null,
       };
@@ -179,13 +179,6 @@ export default function LoginScreen() {
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Sign in to continue organizing your tasks
           </Text>
-
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-            <Text style={[styles.dividerText, { color: colors.textSecondary }]}>Or sign in with email</Text>
-            <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-          </View>
 
           {/* Error Message */}
           {error ? (

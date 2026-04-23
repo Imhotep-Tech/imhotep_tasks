@@ -6,6 +6,7 @@ import NetInfo from '@react-native-community/netinfo';
 import api from '../constants/api'; 
 import { cacheClearAll } from '@/utils/cache';
 import { clearQueue } from '@/utils/mutation-queue';
+import { clearAllLocalStores } from '@/utils/local-store';
 
 interface AuthContextType {
   user: any;
@@ -278,9 +279,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Logout request failed:', error);
     }
 
-    // Clear offline cache and mutation queue to prevent data leaks
+    // Clear offline cache, mutation queue, and local store
     await cacheClearAll();
     await clearQueue();
+    await clearAllLocalStores();
 
     await logoutInternal();
   };
