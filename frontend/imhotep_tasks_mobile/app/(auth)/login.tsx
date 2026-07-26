@@ -10,58 +10,25 @@ import {
   Platform,
   ScrollView,
   Image,
-  Alert,
   useColorScheme,
+  Alert,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { useAuth } from '@/contexts/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Colors } from '@/constants/theme';
+import api from '@/constants/api';
 
-const themes = {
-  light: {
-    background: '#EEF2FF',
-    card: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    placeholder: '#9CA3AF',
-    border: '#D1D5DB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    error: '#DC2626',
-    errorBg: '#FEF2F2',
-    errorBorder: '#FECACA',
-    info: '#2563EB',
-    infoBg: '#EFF6FF',
-    infoBorder: '#BFDBFE',
-    inputBg: '#FFFFFF',
-    divider: '#D1D5DB',
-  },
-  dark: {
-    background: '#1F2937',
-    card: '#374151',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    placeholder: '#6B7280',
-    border: '#4B5563',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    error: '#F87171',
-    errorBg: '#7F1D1D',
-    errorBorder: '#F87171',
-    info: '#60A5FA',
-    infoBg: '#1E3A5F',
-    infoBorder: '#3B82F6',
-    inputBg: '#4B5563',
-    divider: '#4B5563',
-  },
-};
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
 
   const [formData, setFormData] = useState({
     username: '',
@@ -70,6 +37,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
@@ -81,43 +49,67 @@ export default function LoginScreen() {
         username,
         password,
       });
-
-      const { access, refresh, user: userData } = response.data;
-
-      return {
-        success: true,
-        data: { access, refresh, user: userData },
-      };
-    } catch (error: any) {
-      console.error('Login failed:', error);
-
-      let errorMessage = 'Login failed';
-      let needsVerification = false;
-
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-        // Check if this is an email verification error
-        if (errorMessage === 'Email not verified') {
-          needsVerification = true;
-        }
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.status === 401) {
-        errorMessage = 'Invalid credentials';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Server error. Please try again later.';
+      return { success: true, data: response.data };
+    } catch (err: any) {
+      if (err.response?.status === 403 && err.response?.data?.email_verification_required) {
+        return {
+          success: false,
+          needsVerification: true,
+          error: err.response?.data?.error || 'Email verification required.',
+        };
       }
-
       return {
         success: false,
-        error: errorMessage,
-        needsVerification,
-        info:
-          error.response?.data?.message &&
-            error.response.data.error !== error.response.data.message
-            ? error.response.data.message
-            : null,
+        error: err.response?.data?.error || 'Login failed. Please check your credentials.',
+        info: err.response?.data?.info || '',
       };
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (googleLoading) return;
+    try {
+      setGoogleLoading(true);
+      setError('');
+      setInfo('');
+
+      const response = await api.get('/api/auth/google/url/', { params: { platform: 'mobile' } });
+      const authUrl = response.data.auth_url;
+
+      if (authUrl) {
+        const urlWithMobileFlag = authUrl.includes('?')
+          ? `${authUrl}&mobile=true`
+          : `${authUrl}?mobile=true`;
+
+        const result = await WebBrowser.openAuthSessionAsync(urlWithMobileFlag, 'imhotep-tasks://');
+        if (result.type === 'success' && result.url) {
+          const parsed = Linking.parse(result.url);
+          const params = parsed.queryParams;
+
+          if (params?.access && params?.refresh && params?.user) {
+            let userData = params.user as string;
+            try {
+              userData = JSON.parse(decodeURIComponent(params.user as string));
+            } catch (e) {
+              try {
+                userData = JSON.parse(params.user as string);
+              } catch (err) {}
+            }
+
+            await login({
+              access: params.access as string,
+              refresh: params.refresh as string,
+              user: userData,
+            });
+            router.replace('/(tabs)');
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('Google login failed:', err);
+      setError('Google authentication failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -138,10 +130,8 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } else {
       if (result.needsVerification) {
-        // Store email for verification page and redirect
         await AsyncStorage.setItem('pendingVerificationEmail', formData.username);
         setInfo('Please verify your email. A verification code has been sent.');
-        // Redirect to verification page after a short delay
         setTimeout(() => router.push('/(auth)/email-verify'), 2000);
       } else {
         setError(result.error || 'Login failed');
@@ -156,15 +146,16 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          {/* Logo */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          {/* Logo & Header */}
           <View style={styles.logoContainer}>
             <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
               <Image
@@ -175,39 +166,40 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          <Text style={[styles.title, { color: colors.text }]}>Welcome Back</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Sign in to continue organizing your tasks
-          </Text>
+          <Text style={[styles.title, { color: colors.primary }]}>Imhotep Tasks</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Organize Your Productivity</Text>
+          
+          <Text style={[styles.formHeading, { color: colors.text }]}>Welcome back</Text>
 
-          {/* Error Message */}
+          {/* Alert Messages */}
           {error ? (
-            <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
-              <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+            <View style={[styles.messageBox, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : '#FEF2F2', borderColor: '#EF4444' }]}>
+              <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+              <Text style={{ color: '#EF4444', fontWeight: '600', flex: 1 }}>{error}</Text>
             </View>
           ) : null}
 
-          {/* Info Message */}
           {info ? (
-            <View style={[styles.infoBox, { backgroundColor: colors.infoBg, borderColor: colors.infoBorder }]}>
-              <Text style={[styles.infoText, { color: colors.info }]}>{info}</Text>
+            <View style={[styles.messageBox, { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.18)' : '#EFF6FF', borderColor: '#3B82F6' }]}>
+              <Ionicons name="information-circle-outline" size={18} color="#3B82F6" />
+              <Text style={{ color: '#3B82F6', fontWeight: '600', flex: 1 }}>{info}</Text>
             </View>
           ) : null}
 
-          {/* Username/Email Input */}
+          {/* Username Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: colors.text }]}>Username or Email</Text>
-            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
               <Ionicons
                 name="person-outline"
                 size={20}
-                color={colors.placeholder}
+                color={colors.textMuted}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
-                placeholder="Username or Email"
-                placeholderTextColor={colors.placeholder}
+                placeholder="Enter username or email"
+                placeholderTextColor={colors.textMuted}
                 value={formData.username}
                 onChangeText={(text) => {
                   setFormData({ ...formData, username: text });
@@ -215,7 +207,6 @@ export default function LoginScreen() {
                   if (info) setInfo('');
                 }}
                 autoCapitalize="none"
-                autoCorrect={false}
               />
             </View>
           </View>
@@ -225,22 +216,22 @@ export default function LoginScreen() {
             <View style={styles.labelRow}>
               <Text style={[styles.label, { color: colors.text }]}>Password</Text>
               <Link href="/(auth)/forgot-password" asChild>
-                <TouchableOpacity>
+                <TouchableOpacity activeOpacity={0.7}>
                   <Text style={[styles.forgotPassword, { color: colors.primary }]}>Forgot password?</Text>
                 </TouchableOpacity>
               </Link>
             </View>
-            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={colors.placeholder}
+                color={colors.textMuted}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
-                placeholder="Enter your password"
-                placeholderTextColor={colors.placeholder}
+                placeholder="Enter password"
+                placeholderTextColor={colors.textMuted}
                 value={formData.password}
                 onChangeText={(text) => {
                   setFormData({ ...formData, password: text });
@@ -253,11 +244,12 @@ export default function LoginScreen() {
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeIcon}
+                hitSlop={8}
               >
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={colors.primary}
+                  color={colors.textMuted}
                 />
               </TouchableOpacity>
             </View>
@@ -265,14 +257,43 @@ export default function LoginScreen() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
+            style={[
+              styles.submitButton, 
+              { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow }, 
+              loading && styles.submitButtonDisabled
+            ]}
             onPress={handleSubmit}
             disabled={loading}
+            activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.submitButtonText}>Sign in</Text>
+              <Text style={styles.submitButtonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.cardBorder }]} />
+            <Text style={[styles.dividerText, { color: colors.textMuted }]}>OR</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.cardBorder }]} />
+          </View>
+
+          {/* Google Login Button */}
+          <TouchableOpacity
+            style={[styles.googleButton, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}
+            onPress={handleGoogleLogin}
+            disabled={loading || googleLoading}
+            activeOpacity={0.85}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color={colors.primary} size="small" />
+            ) : (
+              <>
+                <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+                <Text style={[styles.googleButtonText, { color: colors.text }]}>Continue with Google</Text>
+              </>
             )}
           </TouchableOpacity>
 
@@ -280,7 +301,7 @@ export default function LoginScreen() {
           <View style={styles.signUpContainer}>
             <Text style={[styles.signUpText, { color: colors.textSecondary }]}>Don't have an account? </Text>
             <Link href="/(auth)/register" asChild>
-              <TouchableOpacity>
+              <TouchableOpacity activeOpacity={0.7}>
                 <Text style={[styles.signUpLink, { color: colors.primary }]}>Sign up</Text>
               </TouchableOpacity>
             </Link>
@@ -298,91 +319,57 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 16,
+    padding: 20,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 24,
+    borderWidth: 1,
     padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 16,
   },
   logoCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 24,
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 8,
+    marginTop: 2,
     marginBottom: 20,
   },
-  googleButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
+  formHeading: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 16,
   },
-  divider: {
+  messageBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    fontSize: 14,
-  },
-  errorBox: {
-    borderWidth: 1,
-    borderRadius: 8,
     padding: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    fontSize: 14,
-  },
-  infoBox: {
+    borderRadius: 12,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
     marginBottom: 16,
-  },
-  infoText: {
-    fontSize: 14,
+    gap: 8,
   },
   inputContainer: {
     marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
   },
   labelRow: {
     flexDirection: 'row',
@@ -390,52 +377,89 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
   },
-  forgotPassword: {
+  label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  forgotPassword: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   inputIcon: {
-    paddingLeft: 12,
+    paddingLeft: 14,
   },
   input: {
     flex: 1,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    fontSize: 16,
+    fontSize: 15,
   },
   eyeIcon: {
-    paddingRight: 12,
+    paddingRight: 14,
   },
   submitButton: {
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 15,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButtonDisabled: {
     opacity: 0.7,
   },
   submitButtonText: {
-    color: 'white',
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 10,
+  },
+  googleButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   signUpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 20,
   },
   signUpText: {
     fontSize: 14,
   },
   signUpLink: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

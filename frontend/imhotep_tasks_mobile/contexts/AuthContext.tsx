@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-// Assuming you have an axios instance configured similarly to your web app
+import * as Linking from 'expo-linking';
 import api from '../constants/api'; 
 import { cacheClearAll } from '@/utils/cache';
 import { clearQueue } from '@/utils/mutation-queue';
@@ -20,7 +20,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// Configure axios defaults
 axios.defaults.baseURL = api.defaults.baseURL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
@@ -35,18 +34,15 @@ export const useAuth = () => {
 let refreshPromise: Promise<string> | null = null;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // 1. Initial State must be null because loading from storage is async now
   const [user, setUser] = useState<any>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [storageLoaded, setStorageLoaded] = useState(false);
 
-  // Use refs to always have access to current token values in interceptors
   const accessTokenRef = useRef<string | null>(null);
   const refreshTokenRef = useRef<string | null>(null);
 
-  // Keep refs in sync with state
   useEffect(() => {
     accessTokenRef.current = accessToken;
   }, [accessToken]);
@@ -55,7 +51,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     refreshTokenRef.current = refreshToken;
   }, [refreshToken]);
 
-  // 2. Load data from AsyncStorage when the app starts
   useEffect(() => {
     const loadStorageData = async () => {
       try {
@@ -82,7 +77,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loadStorageData();
   }, []);
 
-  // Set auth token in axios headers
   useEffect(() => {
     if (accessToken) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
@@ -93,13 +87,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [accessToken]);
 
-  // Function to refresh the access token
   const refreshAccessToken = async (): Promise<string> => {
     if (refreshPromise) {
       return refreshPromise;
     }
     
-    // We must read refresh token from ref or storage here
     const currentRefreshToken = refreshTokenRef.current || await AsyncStorage.getItem('refresh_token');
 
     if (!currentRefreshToken) {
@@ -126,7 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       })
       .catch(async (error) => {
         console.error('Token refresh failed:', error);
-        await logoutInternal(); // Use internal logout to avoid circular dependency
+        await logoutInternal();
         throw error;
       })
       .finally(() => {
@@ -136,7 +128,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return refreshPromise;
   };
 
-  // Internal logout function (doesn't call API, just clears local state)
   const logoutInternal = async () => {
     setAccessToken(null);
     setRefreshToken(null);
@@ -151,7 +142,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await AsyncStorage.removeItem('user');
   };
 
-  // Axios interceptor (Logic is identical to Web, just adapted slightly)
   useEffect(() => {
     const createInterceptor = (axiosInstance: AxiosInstance) => {
       return axiosInstance.interceptors.response.use(
@@ -160,14 +150,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const originalRequest = error.config;
           const url = originalRequest?.url || '';
           
-          // Prevent infinite loops on auth endpoints
           const isAuthEndpoint =
             url.includes('/api/auth/token/refresh/') ||
             url.includes('/api/auth/login/') ||
             url.includes('/api/auth/logout/') ||
             url.includes('/api/auth/google/');
 
-          // Use ref to get current refresh token value
           const currentRefreshToken = refreshTokenRef.current;
 
           if (
@@ -193,7 +181,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       );
     };
 
-    // Set up interceptors for both axios and api instances
     const axiosInterceptor = createInterceptor(axios);
     const apiInterceptor = createInterceptor(api);
 
@@ -201,9 +188,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       axios.interceptors.response.eject(axiosInterceptor);
       api.interceptors.response.eject(apiInterceptor);
     };
-  }, []); // Empty dependency array - interceptors use refs for current token values
+  }, []);
 
-  // Check if user is authenticated on app load (after storage is loaded)
   useEffect(() => {
     const checkAuth = async () => {
       if (!storageLoaded) return;
@@ -212,30 +198,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const currentRefreshToken = refreshTokenRef.current;
 
       if (currentAccessToken) {
-        // Check if we're online before trying to verify with the server
         const netState = await NetInfo.fetch();
         const isOnline = !!(netState.isConnected && netState.isInternetReachable !== false);
 
         if (!isOnline) {
-          // Offline: trust stored user data, skip API verification
           console.log('[Auth] Offline — using cached user data');
-          // User data was already loaded from AsyncStorage in loadStorageData
           setLoading(false);
           return;
         }
 
         try {
-          // Online: Verify the token by fetching user data
           const response = await api.get('/api/user-data/');
           setUser(response.data);
           await AsyncStorage.setItem('user', JSON.stringify(response.data));
         } catch (error) {
           console.error('Auth check failed:', error);
-          // Token might be expired, try to refresh
           if (currentRefreshToken) {
             try {
               await refreshAccessToken();
-              // After refresh, try fetching user data again
               const response = await api.get('/api/user-data/');
               setUser(response.data);
               await AsyncStorage.setItem('user', JSON.stringify(response.data));
@@ -254,7 +234,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, [storageLoaded]);
 
-  // Login Function
   const login = async ({ access, refresh, user }: { access: string; refresh: string; user: any }) => {
     setAccessToken(access);
     setRefreshToken(refresh);
@@ -262,13 +241,62 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     accessTokenRef.current = access;
     refreshTokenRef.current = refresh;
 
-    // Async Storage must be awaited
     await AsyncStorage.setItem('access_token', access);
     await AsyncStorage.setItem('refresh_token', refresh);
     await AsyncStorage.setItem('user', JSON.stringify(user));
   };
 
-  // Logout Function (with API call)
+  // Deep Link Listener for Google Auth Redirects (imhotep-tasks://auth-callback?access=...&refresh=...&user=...)
+  useEffect(() => {
+    const handleDeepLink = async (event: { url: string }) => {
+      const url = event.url;
+      if (!url) return;
+
+      console.log('🔗 Incoming Deep Link:', url);
+
+      try {
+        const parsed = Linking.parse(url);
+        const params = parsed.queryParams;
+
+        if (parsed.hostname === 'auth-callback' || parsed.path === 'auth-callback' || params?.access) {
+          const access = params?.access as string;
+          const refresh = params?.refresh as string;
+          const rawUser = params?.user as string;
+
+          if (access && refresh && rawUser) {
+            let userData = rawUser;
+            try {
+              userData = JSON.parse(decodeURIComponent(rawUser));
+            } catch (e) {
+              try {
+                userData = JSON.parse(rawUser);
+              } catch (err) {
+                console.error('Failed to parse user JSON from deep link:', err);
+              }
+            }
+
+            console.log('✅ Google OAuth Deep Link Received! Logging in user...');
+            await login({ access, refresh, user: userData });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to parse deep link auth params:', err);
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    Linking.getInitialURL().then((initialUrl) => {
+      if (initialUrl) {
+        handleDeepLink({ url: initialUrl });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   const logout = async () => {
     try {
       const currentRefreshToken = refreshTokenRef.current;
@@ -279,7 +307,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Logout request failed:', error);
     }
 
-    // Clear offline cache, mutation queue, and local store
     await cacheClearAll();
     await clearQueue();
     await clearAllLocalStores();
@@ -287,7 +314,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await logoutInternal();
   };
 
-  // Update User Function
   const updateUser = async (userData: any) => {
     setUser(userData);
     await AsyncStorage.setItem('user', JSON.stringify(userData));

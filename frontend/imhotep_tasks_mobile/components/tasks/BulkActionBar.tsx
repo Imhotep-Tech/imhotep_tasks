@@ -6,42 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Modal,
+  ScrollView,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
 import { DatePickerModal } from './DatePickerModal';
-
-// Theme colors matching the app
-const themes = {
-  light: {
-    background: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    border: '#E5E7EB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    success: '#16A34A',
-    successBg: '#DCFCE7',
-    error: '#DC2626',
-    errorBg: '#FEF2F2',
-    warning: '#D97706',
-    warningBg: '#FEF3C7',
-  },
-  dark: {
-    background: '#1F2937',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    border: '#374151',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    success: '#22C55E',
-    successBg: '#14532D',
-    error: '#EF4444',
-    errorBg: '#450A0A',
-    warning: '#F59E0B',
-    warningBg: '#451A03',
-  },
-};
 
 interface BulkActionBarProps {
   selectedCount: number;
@@ -77,8 +49,11 @@ export function BulkActionBar({
   onChangeCategory,
 }: BulkActionBarProps) {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme ?? 'light'];
-  
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
+  const insets = useSafeAreaInsets();
+  const floatingBottom = (insets.bottom || 0) + (Platform.OS === 'ios' ? 62 : 56);
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   
@@ -100,80 +75,92 @@ export function BulkActionBar({
 
   return (
     <>
-      <View style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-        {/* Selection info */}
-        <View style={styles.selectionInfo}>
-          <TouchableOpacity
-            style={styles.selectAllButton}
-            onPress={allSelected ? onClearSelection : onSelectAll}
-            disabled={loading}
+      <View style={[styles.floatingWrapper, { bottom: floatingBottom }]}>
+        <View style={[styles.container, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
           >
-            <View style={[
-              styles.selectAllCheckbox,
-              { borderColor: colors.primary },
-              allSelected && { backgroundColor: colors.primary }
-            ]}>
-              {allSelected && (
-                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-              )}
+            {/* Selection badge */}
+            <View style={[styles.selectionBadge, { backgroundColor: colors.primaryLight }]}>
+              <TouchableOpacity
+                style={styles.checkboxTouch}
+                onPress={allSelected ? onClearSelection : onSelectAll}
+                disabled={loading}
+                hitSlop={6}
+              >
+                <View style={[
+                  styles.selectAllCheckbox,
+                  { borderColor: colors.primary },
+                  allSelected && { backgroundColor: colors.primary }
+                ]}>
+                  {allSelected && (
+                    <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                  )}
+                </View>
+              </TouchableOpacity>
+              
+              <Text style={[styles.selectionText, { color: colors.primary }]}>
+                {selectedCount} selected
+              </Text>
+              
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={onClearSelection}
+                disabled={loading}
+                hitSlop={6}
+              >
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-          
-          <Text style={[styles.selectionText, { color: colors.text }]}>
-            {selectedCount} selected
-          </Text>
-          
-          <TouchableOpacity
-            style={styles.clearButton}
-            onPress={onClearSelection}
-            disabled={loading}
-          >
-            <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
-        </View>
 
-        {/* Action buttons */}
-        <View style={styles.actionsContainer}>
-          {loading ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <>
-              {/* Toggle Complete */}
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.successBg }]}
-                onPress={onToggleComplete}
-              >
-                <Ionicons name="checkmark-done" size={20} color={colors.success} />
-                <Text style={[styles.actionText, { color: colors.success }]}>Done</Text>
-              </TouchableOpacity>
+            {/* Action buttons */}
+            {loading ? (
+              <View style={styles.loadingWrapper}>
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            ) : (
+              <View style={styles.actionsContainer}>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#ECFDF5' }]}
+                  onPress={onToggleComplete}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="checkmark-done" size={16} color={isDark ? '#34D399' : '#10B981'} />
+                  <Text style={[styles.actionText, { color: isDark ? '#34D399' : '#10B981' }]}>Done</Text>
+                </TouchableOpacity>
 
-              {/* Change Date */}
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.warningBg }]}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <Ionicons name="calendar" size={20} color={colors.warning} />
-                <Text style={[styles.actionText, { color: colors.warning }]}>Date</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.2)' : '#FFFBEB' }]}
+                  onPress={() => setShowDatePicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="calendar" size={16} color={isDark ? '#FBBF24' : '#F59E0B'} />
+                  <Text style={[styles.actionText, { color: isDark ? '#FBBF24' : '#F59E0B' }]}>Date</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.primaryLight }]}
-                onPress={() => setShowCategoryPicker(true)}
-              >
-                <Ionicons name="pricetag" size={20} color={colors.primary} />
-                <Text style={[styles.actionText, { color: colors.primary }]}>Category</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: colors.primaryLight }]}
+                  onPress={() => setShowCategoryPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="pricetag" size={16} color={colors.primary} />
+                  <Text style={[styles.actionText, { color: colors.primary }]}>Cat.</Text>
+                </TouchableOpacity>
 
-              {/* Delete */}
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.errorBg }]}
-                onPress={onDelete}
-              >
-                <Ionicons name="trash" size={20} color={colors.error} />
-                <Text style={[styles.actionText, { color: colors.error }]}>Delete</Text>
-              </TouchableOpacity>
-            </>
-          )}
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEF2F2' }]}
+                  onPress={onDelete}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="trash" size={16} color="#EF4444" />
+                  <Text style={[styles.actionText, { color: '#EF4444' }]}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
         </View>
       </View>
 
@@ -186,6 +173,7 @@ export function BulkActionBar({
         minimumDate={new Date()}
       />
 
+      {/* Category Picker Modal */}
       <Modal
         visible={showCategoryPicker}
         transparent
@@ -193,12 +181,12 @@ export function BulkActionBar({
         onRequestClose={() => setShowCategoryPicker(false)}
       >
         <View style={styles.categoryOverlay}>
-          <View style={[styles.categoryModal, { backgroundColor: colors.background, borderColor: colors.border }]}>
+          <View style={[styles.categoryModal, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <Text style={[styles.categoryTitle, { color: colors.text }]}>Change Category</Text>
             {PRESET_CATEGORIES.map((category) => (
               <TouchableOpacity
                 key={category}
-                style={[styles.categoryOption, { borderBottomColor: colors.border }]}
+                style={[styles.categoryOption, { borderBottomColor: colors.cardBorder }]}
                 onPress={() => handleCategorySelect(category)}
               >
                 <Text style={[styles.categoryOptionText, { color: colors.text }]}>
@@ -207,7 +195,7 @@ export function BulkActionBar({
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={[styles.categoryCancel, { borderColor: colors.border }]}
+              style={[styles.categoryCancel, { borderColor: colors.cardBorder }]}
               onPress={() => setShowCategoryPicker(false)}
             >
               <Text style={[styles.categoryCancelText, { color: colors.textSecondary }]}>Cancel</Text>
@@ -220,100 +208,122 @@ export function BulkActionBar({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 8,
+  floatingWrapper: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    zIndex: 9999,
+    elevation: 10,
   },
-  selectionInfo: {
+  container: {
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  scrollContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    paddingHorizontal: 4,
   },
-  selectAllButton: {
-    padding: 4,
+  selectionBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    gap: 6,
+  },
+  checkboxTouch: {
+    padding: 2,
   },
   selectAllCheckbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
+    width: 18,
+    height: 18,
+    borderRadius: 5,
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
   selectionText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
   },
   clearButton: {
-    padding: 4,
+    padding: 2,
+    marginLeft: 2,
+  },
+  loadingWrapper: {
+    paddingHorizontal: 16,
+    justifyContent: 'center',
   },
   actionsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 4,
+    paddingVertical: 7,
+    borderRadius: 12,
+    gap: 5,
   },
   actionText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
   },
   categoryOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
   },
   categoryModal: {
     width: '100%',
-    borderRadius: 12,
+    maxWidth: 340,
+    borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
   },
   categoryTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    fontSize: 18,
+    fontWeight: '800',
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    letterSpacing: -0.3,
   },
   categoryOption: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
     borderTopWidth: 1,
   },
   categoryOptionText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   categoryCancel: {
-    margin: 12,
+    margin: 14,
     borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
+    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   categoryCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

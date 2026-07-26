@@ -10,55 +10,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
 import { DueDate } from './DueDate';
-
-// Theme colors matching routines.tsx and auth pages
-const themes = {
-  light: {
-    overlay: 'rgba(0, 0, 0, 0.5)',
-    card: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    textMuted: '#9CA3AF',
-    border: '#E5E7EB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    success: '#16A34A',
-    successBg: '#DCFCE7',
-    successBorder: '#22C55E',
-    warning: '#D97706',
-    warningBg: '#FEF3C7',
-    warningBorder: '#F59E0B',
-    error: '#DC2626',
-    errorBg: '#FEE2E2',
-    errorBorder: '#EF4444',
-    transactionBg: '#ECFDF5',
-    transactionText: '#059669',
-    description: '#4B5563',
-  },
-  dark: {
-    overlay: 'rgba(0, 0, 0, 0.7)',
-    card: '#1F2937',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    textMuted: '#6B7280',
-    border: '#374151',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    success: '#22C55E',
-    successBg: '#14532D',
-    successBorder: '#22C55E',
-    warning: '#FBBF24',
-    warningBg: '#78350F',
-    warningBorder: '#FBBF24',
-    error: '#EF4444',
-    errorBg: '#450A0A',
-    errorBorder: '#EF4444',
-    transactionBg: '#14532D',
-    transactionText: '#22C55E',
-    description: '#D1D5DB',
-  },
-};
 
 interface Task {
   id: number;
@@ -83,7 +36,6 @@ interface TaskDetailsModalProps {
   minLoadingTime?: number;
 }
 
-// Minimum delay helper to ensure loading state is visible
 const withMinDelay = async <T,>(promise: Promise<T>, minMs: number): Promise<T> => {
   const [result] = await Promise.all([
     promise,
@@ -102,7 +54,8 @@ export function TaskDetailsModal({
   minLoadingTime = 500,
 }: TaskDetailsModalProps) {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme ?? 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
   const [completeLoading, setCompleteLoading] = useState(false);
 
   if (!task) return null;
@@ -142,33 +95,42 @@ export function TaskDetailsModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
-        <View style={[styles.container, { backgroundColor: colors.card }]}>
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={[styles.overlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.75)' : 'rgba(15,23,42,0.45)' }]}>
+        <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          {/* Grab handle */}
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: colors.cardBorder }]} />
+          </View>
+
+          <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
             <Text style={[styles.headerTitle, { color: colors.text }]}>Task Details</Text>
-            <Pressable onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={colors.textSecondary} />
+            <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
             </Pressable>
           </View>
 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            {/* Status Badge */}
+            {/* Status Badge & Due Date */}
             <View style={styles.statusRow}>
               <View
                 style={[
                   styles.statusBadge,
-                  { backgroundColor: task.status ? colors.successBg : colors.warningBg },
+                  { 
+                    backgroundColor: task.status 
+                      ? (isDark ? 'rgba(16, 185, 129, 0.2)' : '#ECFDF5')
+                      : (isDark ? 'rgba(245, 158, 11, 0.2)' : '#FFFBEB') 
+                  },
                 ]}
               >
                 <Ionicons
                   name={task.status ? 'checkmark-circle' : 'time'}
                   size={16}
-                  color={task.status ? colors.success : colors.warning}
+                  color={task.status ? (isDark ? '#34D399' : '#10B981') : (isDark ? '#FBBF24' : '#F59E0B')}
                 />
                 <Text
                   style={[
                     styles.statusText,
-                    { color: task.status ? colors.success : colors.warning },
+                    { color: task.status ? (isDark ? '#34D399' : '#10B981') : (isDark ? '#FBBF24' : '#F59E0B') },
                   ]}
                 >
                   {task.status ? 'Completed' : 'Pending'}
@@ -181,7 +143,7 @@ export function TaskDetailsModal({
 
             {/* Title */}
             <View style={styles.section}>
-              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Title</Text>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Title</Text>
               <Text
                 style={[
                   styles.title,
@@ -196,18 +158,18 @@ export function TaskDetailsModal({
             {/* Description */}
             {task.task_details ? (
               <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Description</Text>
-                <Text style={[styles.description, { color: colors.description }]}>{task.task_details}</Text>
+                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Description</Text>
+                <Text style={[styles.description, { color: colors.textSecondary }]}>{task.task_details}</Text>
               </View>
             ) : null}
 
             {/* Category */}
             {task.task_category ? (
               <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Category</Text>
-                <View style={[styles.transactionBadge, { backgroundColor: colors.primaryLight }]}>
-                  <Ionicons name="pricetag-outline" size={16} color={colors.primary} />
-                  <Text style={[styles.transactionText, { color: colors.primary, textTransform: 'capitalize' }]}>
+                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Category</Text>
+                <View style={[styles.pillBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Ionicons name="pricetag-outline" size={15} color={colors.primary} />
+                  <Text style={[styles.pillText, { color: colors.primary, textTransform: 'capitalize' }]}>
                     {task.task_category}
                   </Text>
                 </View>
@@ -217,10 +179,10 @@ export function TaskDetailsModal({
             {/* Transaction Info */}
             {task.transaction_id && (
               <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Transaction</Text>
-                <View style={[styles.transactionBadge, { backgroundColor: colors.transactionBg }]}>
-                  <Ionicons name="cash-outline" size={16} color={colors.transactionText} />
-                  <Text style={[styles.transactionText, { color: colors.transactionText }]}>
+                <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>Transaction</Text>
+                <View style={[styles.pillBadge, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#ECFDF5' }]}>
+                  <Ionicons name="cash-outline" size={15} color={isDark ? '#34D399' : '#059669'} />
+                  <Text style={[styles.pillText, { color: isDark ? '#34D399' : '#059669' }]}>
                     {task.transaction_status || `Transaction #${task.transaction_id}`}
                   </Text>
                 </View>
@@ -228,7 +190,7 @@ export function TaskDetailsModal({
             )}
 
             {/* Timestamps */}
-            <View style={[styles.timestampsContainer, { borderTopColor: colors.border }]}>
+            <View style={[styles.timestampsContainer, { borderTopColor: colors.cardBorder }]}>
               {task.created_at && (
                 <View style={styles.timestamp}>
                   <Ionicons name="time-outline" size={14} color={colors.textMuted} />
@@ -248,11 +210,15 @@ export function TaskDetailsModal({
             </View>
           </ScrollView>
 
-          {/* Actions */}
-          <View style={[styles.actions, { borderTopColor: colors.border }]}>
+          {/* Action Row */}
+          <View style={[styles.actions, { borderTopColor: colors.cardBorder }]}>
             <View style={styles.actionRow}>
               <Pressable
-                style={[styles.actionButton, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
+                style={({ pressed }) => [
+                  styles.actionButton, 
+                  { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+                  pressed && { transform: [{ scale: 0.98 }] },
+                ]}
                 onPress={() => {
                   onEdit(task);
                   onClose();
@@ -263,27 +229,28 @@ export function TaskDetailsModal({
               </Pressable>
 
               <Pressable
-                style={[
+                style={({ pressed }) => [
                   styles.actionButton,
                   {
-                    backgroundColor: task.status ? colors.warningBg : colors.successBg,
-                    borderColor: task.status ? colors.warningBorder : colors.successBorder,
+                    backgroundColor: task.status ? (isDark ? 'rgba(245,158,11,0.2)' : '#FFFBEB') : (isDark ? 'rgba(16,185,129,0.2)' : '#ECFDF5'),
+                    borderColor: task.status ? '#F59E0B' : '#10B981',
                   },
                   completeLoading && styles.actionButtonDisabled,
+                  pressed && !completeLoading && { transform: [{ scale: 0.98 }] },
                 ]}
                 onPress={handleToggleComplete}
                 disabled={completeLoading}
               >
                 {completeLoading ? (
-                  <ActivityIndicator size="small" color={task.status ? colors.warning : colors.success} />
+                  <ActivityIndicator size="small" color={task.status ? '#F59E0B' : '#10B981'} />
                 ) : (
                   <>
                     <Ionicons
                       name={task.status ? 'close-circle' : 'checkmark-circle'}
                       size={18}
-                      color={task.status ? colors.warning : colors.success}
+                      color={task.status ? '#F59E0B' : '#10B981'}
                     />
-                    <Text style={[styles.actionButtonText, { color: task.status ? colors.warning : colors.success }]}>
+                    <Text style={[styles.actionButtonText, { color: task.status ? '#F59E0B' : '#10B981' }]}>
                       {task.status ? 'Undo' : 'Done'}
                     </Text>
                   </>
@@ -291,14 +258,18 @@ export function TaskDetailsModal({
               </Pressable>
 
               <Pressable
-                style={[styles.actionButton, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}
+                style={({ pressed }) => [
+                  styles.actionButton, 
+                  { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEF2F2', borderColor: '#EF4444' },
+                  pressed && { transform: [{ scale: 0.98 }] },
+                ]}
                 onPress={() => {
                   onDelete(task.id);
                   onClose();
                 }}
               >
-                <Ionicons name="trash" size={18} color={colors.error} />
-                <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete</Text>
+                <Ionicons name="trash" size={18} color="#EF4444" />
+                <Text style={[styles.actionButtonText, { color: '#EF4444' }]}>Delete</Text>
               </Pressable>
             </View>
           </View>
@@ -313,27 +284,45 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  container: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
     maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   closeButton: {
     padding: 4,
   },
   content: {
-    padding: 16,
+    padding: 20,
   },
   statusRow: {
     flexDirection: 'row',
@@ -344,53 +333,55 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 12,
     gap: 6,
   },
   statusText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '700',
   },
   section: {
     marginBottom: 20,
   },
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   titleCompleted: {
     textDecorationLine: 'line-through',
   },
   description: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 22,
   },
-  transactionBadge: {
+  pillBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 10,
     gap: 8,
     alignSelf: 'flex-start',
   },
-  transactionText: {
+  pillText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   timestampsContainer: {
     borderTopWidth: 1,
     paddingTop: 16,
     gap: 8,
+    marginBottom: 20,
   },
   timestamp: {
     flexDirection: 'row',
@@ -398,30 +389,30 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timestampText: {
-    fontSize: 13,
+    fontSize: 12,
   },
   actions: {
-    padding: 16,
+    padding: 20,
     borderTopWidth: 1,
     gap: 12,
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 13,
+    borderRadius: 14,
     borderWidth: 1,
-    gap: 8,
+    gap: 6,
   },
   actionButtonText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   actionButtonDisabled: {
     opacity: 0.7,

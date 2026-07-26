@@ -5,42 +5,10 @@ import {
   Modal,
   Pressable,
   StyleSheet,
-  ScrollView,
-  useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// Theme colors
-const themes = {
-  light: {
-    background: '#FFFFFF',
-    surface: '#F3F4F6',
-    surfaceHover: '#E5E7EB',
-    text: '#1F2937',
-    textSecondary: '#6B7280',
-    textMuted: '#4B5563',
-    border: '#D1D5DB',
-    borderLight: '#E5E7EB',
-    primary: '#6366F1',
-    primaryLight: '#EEF2FF',
-    primaryMuted: '#C7D2FE',
-    overlay: 'rgba(0, 0, 0, 0.5)',
-  },
-  dark: {
-    background: '#1F2937',
-    surface: '#374151',
-    surfaceHover: '#4B5563',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    textMuted: '#D1D5DB',
-    border: '#4B5563',
-    borderLight: '#374151',
-    primary: '#818CF8',
-    primaryLight: '#312E81',
-    primaryMuted: '#4338CA',
-    overlay: 'rgba(0, 0, 0, 0.7)',
-  },
-};
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
 
 interface DatePickerModalProps {
   visible: boolean;
@@ -64,7 +32,8 @@ export function DatePickerModal({
   minimumDate,
 }: DatePickerModalProps) {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -99,16 +68,12 @@ export function DatePickerModal({
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
     const days: (number | null)[] = [];
 
-    // Add empty slots for days before the first day
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
-
-    // Add days of the month
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(i);
     }
-
     return days;
   };
 
@@ -123,16 +88,6 @@ export function DatePickerModal({
       day === today.getDate() &&
       currentMonth === today.getMonth() &&
       currentYear === today.getFullYear()
-    );
-  };
-
-  const isTomorrow = (day: number) => {
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return (
-      day === tomorrow.getDate() &&
-      currentMonth === tomorrow.getMonth() &&
-      currentYear === tomorrow.getFullYear()
     );
   };
 
@@ -171,7 +126,6 @@ export function DatePickerModal({
 
   const handleConfirm = () => {
     if (selected) {
-      // Use local date values to avoid timezone shift from toISOString()
       const year = selected.getFullYear();
       const month = String(selected.getMonth() + 1).padStart(2, '0');
       const day = String(selected.getDate()).padStart(2, '0');
@@ -207,58 +161,73 @@ export function DatePickerModal({
       transparent
       onRequestClose={onClose}
     >
-      <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Select Date</Text>
-            <Pressable onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={colors.textSecondary} />
+      <View style={[styles.overlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.75)' : 'rgba(15,23,42,0.45)' }]}>
+        <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          {/* Grab handle */}
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: colors.cardBorder }]} />
+          </View>
+
+          <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Select Due Date</Text>
+            <Pressable onPress={onClose} style={styles.closeButton} hitSlop={8}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
             </Pressable>
           </View>
 
           {/* Quick Select */}
           <View style={styles.quickSelect}>
             <Pressable
-              style={[
+              style={({ pressed }) => [
                 styles.quickButton, 
-                { backgroundColor: colors.surface },
-                isToday(today.getDate()) && [styles.quickButtonActive, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]
+                { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
+                pressed && { transform: [{ scale: 0.98 }] },
               ]}
               onPress={() => handleQuickSelect('today')}
             >
-              <Text style={[styles.quickButtonText, { color: colors.textMuted }]}>Today</Text>
+              <Text style={[styles.quickButtonText, { color: colors.text }]}>Today</Text>
             </Pressable>
+
             <Pressable
-              style={[styles.quickButton, { backgroundColor: colors.surface }]}
+              style={({ pressed }) => [
+                styles.quickButton, 
+                { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
+                pressed && { transform: [{ scale: 0.98 }] },
+              ]}
               onPress={() => handleQuickSelect('tomorrow')}
             >
-              <Text style={[styles.quickButtonText, { color: colors.textMuted }]}>Tomorrow</Text>
+              <Text style={[styles.quickButtonText, { color: colors.text }]}>Tomorrow</Text>
             </Pressable>
+
             <Pressable
-              style={[styles.quickButton, { backgroundColor: colors.surface }]}
+              style={({ pressed }) => [
+                styles.quickButton, 
+                { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
+                pressed && { transform: [{ scale: 0.98 }] },
+              ]}
               onPress={() => handleQuickSelect('nextWeek')}
             >
-              <Text style={[styles.quickButtonText, { color: colors.textMuted }]}>Next Week</Text>
+              <Text style={[styles.quickButtonText, { color: colors.text }]}>Next Week</Text>
             </Pressable>
           </View>
 
           {/* Month Navigation */}
           <View style={styles.monthNav}>
-            <Pressable onPress={handlePrevMonth} style={styles.navButton}>
-              <Ionicons name="chevron-back" size={24} color={colors.primary} />
+            <Pressable onPress={handlePrevMonth} style={styles.navButton} hitSlop={8}>
+              <Ionicons name="chevron-back" size={22} color={colors.primary} />
             </Pressable>
             <Text style={[styles.monthTitle, { color: colors.text }]}>
               {MONTHS[currentMonth]} {currentYear}
             </Text>
-            <Pressable onPress={handleNextMonth} style={styles.navButton}>
-              <Ionicons name="chevron-forward" size={24} color={colors.primary} />
+            <Pressable onPress={handleNextMonth} style={styles.navButton} hitSlop={8}>
+              <Ionicons name="chevron-forward" size={22} color={colors.primary} />
             </Pressable>
           </View>
 
           {/* Day Headers */}
           <View style={styles.dayHeaders}>
             {DAYS.map((day) => (
-              <Text key={day} style={[styles.dayHeader, { color: colors.textSecondary }]}>
+              <Text key={day} style={[styles.dayHeader, { color: colors.textMuted }]}>
                 {day}
               </Text>
             ))}
@@ -272,7 +241,7 @@ export function DatePickerModal({
                   <Pressable
                     style={[
                       styles.dayButton,
-                      isToday(day) && [styles.todayButton, { backgroundColor: colors.surface }],
+                      isToday(day) && [styles.todayButton, { backgroundColor: colors.primaryLight }],
                       isSelected(day) && [styles.selectedButton, { backgroundColor: colors.primary }],
                       isDateDisabled(day) && styles.disabledButton,
                     ]}
@@ -283,16 +252,13 @@ export function DatePickerModal({
                       style={[
                         styles.dayText,
                         { color: colors.text },
-                        isToday(day) && [styles.todayText, { color: colors.primary }],
-                        isSelected(day) && styles.selectedText,
-                        isDateDisabled(day) && [styles.disabledText, { color: colors.textSecondary }],
+                        isToday(day) && { color: colors.primary, fontWeight: '700' },
+                        isSelected(day) && { color: '#FFF', fontWeight: '800' },
+                        isDateDisabled(day) && { color: colors.textMuted },
                       ]}
                     >
                       {day}
                     </Text>
-                    {isToday(day) && !isSelected(day) && (
-                      <View style={[styles.todayDot, { backgroundColor: colors.primary }]} />
-                    )}
                   </Pressable>
                 ) : null}
               </View>
@@ -300,24 +266,25 @@ export function DatePickerModal({
           </View>
 
           {/* Actions */}
-          <View style={[styles.actions, { borderTopColor: colors.borderLight }]}>
+          <View style={[styles.actions, { borderTopColor: colors.cardBorder }]}>
             <Pressable 
-              style={[styles.clearButton, { borderColor: colors.border }]} 
+              style={[styles.clearButton, { borderColor: colors.cardBorder }]} 
               onPress={handleClear}
             >
               <Text style={[styles.clearButtonText, { color: colors.textSecondary }]}>Clear</Text>
             </Pressable>
             <Pressable
-              style={[
+              style={({ pressed }) => [
                 styles.confirmButton, 
-                { backgroundColor: colors.primary },
-                !selected && [styles.confirmButtonDisabled, { backgroundColor: colors.primaryMuted }]
+                { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow },
+                !selected && styles.confirmButtonDisabled,
+                pressed && selected && { transform: [{ scale: 0.98 }] },
               ]}
               onPress={handleConfirm}
               disabled={!selected}
             >
               <Text style={styles.confirmButtonText}>
-                {selected ? `Select ${selected.toLocaleDateString()}` : 'Select a date'}
+                {selected ? `Confirm ${selected.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Select a date'}
               </Text>
             </Pressable>
           </View>
@@ -332,135 +299,148 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  container: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 24,
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    paddingBottom: 28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   closeButton: {
     padding: 4,
   },
   quickSelect: {
     flexDirection: 'row',
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingTop: 14,
     gap: 8,
   },
   quickButton: {
     flex: 1,
     paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: 12,
+    borderWidth: 1,
     alignItems: 'center',
   },
-  quickButtonActive: {
-    borderWidth: 1,
-  },
   quickButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
   },
   monthNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
   },
   navButton: {
-    padding: 8,
+    padding: 6,
   },
   monthTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
   },
   dayHeaders: {
     flexDirection: 'row',
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     marginBottom: 8,
   },
   dayHeader: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
   },
   dayCell: {
     width: '14.28%',
     aspectRatio: 1,
-    padding: 2,
+    padding: 3,
   },
   dayButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 12,
   },
   todayButton: {},
   selectedButton: {},
   disabledButton: {
-    opacity: 0.3,
+    opacity: 0.25,
   },
   dayText: {
-    fontSize: 16,
-  },
-  todayText: {
-    fontWeight: '600',
-  },
-  selectedText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  disabledText: {},
-  todayDot: {
-    position: 'absolute',
-    bottom: 6,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    fontSize: 15,
+    fontWeight: '500',
   },
   actions: {
     flexDirection: 'row',
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     gap: 12,
     borderTopWidth: 1,
     marginTop: 8,
   },
   clearButton: {
-    paddingVertical: 12,
+    paddingVertical: 13,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 14,
     borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   clearButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
   },
   confirmButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  confirmButtonDisabled: {},
+  confirmButtonDisabled: {
+    opacity: 0.5,
+  },
   confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFF',
   },
 });

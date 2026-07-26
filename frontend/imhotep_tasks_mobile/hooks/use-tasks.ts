@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Alert } from 'react-native';
 import api from '@/constants/api';
-import { Task, TasksResponse, TaskFormData } from '@/components/tasks';
-import { isOverdue } from '@/components/tasks';
+import { Task, TasksResponse, TaskFormData } from '@/components/tasks/types';
+import { isOverdue } from '@/components/tasks/DueDate';
 import { useNetwork } from '@/contexts/NetworkContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { enqueue, cancelToggleIfExists } from '@/utils/mutation-queue';

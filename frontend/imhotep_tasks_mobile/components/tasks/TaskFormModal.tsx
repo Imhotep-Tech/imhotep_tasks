@@ -10,40 +10,11 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
-  useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DatePickerModal } from './DatePickerModal';
-
-// Theme colors
-const themes = {
-  light: {
-    background: '#FFFFFF',
-    surface: '#F9FAFB',
-    text: '#1F2937',
-    textSecondary: '#6B7280',
-    placeholder: '#9CA3AF',
-    border: '#D1D5DB',
-    borderLight: '#E5E7EB',
-    primary: '#6366F1',
-    primaryLight: '#EEF2FF',
-    error: '#EF4444',
-    overlay: 'rgba(0, 0, 0, 0.5)',
-  },
-  dark: {
-    background: '#1F2937',
-    surface: '#374151',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    placeholder: '#6B7280',
-    border: '#4B5563',
-    borderLight: '#374151',
-    primary: '#818CF8',
-    primaryLight: '#312E81',
-    error: '#F87171',
-    overlay: 'rgba(0, 0, 0, 0.7)',
-  },
-};
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 interface Task {
   id: number;
@@ -61,10 +32,9 @@ interface TaskFormModalProps {
   onClose: () => void;
   onSubmit: (task: { task_title: string; task_details: string; due_date: string; task_category: string }) => Promise<void>;
   loading?: boolean;
-  minLoadingTime?: number; // Minimum time to show loading state (ms)
+  minLoadingTime?: number;
 }
 
-// Minimum delay helper to ensure loading state is visible
 const withMinDelay = async <T,>(promise: Promise<T>, minMs: number): Promise<T> => {
   const [result] = await Promise.all([
     promise,
@@ -93,7 +63,8 @@ export function TaskFormModal({
   minLoadingTime = 500,
 }: TaskFormModalProps) {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -105,19 +76,14 @@ export function TaskFormModal({
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [internalLoading, setInternalLoading] = useState(false);
   
-  // Use internal loading state if external is not provided
   const loading = externalLoading !== undefined ? externalLoading : internalLoading;
-
-  // Resolve the final category value
   const resolvedCategory = selectedCategory === '__other__' ? customCategory.trim().toLowerCase() : selectedCategory;
 
-  // Pre-fill form when editing
   useEffect(() => {
     if (visible) {
       if (mode === 'edit' && task) {
         setTitle(task.task_title || '');
         setDescription(task.task_details || '');
-        // Slice date to YYYY-MM-DD format (first 10 chars)
         setDueDate(task.due_date ? task.due_date.slice(0, 10) : '');
         const existingCat = (task.task_category || 'general').toLowerCase();
         if (PRESET_CATEGORIES.includes(existingCat)) {
@@ -148,7 +114,6 @@ export function TaskFormModal({
     setInternalLoading(true);
     
     try {
-      // Use minimum delay to ensure loading state is visible for better UX
       await withMinDelay(
         onSubmit({
           task_title: title.trim(),
@@ -158,7 +123,6 @@ export function TaskFormModal({
         }),
         minLoadingTime
       );
-      // Reset form and close only on success
       setTitle('');
       setDescription('');
       setDueDate('');
@@ -166,7 +130,6 @@ export function TaskFormModal({
       setCustomCategory('');
       onClose();
     } catch (err) {
-      // Don't close on error, show error message
       setError(mode === 'edit' ? 'Failed to update task' : 'Failed to create task');
     } finally {
       setInternalLoading(false);
@@ -201,7 +164,6 @@ export function TaskFormModal({
   const isEditMode = mode === 'edit';
   const headerTitle = isEditMode ? 'Edit Task' : 'Add New Task';
   const submitText = isEditMode ? 'Update Task' : 'Create Task';
-  const submitIcon = isEditMode ? 'checkmark' : 'add';
 
   return (
     <>
@@ -212,14 +174,19 @@ export function TaskFormModal({
         onRequestClose={handleClose}
       >
         <KeyboardAvoidingView
-          style={[styles.overlay, { backgroundColor: colors.overlay }]}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[styles.overlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.75)' : 'rgba(15,23,42,0.45)' }]}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
+          <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            {/* Grab handle */}
+            <View style={styles.handleContainer}>
+              <View style={[styles.handle, { backgroundColor: colors.cardBorder }]} />
+            </View>
+
+            <View style={[styles.header, { borderBottomColor: colors.cardBorder }]}>
               <Text style={[styles.headerTitle, { color: colors.text }]}>{headerTitle}</Text>
-              <Pressable onPress={handleClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
+              <Pressable onPress={handleClose} style={styles.closeButton} hitSlop={8}>
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
               </Pressable>
             </View>
 
@@ -228,14 +195,14 @@ export function TaskFormModal({
                 <Text style={[styles.label, { color: colors.text }]}>Title *</Text>
                 <TextInput
                   style={[styles.input, { 
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
                     color: colors.text,
                   }]}
                   value={title}
                   onChangeText={setTitle}
-                  placeholder="e.g. Write project proposal"
-                  placeholderTextColor={colors.placeholder}
+                  placeholder="e.g. Complete quarterly roadmap"
+                  placeholderTextColor={colors.textMuted}
                   autoFocus={mode === 'add'}
                 />
               </View>
@@ -244,14 +211,14 @@ export function TaskFormModal({
                 <Text style={[styles.label, { color: colors.text }]}>Description (optional)</Text>
                 <TextInput
                   style={[styles.input, styles.textArea, { 
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
                     color: colors.text,
                   }]}
                   value={description}
                   onChangeText={setDescription}
-                  placeholder="Add details to help you remember"
-                  placeholderTextColor={colors.placeholder}
+                  placeholder="Add task notes or context..."
+                  placeholderTextColor={colors.textMuted}
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
@@ -262,21 +229,21 @@ export function TaskFormModal({
                 <Text style={[styles.label, { color: colors.text }]}>Due Date (optional)</Text>
                 <Pressable
                   style={[styles.dateButton, { 
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
                   }]}
                   onPress={() => setShowDatePicker(true)}
                 >
                   <Ionicons
                     name="calendar-outline"
                     size={20}
-                    color={dueDate ? colors.primary : colors.placeholder}
+                    color={dueDate ? colors.primary : colors.textMuted}
                   />
                   <Text
                     style={[
                       styles.dateButtonText,
                       { color: colors.text },
-                      !dueDate && { color: colors.placeholder },
+                      !dueDate && { color: colors.textMuted },
                     ]}
                   >
                     {formatDateDisplay(dueDate)}
@@ -288,11 +255,12 @@ export function TaskFormModal({
                         setDueDate('');
                       }}
                       style={styles.clearDateButton}
+                      hitSlop={6}
                     >
-                      <Ionicons name="close-circle" size={20} color={colors.placeholder} />
+                      <Ionicons name="close-circle" size={18} color={colors.textMuted} />
                     </Pressable>
                   ) : (
-                    <Ionicons name="chevron-forward" size={20} color={colors.placeholder} />
+                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                   )}
                 </Pressable>
               </View>
@@ -302,8 +270,8 @@ export function TaskFormModal({
                 <Text style={[styles.label, { color: colors.text }]}>Category</Text>
                 <Pressable
                   style={[styles.dateButton, { 
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
+                    backgroundColor: colors.inputBg,
+                    borderColor: colors.inputBorder,
                   }]}
                   onPress={() => setShowCategoryPicker(!showCategoryPicker)}
                 >
@@ -312,31 +280,26 @@ export function TaskFormModal({
                     size={20}
                     color={colors.primary}
                   />
-                  <Text
-                    style={[
-                      styles.dateButtonText,
-                      { color: colors.text },
-                    ]}
-                  >
+                  <Text style={[styles.dateButtonText, { color: colors.text }]}>
                     {selectedCategory === '__other__'
                       ? (customCategory || 'Custom...')
                       : CATEGORY_LABELS[selectedCategory] || selectedCategory}
                   </Text>
                   <Ionicons
                     name={showCategoryPicker ? 'chevron-up' : 'chevron-down'}
-                    size={20}
-                    color={colors.placeholder}
+                    size={18}
+                    color={colors.textMuted}
                   />
                 </Pressable>
 
                 {showCategoryPicker && (
-                  <View style={[styles.categoryDropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <View style={[styles.categoryDropdown, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                     {PRESET_CATEGORIES.map((cat) => (
                       <Pressable
                         key={cat}
                         style={[
                           styles.categoryOption,
-                          { borderBottomColor: colors.borderLight },
+                          { borderBottomColor: colors.cardBorder },
                           selectedCategory === cat && { backgroundColor: colors.primaryLight },
                         ]}
                         onPress={() => {
@@ -375,38 +338,43 @@ export function TaskFormModal({
                 {selectedCategory === '__other__' && (
                   <TextInput
                     style={[styles.input, { 
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
+                      backgroundColor: colors.inputBg,
+                      borderColor: colors.inputBorder,
                       color: colors.text,
                       marginTop: 8,
                     }]}
                     value={customCategory}
                     onChangeText={setCustomCategory}
                     placeholder="Enter custom category"
-                    placeholderTextColor={colors.placeholder}
+                    placeholderTextColor={colors.textMuted}
                   />
                 )}
               </View>
 
-              {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               <View style={styles.actions}>
                 <Pressable 
-                  style={[styles.cancelButton, { borderColor: colors.border }]} 
+                  style={[styles.cancelButton, { borderColor: colors.cardBorder }]} 
                   onPress={handleClose}
                 >
                   <Text style={[styles.cancelText, { color: colors.textSecondary }]}>Cancel</Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
+                  style={({ pressed }) => [
+                    styles.submitButton, 
+                    { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow },
+                    loading && styles.submitButtonDisabled,
+                    pressed && !loading && { transform: [{ scale: 0.98 }] },
+                  ]}
                   onPress={handleSubmit}
                   disabled={loading}
                 >
                   {loading ? (
-                    <ActivityIndicator size="small" color="#fff" />
+                    <ActivityIndicator size="small" color="#FFF" />
                   ) : (
                     <>
-                      <Ionicons name={submitIcon} size={20} color="#fff" />
+                      <Ionicons name={isEditMode ? "checkmark" : "add"} size={20} color="#FFF" />
                       <Text style={styles.submitText}>{submitText}</Text>
                     </>
                   )}
@@ -432,114 +400,141 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
-  container: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '90%',
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    maxHeight: '88%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   closeButton: {
     padding: 4,
   },
   form: {
-    padding: 16,
+    padding: 20,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
+    borderRadius: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 16,
+    fontSize: 15,
   },
   textArea: {
-    minHeight: 100,
+    minHeight: 90,
   },
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
     gap: 10,
   },
   dateButtonText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
   },
   clearDateButton: {
     padding: 2,
   },
-  error: {
+  errorText: {
+    color: '#EF4444',
     fontSize: 14,
-    marginBottom: 12,
+    marginBottom: 14,
+    fontWeight: '600',
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 12,
     marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 28,
   },
   cancelButton: {
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 13,
+    borderRadius: 14,
     borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cancelText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 10,
-    gap: 6,
+    paddingHorizontal: 22,
+    paddingVertical: 13,
+    borderRadius: 14,
+    gap: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButtonDisabled: {
     opacity: 0.7,
   },
   submitText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
   categoryDropdown: {
     marginTop: 8,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 14,
     overflow: 'hidden',
   },
   categoryOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
   categoryOptionText: {
     fontSize: 15,
+    fontWeight: '500',
   },
 });

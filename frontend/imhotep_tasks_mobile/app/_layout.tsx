@@ -1,5 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, Redirect } from 'expo-router';
+import { Stack } from 'expo-router';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { TaskModalProvider } from '@/contexts/TaskModalContext';
 import { NetworkProvider } from '@/contexts/NetworkContext';
@@ -15,8 +14,6 @@ export const unstable_settings = {
 };
 
 function RootLayoutNav() {
-  const { isAuthenticated, loading } = useAuth();
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
@@ -29,17 +26,15 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AuthProvider>
-        <NetworkProvider>
-          <TaskModalProvider>
-            <RootLayoutNav />
-            <OfflineIndicator />
-            <UpdateChecker />
-            <StatusBar style="auto" />
-          </TaskModalProvider>
-        </NetworkProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <NetworkProvider>
+        <TaskModalProvider>
+          <RootLayoutNav />
+          <OfflineIndicator />
+          <UpdateChecker />
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        </TaskModalProvider>
+      </NetworkProvider>
+    </AuthProvider>
   );
 }

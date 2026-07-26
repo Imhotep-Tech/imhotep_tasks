@@ -2,26 +2,7 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-
-// Theme colors matching routines.tsx and auth pages
-const themes = {
-  light: {
-    text: '#111827',
-    textSecondary: '#6B7280',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    warning: '#D97706',
-    warningBg: '#FEF3C7',
-  },
-  dark: {
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    warning: '#FBBF24',
-    warningBg: '#78350F',
-  },
-};
+import { Colors } from '@/constants/theme';
 
 interface EmptyTasksProps {
   onAddTask: () => void;
@@ -29,41 +10,70 @@ interface EmptyTasksProps {
 
 export function EmptyTasks({ onAddTask }: EmptyTasksProps) {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme ?? 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
 
   return (
     <View style={styles.container}>
-      <View style={[styles.iconContainer, { backgroundColor: colors.warningBg }]}>
-        <Ionicons name="checkmark-done-circle-outline" size={64} color={colors.warning} />
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name="sparkles-outline" size={48} color={colors.primary} />
+        </View>
+
+        <Text style={[styles.title, { color: colors.text }]}>All Clear for Today!</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          You don't have any tasks scheduled. Enjoy your free time or add something new to your list.
+        </Text>
+
+        <Pressable 
+          style={({ pressed }) => [
+            styles.button, 
+            { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow },
+            pressed && { transform: [{ scale: 0.98 }] },
+          ]} 
+          onPress={onAddTask}
+        >
+          <Ionicons name="add-circle" size={20} color="#FFF" />
+          <Text style={styles.buttonText}>Create New Task</Text>
+        </Pressable>
       </View>
-      <Text style={[styles.title, { color: colors.text }]}>No tasks for today</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-        You don't have any tasks scheduled for today. Enjoy your free time or create a new task!
-      </Text>
-      <Pressable style={[styles.button, { backgroundColor: colors.primary }]} onPress={onAddTask}>
-        <Ionicons name="add" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Add a Task</Text>
-      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
+    paddingVertical: 32,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 24,
+    borderWidth: 1,
     padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   iconContainer: {
-    borderRadius: 50,
-    padding: 16,
-    marginBottom: 16,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '800',
     marginBottom: 8,
+    textAlign: 'center',
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 14,
@@ -74,14 +84,18 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingHorizontal: 22,
+    paddingVertical: 14,
+    borderRadius: 14,
     gap: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

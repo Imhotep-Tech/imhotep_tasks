@@ -13,8 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { TaskItem } from './TaskItem';
 import { TaskStats } from './TaskStats';
 import { TaskFormModal } from './TaskFormModal';
@@ -22,45 +20,10 @@ import { TaskDetailsModal } from './TaskDetailsModal';
 import { EmptyTasks } from './EmptyTasks';
 import { BulkActionBar } from './BulkActionBar';
 import type { Task } from './types';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTasks, TaskPageType } from '@/hooks/use-tasks';
 import { useTaskModal } from '@/contexts/TaskModalContext';
-// Theme colors matching routines.tsx and auth pages
-const themes = {
-  light: {
-    background: '#F3F4F6',
-    card: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    border: '#E5E7EB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    success: '#16A34A',
-    successBg: '#DCFCE7',
-    error: '#DC2626',
-    errorBg: '#FEF2F2',
-    inputBg: '#FFFFFF',
-    placeholder: '#9CA3AF',
-    statsCard: '#FFFFFF',
-  },
-  dark: {
-    background: '#111827',
-    card: '#1F2937',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    border: '#374151',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    success: '#22C55E',
-    successBg: '#14532D',
-    error: '#EF4444',
-    errorBg: '#450A0A',
-    inputBg: '#374151',
-    placeholder: '#6B7280',
-    statsCard: '#1F2937',
-  },
-};
 
 const CATEGORY_ICONS: Record<string, string> = {
   study: '📚',
@@ -80,9 +43,9 @@ interface TaskListScreenProps {
 }
 
 export function TaskListScreen({ pageType, title, username, showNavButtons = false }: TaskListScreenProps) {
-  const backgroundColor = useThemeColor({}, 'background');
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme ?? 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
   const router = useRouter();
 
   const {
@@ -99,10 +62,8 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     formMode,
     editingTask,
     detailsTask,
-    // Selection state
     selectedIds,
     selectionMode,
-    // Actions
     fetchTasks,
     onRefresh,
     handleLoadMore,
@@ -113,12 +74,10 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     handleFormSubmit,
     handleToggleComplete,
     handleDeleteTask,
-    // Selection actions
     toggleSelect,
     selectAll,
     clearSelection,
     toggleSelectionMode,
-    // Bulk actions
     handleBulkDelete,
     handleBulkComplete,
     handleBulkUpdateDate,
@@ -136,7 +95,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
     return value.charAt(0).toUpperCase() + value.slice(1);
   }, []);
 
-  // Group tasks by category, with optional consolidated "Done" section for today page.
+  // Group tasks by category
   const sections = useMemo(() => {
     const categoryOrderSort = (a: string, b: string) => {
       if (a === 'study') return -1;
@@ -195,7 +154,6 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
       groups[cat].push(task);
     });
 
-    // Sort within each group: pending first, then done
     Object.keys(groups).forEach(cat => {
       groups[cat].sort((a, b) => {
         if (a.status === b.status) return 0;
@@ -203,7 +161,6 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
       });
     });
 
-    // Category display order: study first, then rest alphabetically
     const orderedKeys = Object.keys(groups).sort(categoryOrderSort);
 
     return orderedKeys.map(cat => ({
@@ -218,14 +175,12 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
 
   const { setOnTaskAdded } = useTaskModal();
 
-  // Register the refresh callback when a task is added from the global modal
   useEffect(() => {
     const refreshCallback = () => {
       fetchTasks(1);
     };
     setOnTaskAdded(refreshCallback);
     
-    // Cleanup on unmount
     return () => {
       setOnTaskAdded(null);
     };
@@ -255,24 +210,27 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
   );
 
   const ListHeader = () => (
-    <>
-      <View style={[styles.header, { backgroundColor: colors.background }]}>
-        <View>
+    <View style={styles.headerContainer}>
+      <View style={styles.header}>
+        <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: colors.text }]}>
             {title}
           </Text>
           {username && (
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-              Hello, {username}!
+              Hello, {username}! 👋
             </Text>
           )}
         </View>
         <View style={styles.headerButtons}>
-          {/* Selection mode toggle */}
           <Pressable 
-            style={[
+            style={({ pressed }) => [
               styles.selectModeButton, 
-              { backgroundColor: selectionMode ? colors.primary : colors.card, borderColor: colors.border }
+              { 
+                backgroundColor: selectionMode ? colors.primary : colors.card, 
+                borderColor: colors.cardBorder 
+              },
+              pressed && { transform: [{ scale: 0.95 }] },
             ]} 
             onPress={toggleSelectionMode}
           >
@@ -282,72 +240,92 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
               color={selectionMode ? "#FFFFFF" : colors.textSecondary} 
             />
           </Pressable>
-          {/* Add task button */}
-          <Pressable style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAddModal}>
-            <Ionicons name="add" size={24} color="#fff" />
+
+          <Pressable 
+            style={({ pressed }) => [
+              styles.addButton, 
+              { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow },
+              pressed && { transform: [{ scale: 0.95 }] },
+            ]} 
+            onPress={openAddModal}
+          >
+            <Ionicons name="add" size={24} color="#FFF" />
           </Pressable>
         </View>
       </View>
 
-      {/* Navigation buttons for All Tasks page */}
+      {/* Quick Navigation Pills for All Tasks */}
       {showNavButtons && (
-        <View style={[styles.navButtonsContainer, { backgroundColor: colors.background }]}>
+        <View style={styles.navButtonsContainer}>
           <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={[styles.navButton, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
             onPress={() => router.push('/(tabs)')}
+            activeOpacity={0.7}
           >
-            <Ionicons name="today-outline" size={20} color={colors.primary} />
+            <Ionicons name="today-outline" size={18} color={colors.primary} />
             <Text style={[styles.navButtonText, { color: colors.text }]}>Today's Tasks</Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={[styles.navButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={[styles.navButton, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
             onPress={() => router.push('/(tabs)/next-week')}
+            activeOpacity={0.7}
           >
-            <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+            <Ionicons name="calendar-outline" size={18} color={colors.primary} />
             <Text style={[styles.navButtonText, { color: colors.text }]}>Next 7 Days</Text>
           </TouchableOpacity>
         </View>
       )}
 
+      {/* Bento Task Stats */}
       <TaskStats
         totalTasks={totalTasks}
         completedCount={completedCount}
         pendingCount={pendingCount}
       />
-
-      <View style={[styles.listHeader, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <Text style={[styles.listTitle, { color: colors.text }]}>
-          Tasks
-        </Text>
-      </View>
-    </>
+    </View>
   );
 
+  // Skeleton Loader for initial fetch state
   if (loading && sortedTasks.length === 0) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading tasks...</Text>
+      <SafeAreaView style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])} edges={['top']}>
+        <View style={styles.skeletonContainer}>
+          <ListHeader />
+          <View style={styles.skeletonList}>
+            {[1, 2, 3, 4].map(idx => (
+              <View 
+                key={idx} 
+                style={[styles.skeletonCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
+              >
+                <View style={[styles.skeletonCircle, { backgroundColor: colors.skeletonBg }]} />
+                <View style={styles.skeletonTextCol}>
+                  <View style={[styles.skeletonLineLong, { backgroundColor: colors.skeletonBg }]} />
+                  <View style={[styles.skeletonLineShort, { backgroundColor: colors.skeletonBg }]} />
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])} edges={['top']}>
       <SectionList
         sections={sections}
         renderItem={renderTask}
         renderSectionHeader={({ section }) => (
           <Pressable
             onPress={() => toggleSection(section.category)}
-            style={[
+            style={({ pressed }) => [
               styles.sectionHeader,
               {
-                backgroundColor: colorScheme === 'dark' ? '#1F2937' : '#F9FAFB',
-                borderBottomColor: colors.border,
+                backgroundColor: colors.card,
+                borderColor: colors.cardBorder,
               },
+              pressed && { opacity: 0.8 },
             ]}
           >
             <View style={styles.sectionHeaderLeft}>
@@ -362,15 +340,8 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
                   </Text>
                 </View>
               )}
-              {!section.doneGroup && section.doneCount > 0 && (
-                <View style={[styles.sectionBadge, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6' }]}>
-                  <Text style={[styles.sectionBadgeText, { color: colors.textSecondary }]}>
-                    {section.doneCount} done
-                  </Text>
-                </View>
-              )}
-              {section.doneGroup && (
-                <View style={[styles.sectionBadge, { backgroundColor: colorScheme === 'dark' ? '#374151' : '#F3F4F6' }]}>
+              {section.doneCount > 0 && (
+                <View style={[styles.sectionBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F1F5F9' }]}>
                   <Text style={[styles.sectionBadgeText, { color: colors.textSecondary }]}>
                     {section.doneCount} done
                   </Text>
@@ -397,7 +368,7 @@ export function TaskListScreen({ pageType, title, username, showNavButtons = fal
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
-        contentContainerStyle={sortedTasks.length === 0 ? styles.emptyList : undefined}
+        contentContainerStyle={[styles.listContentContainer, selectedIds.length > 0 && { paddingBottom: 160 }]}
         stickySectionHeadersEnabled={false}
       />
 
@@ -444,30 +415,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 14,
+  headerContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    marginBottom: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
+    letterSpacing: -0.5,
   },
   greeting: {
     marginTop: 4,
     fontSize: 14,
+    fontWeight: '500',
   },
   headerButtons: {
     flexDirection: 'row',
@@ -475,20 +442,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   selectModeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
   },
   addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -496,9 +462,8 @@ const styles = StyleSheet.create({
   },
   navButtonsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
     paddingVertical: 8,
-    gap: 12,
+    gap: 10,
   },
   navButton: {
     flex: 1,
@@ -506,32 +471,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
     borderWidth: 1,
     gap: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
     elevation: 2,
   },
   navButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
-  listHeader: {
+  listContentContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    marginTop: 8,
-  },
-  listTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  emptyList: {
-    flex: 1,
+    paddingBottom: 40,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -539,7 +495,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 12,
+    marginBottom: 8,
   },
   sectionHeaderLeft: {
     flexDirection: 'row',
@@ -553,15 +512,51 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   sectionBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   sectionBadgeText: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  skeletonContainer: {
+    flex: 1,
+  },
+  skeletonList: {
+    paddingHorizontal: 16,
+    gap: 12,
+    marginTop: 8,
+  },
+  skeletonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    height: 72,
+  },
+  skeletonCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    marginRight: 14,
+  },
+  skeletonTextCol: {
+    flex: 1,
+    gap: 8,
+  },
+  skeletonLineLong: {
+    height: 14,
+    borderRadius: 7,
+    width: '70%',
+  },
+  skeletonLineShort: {
+    height: 10,
+    borderRadius: 5,
+    width: '40%',
   },
 });

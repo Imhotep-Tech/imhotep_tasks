@@ -11,7 +11,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   useColorScheme,
-  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,64 +18,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth } from '@/contexts/AuthContext';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { useUpdateChecker } from '@/hooks/use-update-checker';
 import api from '@/constants/api';
 import * as Updates from 'expo-updates';
 import * as LegacyFileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Theme colors
-const themes = {
-  light: {
-    background: '#FFFFFF',
-    surface: '#F9FAFB',
-    surfaceActive: '#FFFFFF',
-    text: '#1F2937',
-    textSecondary: '#6B7280',
-    placeholder: '#9CA3AF',
-    border: '#D1D5DB',
-    borderLight: '#E5E7EB',
-    primary: '#6366F1',
-    primaryLight: '#EEF2FF',
-    error: '#EF4444',
-    errorLight: '#FEF2F2',
-    success: '#22C55E',
-    successLight: '#F0FDF4',
-    warning: '#F59E0B',
-    warningLight: '#FFFBEB',
-    overlay: 'rgba(0, 0, 0, 0.5)',
-  },
-  dark: {
-    background: '#1F2937',
-    surface: '#374151',
-    surfaceActive: '#4B5563',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    placeholder: '#6B7280',
-    border: '#4B5563',
-    borderLight: '#374151',
-    primary: '#818CF8',
-    primaryLight: '#312E81',
-    error: '#F87171',
-    errorLight: '#7F1D1D',
-    success: '#4ADE80',
-    successLight: '#14532D',
-    warning: '#FBBF24',
-    warningLight: '#78350F',
-    overlay: 'rgba(0, 0, 0, 0.7)',
-  },
-};
+import { Colors } from '@/constants/theme';
 
 export default function ProfileScreen() {
-  const { user, logout, updateUser, token } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { checking: checkingUpdates, checkForUpdates } = useUpdateChecker();
-  const backgroundColor = useThemeColor({}, 'background');
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Helper to scroll input into view on Android
   const scrollToInput = (yOffset: number) => {
     if (Platform.OS === 'android') {
       setTimeout(() => {
@@ -119,7 +75,6 @@ export default function ProfileScreen() {
   });
   const [refreshingFrontend, setRefreshingFrontend] = useState(false);
 
-  // Load profile data on component mount
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -139,7 +94,6 @@ export default function ProfileScreen() {
     try {
       const response = await api.put('/api/profile/update/', profileData);
 
-      // Check if email verification is required
       if (response.data.email_verification_required) {
         setPendingNewEmail(response.data.pending_new_email);
         setShowOtpModal(true);
@@ -148,7 +102,6 @@ export default function ProfileScreen() {
         setSuccess(response.data.message || 'Profile updated successfully!');
       }
 
-      // Update user context with new data
       if (response.data.user) {
         updateUser(response.data.user);
       }
@@ -175,7 +128,6 @@ export default function ProfileScreen() {
       setOtp('');
       setSuccess('Email changed successfully! Please log in again with your new email.');
 
-      // Log out user after email change
       setTimeout(() => {
         logout();
       }, 2000);
@@ -190,7 +142,6 @@ export default function ProfileScreen() {
     setShowOtpModal(false);
     setOtp('');
     setOtpError('');
-    // Reset email to current value since verification was cancelled
     setProfileData(prev => ({ ...prev, email: user?.email || '' }));
   };
 
@@ -293,11 +244,10 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top']}>
+    <SafeAreaView style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])} edges={['top']}>
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           ref={scrollViewRef}
@@ -306,263 +256,299 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-        <ThemedView style={styles.header}>
-          <ThemedText type="title" style={styles.title}>My Profile</ThemedText>
-          <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Manage your account and preferences
-          </ThemedText>
-        </ThemedView>
-
-        {/* User Avatar */}
-        <View style={styles.avatarContainer}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Ionicons name="person" size={40} color="#fff" />
-          </View>
-          <ThemedText type="subtitle" style={styles.userName}>
-            {user?.username || 'User'}
-          </ThemedText>
-        </View>
-
-        {/* Tabs */}
-        <View style={[styles.tabContainer, { backgroundColor: colors.surface }]}>
-          <Pressable
-            style={[
-              styles.tab,
-              activeTab === 'profile' && [styles.activeTab, { backgroundColor: colors.surfaceActive }],
-            ]}
-            onPress={() => { setActiveTab('profile'); setError(''); setSuccess(''); }}
-          >
-            <ThemedText style={[styles.tabText, activeTab === 'profile' && { color: colors.primary }]}>
-              Profile
+          <ThemedView style={styles.header}>
+            <ThemedText style={[styles.title, { color: colors.text }]}>My Profile</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
+              Manage your account and preferences
             </ThemedText>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.tab,
-              activeTab === 'password' && [styles.activeTab, { backgroundColor: colors.surfaceActive }],
-            ]}
-            onPress={() => { setActiveTab('password'); setError(''); setSuccess(''); }}
-          >
-            <ThemedText style={[styles.tabText, activeTab === 'password' && { color: colors.primary }]}>
-              Password
+          </ThemedView>
+
+          {/* User Avatar Card */}
+          <View style={[styles.avatarCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={[styles.avatarRing, { backgroundColor: colors.primaryLight }]}>
+              <Ionicons name="person" size={40} color={colors.primary} />
+            </View>
+            <ThemedText style={[styles.userName, { color: colors.text }]}>
+              {user?.username || 'User'}
             </ThemedText>
-          </Pressable>
-        </View>
-
-        {/* Messages */}
-        {error ? (
-          <View style={[styles.messageBox, { backgroundColor: colors.errorLight, borderColor: colors.error }]}>
-            <ThemedText style={{ color: colors.error }}>{error}</ThemedText>
+            <ThemedText style={[styles.userEmail, { color: colors.textSecondary }]}>
+              {user?.email || ''}
+            </ThemedText>
           </View>
-        ) : null}
-        {success ? (
-          <View style={[styles.messageBox, { backgroundColor: colors.successLight, borderColor: colors.success }]}>
-            <ThemedText style={{ color: colors.success }}>{success}</ThemedText>
-          </View>
-        ) : null}
 
-        {/* Profile Form */}
-        {activeTab === 'profile' && (
-          <View style={styles.form}>
-            <View style={styles.row}>
-              <View style={styles.halfInput}>
-                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>First Name</ThemedText>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={profileData.first_name}
-                  onChangeText={(text) => setProfileData({ ...profileData, first_name: text })}
-                  placeholder="First name"
-                  placeholderTextColor={colors.placeholder}
-                />
-              </View>
-              <View style={styles.halfInput}>
-                <ThemedText style={[styles.label, { color: colors.textSecondary }]}>Last Name</ThemedText>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={profileData.last_name}
-                  onChangeText={(text) => setProfileData({ ...profileData, last_name: text })}
-                  placeholder="Last name"
-                  placeholderTextColor={colors.placeholder}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Username <ThemedText style={{ color: colors.error }}>*</ThemedText>
+          {/* Tabs */}
+          <View style={[styles.tabContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <Pressable
+              style={[
+                styles.tab,
+                activeTab === 'profile' && [styles.activeTab, { backgroundColor: colors.primary }],
+              ]}
+              onPress={() => { setActiveTab('profile'); setError(''); setSuccess(''); }}
+            >
+              <ThemedText style={[styles.tabText, { color: activeTab === 'profile' ? '#FFF' : colors.textSecondary }]}>
+                Profile Info
               </ThemedText>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={profileData.username}
-                onChangeText={(text) => setProfileData({ ...profileData, username: text })}
-                placeholder="Username"
-                placeholderTextColor={colors.placeholder}
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Email <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                value={profileData.email}
-                onChangeText={(text) => setProfileData({ ...profileData, email: text })}
-                placeholder="you@example.com"
-                placeholderTextColor={colors.placeholder}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                onFocus={() => scrollToInput(350)}
-              />
-            </View>
+            </Pressable>
 
             <Pressable
-              style={[styles.primaryButton, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]}
-              onPress={handleProfileSubmit}
-              disabled={loading}
+              style={[
+                styles.tab,
+                activeTab === 'password' && [styles.activeTab, { backgroundColor: colors.primary }],
+              ]}
+              onPress={() => { setActiveTab('password'); setError(''); setSuccess(''); }}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <ThemedText style={styles.buttonText}>Update Profile</ThemedText>
-              )}
+              <ThemedText style={[styles.tabText, { color: activeTab === 'password' ? '#FFF' : colors.textSecondary }]}>
+                Security
+              </ThemedText>
             </Pressable>
           </View>
-        )}
 
-        {/* Password Form */}
-        {activeTab === 'password' && (
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Current Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={passwordData.current_password}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, current_password: text })}
-                  placeholder="Current password"
-                  placeholderTextColor={colors.placeholder}
-                  secureTextEntry={!showPasswords.current}
-                />
-                <Pressable
-                  style={styles.eyeButton}
-                  onPress={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
-                >
-                  <Ionicons
-                    name={showPasswords.current ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </Pressable>
-              </View>
+          {/* Messages */}
+          {error ? (
+            <View style={[styles.messageBox, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : '#FEF2F2', borderColor: '#EF4444' }]}>
+              <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+              <ThemedText style={{ color: '#EF4444', fontWeight: '600', flex: 1 }}>{error}</ThemedText>
             </View>
+          ) : null}
 
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                New Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={passwordData.new_password}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, new_password: text })}
-                  placeholder="New password (min 8 characters)"
-                  placeholderTextColor={colors.placeholder}
-                  secureTextEntry={!showPasswords.new}
-                />
-                <Pressable
-                  style={styles.eyeButton}
-                  onPress={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
-                >
-                  <Ionicons
-                    name={showPasswords.new ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </Pressable>
-              </View>
+          {success ? (
+            <View style={[styles.messageBox, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#ECFDF5', borderColor: '#10B981' }]}>
+              <Ionicons name="checkmark-circle-outline" size={18} color="#10B981" />
+              <ThemedText style={{ color: '#10B981', fontWeight: '600', flex: 1 }}>{success}</ThemedText>
             </View>
+          ) : null}
 
-            <View style={styles.inputGroup}>
-              <ThemedText style={[styles.label, { color: colors.textSecondary }]}>
-                Confirm Password <ThemedText style={{ color: colors.error }}>*</ThemedText>
-              </ThemedText>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.passwordInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-                  value={passwordData.confirm_password}
-                  onChangeText={(text) => setPasswordData({ ...passwordData, confirm_password: text })}
-                  placeholder="Confirm new password"
-                  placeholderTextColor={colors.placeholder}
-                  secureTextEntry={!showPasswords.confirm}
-                  onFocus={() => scrollToInput(450)}
-                />
-                <Pressable
-                  style={styles.eyeButton}
-                  onPress={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
-                >
-                  <Ionicons
-                    name={showPasswords.confirm ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={colors.primary}
+          {/* Profile Form */}
+          {activeTab === 'profile' && (
+            <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <View style={styles.row}>
+                <View style={styles.halfInput}>
+                  <ThemedText style={[styles.label, { color: colors.text }]}>First Name</ThemedText>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    value={profileData.first_name}
+                    onChangeText={(text) => setProfileData({ ...profileData, first_name: text })}
+                    placeholder="First name"
+                    placeholderTextColor={colors.textMuted}
                   />
-                </Pressable>
+                </View>
+
+                <View style={styles.halfInput}>
+                  <ThemedText style={[styles.label, { color: colors.text }]}>Last Name</ThemedText>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    value={profileData.last_name}
+                    onChangeText={(text) => setProfileData({ ...profileData, last_name: text })}
+                    placeholder="Last name"
+                    placeholderTextColor={colors.textMuted}
+                  />
+                </View>
               </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>
+                  Username *
+                </ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                  value={profileData.username}
+                  onChangeText={(text) => setProfileData({ ...profileData, username: text })}
+                  placeholder="Username"
+                  placeholderTextColor={colors.textMuted}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>
+                  Email Address *
+                </ThemedText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                  value={profileData.email}
+                  onChangeText={(text) => setProfileData({ ...profileData, email: text })}
+                  placeholder="you@example.com"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onFocus={() => scrollToInput(350)}
+                />
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.primaryButton, 
+                  { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow }, 
+                  loading && styles.buttonDisabled,
+                  pressed && !loading && { transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={handleProfileSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <ThemedText style={styles.buttonText}>Update Profile</ThemedText>
+                )}
+              </Pressable>
             </View>
+          )}
+
+          {/* Password Form */}
+          {activeTab === 'password' && (
+            <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>
+                  Current Password *
+                </ThemedText>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    value={passwordData.current_password}
+                    onChangeText={(text) => setPasswordData({ ...passwordData, current_password: text })}
+                    placeholder="Enter current password"
+                    placeholderTextColor={colors.textMuted}
+                    secureTextEntry={!showPasswords.current}
+                  />
+                  <Pressable
+                    style={styles.eyeButton}
+                    onPress={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name={showPasswords.current ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={colors.textMuted}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>
+                  New Password *
+                </ThemedText>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    value={passwordData.new_password}
+                    onChangeText={(text) => setPasswordData({ ...passwordData, new_password: text })}
+                    placeholder="New password (min 8 characters)"
+                    placeholderTextColor={colors.textMuted}
+                    secureTextEntry={!showPasswords.new}
+                  />
+                  <Pressable
+                    style={styles.eyeButton}
+                    onPress={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name={showPasswords.new ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={colors.textMuted}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: colors.text }]}>
+                  Confirm New Password *
+                </ThemedText>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.passwordInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                    value={passwordData.confirm_password}
+                    onChangeText={(text) => setPasswordData({ ...passwordData, confirm_password: text })}
+                    placeholder="Confirm new password"
+                    placeholderTextColor={colors.textMuted}
+                    secureTextEntry={!showPasswords.confirm}
+                    onFocus={() => scrollToInput(450)}
+                  />
+                  <Pressable
+                    style={styles.eyeButton}
+                    onPress={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name={showPasswords.confirm ? 'eye-off-outline' : 'eye-outline'}
+                      size={20}
+                      color={colors.textMuted}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.primaryButton, 
+                  { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow }, 
+                  loading && styles.buttonDisabled,
+                  pressed && !loading && { transform: [{ scale: 0.98 }] },
+                ]}
+                onPress={handlePasswordSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <ThemedText style={styles.buttonText}>Change Password</ThemedText>
+                )}
+              </Pressable>
+            </View>
+          )}
+
+          {/* Action Buttons */}
+          <View style={styles.actionsSection}>
+            <Pressable 
+              style={({ pressed }) => [
+                styles.actionCardButton, 
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                pressed && { transform: [{ scale: 0.98 }] },
+              ]} 
+              onPress={() => checkForUpdates()}
+              disabled={checkingUpdates}
+            >
+              {checkingUpdates ? (
+                <ActivityIndicator color={colors.primary} size="small" />
+              ) : (
+                <>
+                  <Ionicons name="cloud-download-outline" size={22} color={colors.primary} />
+                  <ThemedText style={[styles.actionCardText, { color: colors.text }]}>Check for Updates</ThemedText>
+                </>
+              )}
+            </Pressable>
 
             <Pressable
-              style={[styles.primaryButton, { backgroundColor: colors.primary }, loading && styles.buttonDisabled]}
-              onPress={handlePasswordSubmit}
-              disabled={loading}
+              style={({ pressed }) => [
+                styles.actionCardButton, 
+                { backgroundColor: colors.card, borderColor: colors.cardBorder },
+                pressed && { transform: [{ scale: 0.98 }] },
+              ]}
+              onPress={handleRefreshFrontend}
+              disabled={refreshingFrontend}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
+              {refreshingFrontend ? (
+                <ActivityIndicator color="#F59E0B" size="small" />
               ) : (
-                <ThemedText style={styles.buttonText}>Change Password</ThemedText>
+                <>
+                  <Ionicons name="refresh-outline" size={22} color="#F59E0B" />
+                  <ThemedText style={[styles.actionCardText, { color: colors.text }]}>Clear Cache & Reload</ThemedText>
+                </>
               )}
             </Pressable>
+
+            <Pressable 
+              style={({ pressed }) => [
+                styles.logoutButton, 
+                pressed && { transform: [{ scale: 0.98 }] },
+              ]} 
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={22} color="#FFF" />
+              <ThemedText style={styles.logoutButtonText}>Log Out</ThemedText>
+            </Pressable>
           </View>
-        )}
-
-        {/* Check for Updates Button */}
-        <Pressable 
-          style={[styles.updateButton, { backgroundColor: colors.primary }]} 
-          onPress={() => checkForUpdates()}
-          disabled={checkingUpdates}
-        >
-          {checkingUpdates ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="cloud-download-outline" size={24} color="#fff" />
-              <ThemedText style={styles.updateButtonText}>Check for Updates</ThemedText>
-            </>
-          )}
-        </Pressable>
-
-        <Pressable
-          style={[styles.updateButton, { backgroundColor: colors.warning }]}
-          onPress={handleRefreshFrontend}
-          disabled={refreshingFrontend}
-        >
-          {refreshingFrontend ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="refresh-outline" size={24} color="#fff" />
-              <ThemedText style={styles.updateButtonText}>Update Frontend & Clear Cache</ThemedText>
-            </>
-          )}
-        </Pressable>
-
-        {/* Logout Button */}
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color="#fff" />
-          <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
-        </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -574,37 +560,38 @@ export default function ProfileScreen() {
         onRequestClose={closeOtpModal}
       >
         <KeyboardAvoidingView
-          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.75)' : 'rgba(15,23,42,0.45)' }]}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.borderLight }]}>
-              <ThemedText type="subtitle" style={{ color: colors.text }}>Verify Email Change</ThemedText>
-              <Pressable onPress={closeOtpModal}>
-                <Ionicons name="close" size={24} color={colors.textSecondary} />
+          <View style={[styles.modalContainer, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.cardBorder }]}>
+              <ThemedText style={[styles.modalTitle, { color: colors.text }]}>Verify Email Change</ThemedText>
+              <Pressable onPress={closeOtpModal} hitSlop={8}>
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
               </Pressable>
             </View>
 
             <View style={styles.modalContent}>
               <ThemedText style={[styles.modalDescription, { color: colors.textSecondary }]}>
-                Enter the 6-digit OTP code sent to your new email address ({pendingNewEmail}). The code expires in 10 minutes.
+                Enter the 6-digit OTP code sent to your new email address ({pendingNewEmail}).
               </ThemedText>
 
               {otpError ? (
-                <View style={[styles.messageBox, { backgroundColor: colors.errorLight, borderColor: colors.error }]}>
-                  <ThemedText style={{ color: colors.error }}>{otpError}</ThemedText>
+                <View style={[styles.messageBox, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : '#FEF2F2', borderColor: '#EF4444' }]}>
+                  <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+                  <ThemedText style={{ color: '#EF4444', fontWeight: '600' }}>{otpError}</ThemedText>
                 </View>
               ) : null}
 
               <TextInput
-                style={[styles.otpInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
+                style={[styles.otpInput, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
                 value={otp}
                 onChangeText={(text) => {
                   setOtp(text.replace(/\D/g, ''));
                   if (otpError) setOtpError('');
                 }}
                 placeholder="000000"
-                placeholderTextColor={colors.placeholder}
+                placeholderTextColor={colors.textMuted}
                 keyboardType="numeric"
                 maxLength={6}
                 textAlign="center"
@@ -612,14 +599,15 @@ export default function ProfileScreen() {
 
               <View style={styles.modalActions}>
                 <Pressable
-                  style={[styles.cancelButton, { borderColor: colors.border }]}
+                  style={[styles.cancelModalButton, { borderColor: colors.cardBorder }]}
                   onPress={closeOtpModal}
                 >
-                  <ThemedText style={{ color: colors.textSecondary }}>Cancel</ThemedText>
+                  <ThemedText style={{ color: colors.textSecondary, fontWeight: '600' }}>Cancel</ThemedText>
                 </Pressable>
+
                 <Pressable
                   style={[
-                    styles.verifyButton,
+                    styles.verifyModalButton,
                     { backgroundColor: colors.primary },
                     (otpLoading || otp.length !== 6) && styles.buttonDisabled,
                   ]}
@@ -627,7 +615,7 @@ export default function ProfileScreen() {
                   disabled={otpLoading || otp.length !== 6}
                 >
                   {otpLoading ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color="#FFF" />
                   ) : (
                     <ThemedText style={styles.buttonText}>Verify</ThemedText>
                   )}
@@ -653,26 +641,35 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 20,
-  },
-  header: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 8,
-    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  header: {
+    marginBottom: 16,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
     marginTop: 4,
   },
-  avatarContainer: {
+  avatarCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
     alignItems: 'center',
-    marginVertical: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  avatar: {
+  avatarRing: {
     width: 80,
     height: 80,
     borderRadius: 40,
@@ -681,12 +678,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   userName: {
-    fontSize: 18,
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  userEmail: {
+    fontSize: 14,
+    marginTop: 2,
   },
   tabContainer: {
     flexDirection: 'row',
-    marginHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 16,
+    borderWidth: 1,
     padding: 4,
     marginBottom: 16,
   },
@@ -694,28 +697,32 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 6,
+    borderRadius: 12,
   },
-  activeTab: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
+  activeTab: {},
   tabText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   messageBox: {
-    marginHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
-    padding: 12,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
+    gap: 8,
   },
-  form: {
-    paddingHorizontal: 16,
+  formCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
   row: {
     flexDirection: 'row',
@@ -730,73 +737,73 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 14,
+    borderRadius: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 16,
+    fontSize: 15,
   },
   passwordContainer: {
     position: 'relative',
   },
   passwordInput: {
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 14,
+    borderRadius: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     paddingRight: 48,
-    fontSize: 16,
+    fontSize: 15,
   },
   eyeButton: {
     position: 'absolute',
-    right: 12,
+    right: 14,
     top: 0,
     bottom: 0,
     justifyContent: 'center',
   },
-  warningBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
-    padding: 8,
-    borderRadius: 6,
-  },
-  warningText: {
-    fontSize: 12,
-  },
   primaryButton: {
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
-  updateButton: {
+  actionsSection: {
+    gap: 10,
+  },
+  actionCardButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
-    marginHorizontal: 16,
-    marginTop: 24,
-    borderRadius: 8,
-    gap: 8,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  updateButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  actionCardText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   logoutButton: {
     flexDirection: 'row',
@@ -804,66 +811,82 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#EF4444',
     paddingVertical: 14,
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 32,
-    borderRadius: 8,
+    borderRadius: 16,
+    marginTop: 6,
     gap: 8,
+    shadowColor: 'rgba(239, 68, 68, 0.4)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
   },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
-    padding: 16,
+    padding: 20,
   },
   modalContainer: {
-    borderRadius: 16,
+    borderRadius: 24,
+    borderWidth: 1,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
   },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
   modalContent: {
-    padding: 16,
+    padding: 20,
   },
   modalDescription: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
+    lineHeight: 20,
   },
   otpInput: {
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 16,
-    fontSize: 24,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 22,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     letterSpacing: 8,
+    fontWeight: '700',
+    marginBottom: 20,
   },
   modalActions: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 16,
   },
-  cancelButton: {
+  cancelModalButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',
   },
-  verifyButton: {
+  verifyModalButton: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 14,
     alignItems: 'center',
   },
 });

@@ -16,45 +16,12 @@ import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios, { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const themes = {
-  light: {
-    background: '#EEF2FF',
-    card: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    placeholder: '#9CA3AF',
-    border: '#D1D5DB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    error: '#DC2626',
-    errorBg: '#FEF2F2',
-    errorBorder: '#FECACA',
-    success: '#22C55E',
-    successText: '#7C3AED',
-    inputBg: '#FFFFFF',
-  },
-  dark: {
-    background: '#1F2937',
-    card: '#374151',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    placeholder: '#6B7280',
-    border: '#4B5563',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    error: '#F87171',
-    errorBg: '#7F1D1D',
-    errorBorder: '#F87171',
-    success: '#4ADE80',
-    successText: '#A78BFA',
-    inputBg: '#4B5563',
-  },
-};
+import { Colors } from '@/constants/theme';
 
 export default function RegisterScreen() {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme === 'dark' ? 'dark' : 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
 
   const [formData, setFormData] = useState({
     username: '',
@@ -77,7 +44,7 @@ export default function RegisterScreen() {
     password2: string
   ) => {
     try {
-      const response = await axios.post('/api/auth/register/', {
+      await axios.post('/api/auth/register/', {
         username,
         email,
         password,
@@ -136,10 +103,8 @@ export default function RegisterScreen() {
     );
 
     if (result.success) {
-      // Store email for verification page
       await AsyncStorage.setItem('pendingVerificationEmail', formData.email);
       setSuccess(true);
-      // Redirect to email verification after a short delay
       setTimeout(() => router.replace('/(auth)/email-verify'), 2000);
     } else {
       setError(
@@ -150,60 +115,54 @@ export default function RegisterScreen() {
     setLoading(false);
   };
 
-  // Success Screen
   if (success) {
     return (
-      <View style={[styles.successContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.successCard, { backgroundColor: colors.card }]}>
-          {/* Success Icon */}
-          <View style={[styles.successIconContainer, { backgroundColor: colors.success }]}>
-            <Ionicons name="checkmark" size={40} color="white" />
+      <View style={StyleSheet.flatten([styles.successContainer, { backgroundColor: colors.background }])}>
+        <View style={[styles.successCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <View style={[styles.successIconContainer, { backgroundColor: '#10B981' }]}>
+            <Ionicons name="checkmark" size={40} color="#FFF" />
           </View>
 
-          <Text style={[styles.successTitle, { color: colors.successText }]}>Imhotep Tasks</Text>
+          <Text style={[styles.successTitle, { color: colors.primary }]}>Imhotep Tasks</Text>
           <Text style={[styles.successSubtitle, { color: colors.textSecondary }]}>Organize Your Productivity</Text>
 
-          <Text style={[styles.successHeading, { color: colors.text }]}>Welcome to Imhotep Tasks!</Text>
+          <Text style={[styles.successHeading, { color: colors.text }]}>Welcome aboard!</Text>
 
           <Text style={[styles.successMessage, { color: colors.textSecondary }]}>
-            We've sent a verification code to your email. You'll be redirected to enter it shortly.
+            We've sent a verification code to your email. Redirecting you to enter your code...
           </Text>
 
           <Link href="/(auth)/email-verify" asChild>
-            <TouchableOpacity style={[styles.successButton, { backgroundColor: colors.primary }]}>
+            <TouchableOpacity style={StyleSheet.flatten([styles.successButton, { backgroundColor: colors.primary }])}>
               <Text style={styles.successButtonText}>Verify Email</Text>
             </TouchableOpacity>
           </Link>
         </View>
-
-        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-          Imhotep Tasks – Organize Your Productivity
-        </Text>
       </View>
     );
   }
 
-  // Registration Form
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
           {/* Logo */}
-        <View style={styles.logoContainer}>
+          <View style={styles.logoContainer}>
             <View style={[styles.logoCircle, { backgroundColor: colors.primaryLight }]}>
-                <Image
-                    source={require('@/assets/images/imhotep_tasks.png')}
-                    style={{ width: 64, height: 64 }}
-                    resizeMode="contain"
-                />
+              <Image
+                source={require('@/assets/images/imhotep_tasks.png')}
+                style={{ width: 64, height: 64 }}
+                resizeMode="contain"
+              />
             </View>
-        </View>
+          </View>
 
           <Text style={[styles.title, { color: colors.text }]}>Join Imhotep Tasks</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -212,25 +171,26 @@ export default function RegisterScreen() {
 
           {/* Error Message */}
           {error ? (
-            <View style={[styles.errorBox, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
-              <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+            <View style={[styles.errorBox, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : '#FEF2F2', borderColor: '#EF4444' }]}>
+              <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+              <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : null}
 
           {/* Username Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: colors.text }]}>Username</Text>
-            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
               <Ionicons
                 name="person-outline"
                 size={20}
-                color={colors.placeholder}
+                color={colors.textMuted}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Choose a username"
-                placeholderTextColor={colors.placeholder}
+                placeholderTextColor={colors.textMuted}
                 value={formData.username}
                 onChangeText={(text) => {
                   setFormData({ ...formData, username: text });
@@ -245,17 +205,17 @@ export default function RegisterScreen() {
           {/* Email Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: colors.text }]}>Email</Text>
-            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
               <Ionicons
                 name="mail-outline"
                 size={20}
-                color={colors.placeholder}
+                color={colors.textMuted}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="your.email@example.com"
-                placeholderTextColor={colors.placeholder}
+                placeholderTextColor={colors.textMuted}
                 value={formData.email}
                 onChangeText={(text) => {
                   setFormData({ ...formData, email: text });
@@ -271,17 +231,17 @@ export default function RegisterScreen() {
           {/* Password Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: colors.text }]}>Password</Text>
-            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
               <Ionicons
                 name="lock-closed-outline"
                 size={20}
-                color={colors.placeholder}
+                color={colors.textMuted}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Create a strong password"
-                placeholderTextColor={colors.placeholder}
+                placeholderTextColor={colors.textMuted}
                 value={formData.password}
                 onChangeText={(text) => {
                   setFormData({ ...formData, password: text });
@@ -293,11 +253,12 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 style={styles.eyeIcon}
+                hitSlop={8}
               >
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={colors.primary}
+                  color={colors.textMuted}
                 />
               </TouchableOpacity>
             </View>
@@ -306,17 +267,17 @@ export default function RegisterScreen() {
           {/* Confirm Password Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: colors.text }]}>Confirm Password</Text>
-            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
               <Ionicons
                 name="shield-checkmark-outline"
                 size={20}
-                color={colors.placeholder}
+                color={colors.textMuted}
                 style={styles.inputIcon}
               />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="Confirm your password"
-                placeholderTextColor={colors.placeholder}
+                placeholderTextColor={colors.textMuted}
                 value={formData.password2}
                 onChangeText={(text) => {
                   setFormData({ ...formData, password2: text });
@@ -328,11 +289,12 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 onPress={() => setShowPassword2(!showPassword2)}
                 style={styles.eyeIcon}
+                hitSlop={8}
               >
                 <Ionicons
                   name={showPassword2 ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color={colors.primary}
+                  color={colors.textMuted}
                 />
               </TouchableOpacity>
             </View>
@@ -340,14 +302,19 @@ export default function RegisterScreen() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={[styles.submitButton, { backgroundColor: colors.primary }, loading && styles.submitButtonDisabled]}
+            style={[
+              styles.submitButton, 
+              { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow }, 
+              loading && styles.submitButtonDisabled
+            ]}
             onPress={handleSubmit}
             disabled={loading}
+            activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color="#FFF" />
             ) : (
-              <Text style={styles.submitButtonText}>Create your account</Text>
+              <Text style={styles.submitButtonText}>Create Account</Text>
             )}
           </TouchableOpacity>
 
@@ -355,7 +322,7 @@ export default function RegisterScreen() {
           <View style={styles.signInContainer}>
             <Text style={[styles.signInText, { color: colors.textSecondary }]}>Already have an account? </Text>
             <Link href="/(auth)/login" asChild>
-              <TouchableOpacity>
+              <TouchableOpacity activeOpacity={0.7}>
                 <Text style={[styles.signInLink, { color: colors.primary }]}>Sign in</Text>
               </TouchableOpacity>
             </Link>
@@ -373,25 +340,26 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 16,
+    padding: 20,
   },
   card: {
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 28,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    shadowRadius: 16,
+    elevation: 6,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   logoCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -399,61 +367,73 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 24,
+    lineHeight: 20,
   },
   errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 18,
+    gap: 8,
   },
   errorText: {
     fontSize: 14,
+    color: '#EF4444',
+    fontWeight: '600',
+    flex: 1,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 14,
   },
   inputIcon: {
-    paddingLeft: 12,
+    paddingLeft: 14,
   },
   input: {
     flex: 1,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    fontSize: 16,
+    fontSize: 15,
   },
   eyeIcon: {
-    paddingRight: 12,
+    paddingRight: 14,
   },
   submitButton: {
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 15,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButtonDisabled: {
     opacity: 0.7,
   },
   submitButtonText: {
-    color: 'white',
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   signInContainer: {
     flexDirection: 'row',
@@ -465,41 +445,37 @@ const styles = StyleSheet.create({
   },
   signInLink: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  // Success Screen Styles
   successContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
   },
   successCard: {
     borderRadius: 24,
+    borderWidth: 1,
     padding: 32,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 8,
     alignItems: 'center',
   },
   successIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 20,
   },
   successTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
     textAlign: 'center',
     marginBottom: 4,
@@ -507,35 +483,30 @@ const styles = StyleSheet.create({
   successSubtitle: {
     fontSize: 14,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   successHeading: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   successMessage: {
-    fontSize: 16,
+    fontSize: 14,
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
+    marginBottom: 28,
+    lineHeight: 20,
   },
   successButton: {
     paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 8,
+    paddingHorizontal: 28,
+    borderRadius: 14,
     width: '100%',
     alignItems: 'center',
   },
   successButtonText: {
-    color: 'white',
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  footerText: {
-    marginTop: 32,
-    fontSize: 14,
-    textAlign: 'center',
+    fontWeight: '700',
   },
 });

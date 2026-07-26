@@ -33,7 +33,7 @@ ALLOWED_HOSTS = [
     '0.0.0.0',
     'backend',
     'imhoteptasks.pythonanywhere.com',
-    '[IP_ADDRESS]'
+    '192.168.100.37'
     ]
 
 # CSRF Settings because JWT is being used

@@ -2,32 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-
-// Theme colors matching routines.tsx and auth pages
-const themes = {
-  light: {
-    card: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    success: '#16A34A',
-    successBg: '#DCFCE7',
-    warning: '#D97706',
-    warningBg: '#FEF3C7',
-  },
-  dark: {
-    card: '#1F2937',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    success: '#22C55E',
-    successBg: '#14532D',
-    warning: '#FBBF24',
-    warningBg: '#78350F',
-  },
-};
+import { Colors } from '@/constants/theme';
 
 interface TaskStatsProps {
   totalTasks: number;
@@ -37,38 +12,60 @@ interface TaskStatsProps {
 
 export function TaskStats({ totalTasks, completedCount, pendingCount }: TaskStatsProps) {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme ?? 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
 
   return (
     <View style={styles.container}>
-      <View style={[styles.statCard, { backgroundColor: colors.card }, styles.totalCard, { borderLeftColor: colors.primary }]}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}>
-          <Ionicons name="clipboard-outline" size={20} color={colors.primary} />
-        </View>
-        <View>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
+      {/* Total Card */}
+      <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <View style={styles.topRow}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}>
+            <Ionicons name="clipboard-outline" size={16} color={colors.primary} />
+          </View>
           <Text style={[styles.statValue, { color: colors.text }]}>{totalTasks}</Text>
         </View>
+        <Text 
+          style={[styles.statLabel, { color: colors.textSecondary }]} 
+          numberOfLines={1} 
+          adjustsFontSizeToFit
+        >
+          Total
+        </Text>
       </View>
 
-      <View style={[styles.statCard, { backgroundColor: colors.card }, styles.completedCard, { borderLeftColor: colors.success }]}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.successBg }]}>
-          <Ionicons name="checkmark-done-outline" size={20} color={colors.success} />
+      {/* Done Card */}
+      <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <View style={styles.topRow}>
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#ECFDF5' }]}>
+            <Ionicons name="checkmark-done-outline" size={16} color={isDark ? '#34D399' : '#10B981'} />
+          </View>
+          <Text style={[styles.statValue, { color: isDark ? '#34D399' : '#10B981' }]}>{completedCount}</Text>
         </View>
-        <View>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Done</Text>
-          <Text style={[styles.statValue, { color: colors.text }]}>{completedCount}</Text>
-        </View>
+        <Text 
+          style={[styles.statLabel, { color: colors.textSecondary }]} 
+          numberOfLines={1} 
+          adjustsFontSizeToFit
+        >
+          Done
+        </Text>
       </View>
 
-      <View style={[styles.statCard, { backgroundColor: colors.card }, styles.pendingCard, { borderLeftColor: colors.warning }]}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.warningBg }]}>
-          <Ionicons name="time-outline" size={20} color={colors.warning} />
+      {/* Pending Card */}
+      <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <View style={styles.topRow}>
+          <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.2)' : '#FFFBEB' }]}>
+            <Ionicons name="time-outline" size={16} color={isDark ? '#FBBF24' : '#F59E0B'} />
+          </View>
+          <Text style={[styles.statValue, { color: isDark ? '#FBBF24' : '#F59E0B' }]}>{pendingCount}</Text>
         </View>
-        <View>
-          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pending</Text>
-          <Text style={[styles.statValue, { color: colors.text }]}>{pendingCount}</Text>
-        </View>
+        <Text 
+          style={[styles.statLabel, { color: colors.textSecondary }]} 
+          numberOfLines={1} 
+          adjustsFontSizeToFit
+        >
+          Pending
+        </Text>
       </View>
     </View>
   );
@@ -78,40 +75,43 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    paddingVertical: 10,
+    gap: 10,
   },
   statCard: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
     elevation: 2,
     gap: 8,
-    borderLeftWidth: 3,
   },
-  totalCard: {},
-  completedCard: {},
-  pendingCard: {},
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800',
+  },
   statLabel: {
     fontSize: 11,
-    fontWeight: '500',
-  },
-  statValue: {
-    fontSize: 18,
     fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

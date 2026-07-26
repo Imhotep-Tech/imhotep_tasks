@@ -10,6 +10,8 @@ const GoogleCallback = () => {
   const [status, setStatus] = useState('processing');
   const [message, setMessage] = useState('Processing Google authentication...');
   const [isNewUser, setIsNewUser] = useState(false);
+  const [mobileDeepLink, setMobileDeepLink] = useState('');
+  const [isMobileFlow, setIsMobileFlow] = useState(false);
   const hasProcessed = useRef(false);
 
   const googleAuth = async (code) => {
@@ -45,12 +47,14 @@ const GoogleCallback = () => {
 
   useEffect(() => {
     const handleGoogleCallback = async () => {
-      // Prevent multiple executions
       if (hasProcessed.current) return;
       hasProcessed.current = true;
       
       const code = searchParams.get('code');
       const error = searchParams.get('error');
+      const platform = searchParams.get('platform');
+      const isMobile = platform === 'mobile' || searchParams.get('mobile') === 'true' || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      setIsMobileFlow(isMobile);
 
       if (error) {
         setStatus('error');
@@ -73,12 +77,28 @@ const GoogleCallback = () => {
           login(result.data);
           setStatus('success');
           setIsNewUser(result.isNewUser);
-          if (result.isNewUser) {
-            setMessage('Welcome to Imhotep Tasks! Your account has been created successfully.');
+
+          // Construct Mobile Deep Link URL
+          const { access, refresh, user: userData } = result.data;
+          const deepLink = `imhotep-tasks://auth-callback?access=${encodeURIComponent(access)}&refresh=${encodeURIComponent(refresh)}&user=${encodeURIComponent(JSON.stringify(userData))}`;
+          setMobileDeepLink(deepLink);
+
+          if (isMobile) {
+            setMessage('Google login successful! Opening Imhotep Tasks Mobile App...');
+            // Automatically attempt to trigger deep link to open the installed app
+            try {
+              window.location.href = deepLink;
+            } catch (e) {
+              console.log('Auto deep link redirect failed:', e);
+            }
           } else {
-            setMessage('Login successful! Redirecting to dashboard...');
+            if (result.isNewUser) {
+              setMessage('Welcome to Imhotep Tasks! Your account has been created successfully.');
+            } else {
+              setMessage('Login successful! Redirecting to dashboard...');
+            }
+            setTimeout(() => navigate('/today-tasks'), 2000);
           }
-          setTimeout(() => navigate('/today-tasks'), 2000);
         } else {
           setStatus('error');
           setMessage(result.error || 'Google authentication failed.');
@@ -190,24 +210,13 @@ const GoogleCallback = () => {
       case 'processing':
         return 'Please wait while we securely authenticate you with Google and prepare your tasks...';
       case 'success':
-        return isNewUser 
-          ? 'Your Google account has been successfully connected and your Imhotep Tasks profile has been created.'
-          : 'Successfully authenticated with Google! Redirecting you to your dashboard...';
+        return isMobileFlow
+          ? 'Google login successful! Tap the button below to return to your mobile app.'
+          : isNewUser 
+            ? 'Your Google account has been successfully connected and your Imhotep Tasks profile has been created.'
+            : 'Successfully authenticated with Google! Redirecting you to your dashboard...';
       case 'error':
         return message;
-      default:
-        return '';
-    }
-  };
-
-  const getBottomMessage = () => {
-    switch (status) {
-      case 'processing':
-        return '🔐 Securing your Google connection 🔐';
-      case 'success':
-        return isNewUser ? '🎉 Your Tasks journey begins now! 🎉' : 'Ready to create amazing Tasks!';
-      case 'error':
-        return '💡 Try logging in with Google again 💡';
       default:
         return '';
     }
@@ -248,22 +257,26 @@ const GoogleCallback = () => {
             </div>
           )}
 
-          {/* Success message for new users */}
-          {status === 'success' && isNewUser && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          {/* Open App Button for Mobile Flow */}
+          {status === 'success' && mobileDeepLink && (
+            <div className="mt-6 space-y-4">
+              <a
+                href={mobileDeepLink}
+                className="inline-flex items-center justify-center w-full py-3.5 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-base rounded-2xl shadow-xl transition-all transform active:scale-95 gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
-                <div className="text-left">
-                  <p className="text-green-700 font-medium text-sm">Account Created Successfully!</p>
-                </div>
-              </div>
+                <span>Open Imhotep Tasks App</span>
+              </a>
+              <p className="text-gray-500 text-xs">
+                If the app didn't open automatically, click the button above to return.
+              </p>
             </div>
           )}
 
-          {/* Countdown/redirect info for success state */}
-          {status === 'success' && (
+          {/* Countdown/redirect info for Web state */}
+          {status === 'success' && !isMobileFlow && (
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
               <div className="flex items-center justify-center">
                 <svg className="w-5 h-5 text-blue-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
@@ -305,13 +318,6 @@ const GoogleCallback = () => {
               Powered by Google OAuth 2.0 • Secure Authentication
             </p>
           </div>
-        </div>
-
-        {/* Bottom decorative text */}
-        <div className="text-center mt-8">
-          <p className="text-gray-500 text-sm font-medium">
-            {getBottomMessage()}
-          </p>
         </div>
       </div>
     </div>

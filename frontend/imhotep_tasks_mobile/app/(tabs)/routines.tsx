@@ -5,6 +5,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  Pressable,
   RefreshControl,
   ActivityIndicator,
   Modal,
@@ -23,58 +24,7 @@ import api from '@/constants/api';
 import axios from 'axios';
 import { cacheSet, cacheGet, buildCacheKey } from '@/utils/cache';
 import { enqueue } from '@/utils/mutation-queue';
-
-// Theme colors
-const themes = {
-  light: {
-    background: '#F3F4F6',
-    card: '#FFFFFF',
-    text: '#111827',
-    textSecondary: '#6B7280',
-    border: '#E5E7EB',
-    primary: '#2563EB',
-    primaryLight: '#EFF6FF',
-    success: '#16A34A',
-    successBg: '#DCFCE7',
-    successBorder: '#86EFAC',
-    error: '#DC2626',
-    errorBg: '#FEF2F2',
-    inactive: '#9CA3AF',
-    inactiveBg: '#F3F4F6',
-    inputBg: '#FFFFFF',
-    placeholder: '#9CA3AF',
-    weekly: '#8B5CF6',
-    weeklyBg: '#EDE9FE',
-    monthly: '#0891B2',
-    monthlyBg: '#CFFAFE',
-    yearly: '#EA580C',
-    yearlyBg: '#FFEDD5',
-  },
-  dark: {
-    background: '#111827',
-    card: '#1F2937',
-    text: '#F9FAFB',
-    textSecondary: '#9CA3AF',
-    border: '#374151',
-    primary: '#3B82F6',
-    primaryLight: '#1E3A5F',
-    success: '#22C55E',
-    successBg: '#14532D',
-    successBorder: '#166534',
-    error: '#EF4444',
-    errorBg: '#450A0A',
-    inactive: '#6B7280',
-    inactiveBg: '#374151',
-    inputBg: '#374151',
-    placeholder: '#6B7280',
-    weekly: '#A78BFA',
-    weeklyBg: '#2E1065',
-    monthly: '#22D3EE',
-    monthlyBg: '#164E63',
-    yearly: '#FB923C',
-    yearlyBg: '#431407',
-  },
-};
+import { Colors } from '@/constants/theme';
 
 interface Routine {
   id: number;
@@ -103,7 +53,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function RoutinesScreen() {
   const colorScheme = useColorScheme();
-  const colors = themes[colorScheme ?? 'light'];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
   const { user, token } = useAuth();
   const { isOnline, refreshPendingCount } = useNetwork();
   const userId = user?.id || user?.pk || 'unknown';
@@ -117,14 +68,12 @@ export default function RoutinesScreen() {
   const [activeCount, setActiveCount] = useState(0);
   const [inactiveCount, setInactiveCount] = useState(0);
 
-  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [applyLoading, setApplyLoading] = useState(false);
 
-  // Form state
   const [title, setTitle] = useState('');
   const [routineType, setRoutineType] = useState<RoutineType>('weekly');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -142,7 +91,6 @@ export default function RoutinesScreen() {
       setLoading(true);
 
       if (isOnline) {
-        // Online: fetch from API, save to cache
         const response = await axios.get(`api/routines/?page=${pageNum}`);
         const data = response.data;
         const newRoutines = data.user_routines || [];
@@ -152,21 +100,17 @@ export default function RoutinesScreen() {
         setTotalPages(data.pagination?.num_pages || 1);
         setTotalRoutines(data.pagination?.total || 0);
         
-        // Calculate counts
         const active = newRoutines.filter((r: Routine) => r.status).length;
         setActiveCount(append ? activeCount + active : active);
         setInactiveCount(append ? inactiveCount + (newRoutines.length - active) : newRoutines.length - active);
 
-        // Save to cache in background
         const cacheKey = buildCacheKey(userId, `routines:page${pageNum}`);
         cacheSet(cacheKey, data).catch(() => {});
       } else {
-        // Offline: load from cache
         const cacheKey = buildCacheKey(userId, `routines:page${pageNum}`);
         const cached = await cacheGet(cacheKey);
 
         if (cached) {
-          console.log(`[Routines] Loaded page ${pageNum} from cache (saved: ${cached.timestamp})`);
           const data = cached.data;
           const newRoutines = data.user_routines || [];
 
@@ -178,12 +122,9 @@ export default function RoutinesScreen() {
           const active = newRoutines.filter((r: Routine) => r.status).length;
           setActiveCount(append ? activeCount + active : active);
           setInactiveCount(append ? inactiveCount + (newRoutines.length - active) : newRoutines.length - active);
-        } else {
-          console.log('[Routines] No cached data available for offline use');
         }
       }
     } catch (error: any) {
-      // Network error while supposedly online — try cache fallback
       const isNetworkError = !error?.response;
       if (isNetworkError) {
         const cacheKey = buildCacheKey(userId, `routines:page${pageNum}`);
@@ -223,7 +164,6 @@ export default function RoutinesScreen() {
     }
   };
 
-  // Form helpers
   const resetForm = () => {
     setTitle('');
     setRoutineType('weekly');
@@ -250,7 +190,6 @@ export default function RoutinesScreen() {
     if (routine.routine_type === 'yearly') {
       setYearlyInput(routine.routines_dates.join(', '));
     }
-    // Set category
     const existingCat = (routine.routine_category || 'general').toLowerCase();
     if (PRESET_CATEGORIES.includes(existingCat)) {
       setSelectedCategory(existingCat);
@@ -367,10 +306,9 @@ export default function RoutinesScreen() {
           await api.post('api/add_routine/', payload);
         }
       } else {
-        // Offline: queue the mutation
         if (editingRoutine) {
           await enqueue({
-            action: 'update_task', // reusing action type for routines
+            action: 'update_task',
             endpoint: `api/update_routine/${editingRoutine.id}/`,
             method: 'POST',
             payload,
@@ -378,7 +316,7 @@ export default function RoutinesScreen() {
           });
         } else {
           await enqueue({
-            action: 'add_task', // reusing action type for routines
+            action: 'add_task',
             endpoint: 'api/add_routine/',
             method: 'POST',
             payload,
@@ -410,7 +348,6 @@ export default function RoutinesScreen() {
           taskId: routine.id,
         });
         await refreshPendingCount();
-        // Optimistic update
         setRoutines(prev => prev.map(r => r.id === routine.id ? { ...r, status: !r.status } : r));
       }
       if (isOnline) fetchRoutines(1);
@@ -444,7 +381,6 @@ export default function RoutinesScreen() {
                   taskId: routine.id,
                 });
                 await refreshPendingCount();
-                // Optimistic update
                 setRoutines(prev => prev.filter(r => r.id !== routine.id));
               }
               if (isOnline) fetchRoutines(1);
@@ -478,9 +414,9 @@ export default function RoutinesScreen() {
 
   const getTypeColor = (type: RoutineType) => {
     switch (type) {
-      case 'weekly': return { bg: colors.weeklyBg, text: colors.weekly };
-      case 'monthly': return { bg: colors.monthlyBg, text: colors.monthly };
-      case 'yearly': return { bg: colors.yearlyBg, text: colors.yearly };
+      case 'weekly': return { bg: isDark ? 'rgba(139, 92, 246, 0.2)' : '#F5F3FF', text: isDark ? '#A78BFA' : '#7C3AED' };
+      case 'monthly': return { bg: isDark ? 'rgba(14, 165, 233, 0.2)' : '#F0F9FF', text: isDark ? '#38BDF8' : '#0284C7' };
+      case 'yearly': return { bg: isDark ? 'rgba(249, 115, 22, 0.2)' : '#FFF7ED', text: isDark ? '#FB923C' : '#EA580C' };
     }
   };
 
@@ -500,8 +436,12 @@ export default function RoutinesScreen() {
     const isLoading = actionLoading === item.id;
 
     return (
-      <TouchableOpacity
-        style={[styles.routineCard, { backgroundColor: colors.card }]}
+      <Pressable
+        style={({ pressed }: { pressed: boolean }) => [
+          styles.routineCard, 
+          { backgroundColor: colors.card, borderColor: colors.cardBorder },
+          pressed && !isLoading && { transform: [{ scale: 0.985 }] },
+        ]}
         onPress={() => openEditModal(item)}
         disabled={isLoading}
       >
@@ -537,65 +477,67 @@ export default function RoutinesScreen() {
                 <TouchableOpacity
                   style={[
                     styles.statusButton,
-                    { backgroundColor: item.status ? colors.successBg : colors.inactiveBg },
+                    { backgroundColor: item.status ? (isDark ? 'rgba(16, 185, 129, 0.2)' : '#ECFDF5') : (isDark ? 'rgba(255,255,255,0.06)' : '#F1F5F9') },
                   ]}
                   onPress={() => handleToggleStatus(item)}
                 >
                   <Ionicons
                     name={item.status ? 'checkmark-circle' : 'pause-circle'}
-                    size={20}
-                    color={item.status ? colors.success : colors.inactive}
+                    size={22}
+                    color={item.status ? (isDark ? '#34D399' : '#10B981') : colors.textMuted}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.deleteButton, { backgroundColor: colors.errorBg }]}
+                  style={[styles.deleteButton, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : '#FEF2F2' }]}
                   onPress={() => handleDelete(item)}
                 >
-                  <Ionicons name="trash-outline" size={18} color={colors.error} />
+                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
                 </TouchableOpacity>
               </>
             )}
           </View>
         </View>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 
   const renderStats = () => (
-    <View style={[styles.statsContainer, { backgroundColor: colors.card }]}>
-      <View style={styles.statItem}>
+    <View style={styles.statsContainer}>
+      <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
         <Text style={[styles.statNumber, { color: colors.primary }]}>{totalRoutines}</Text>
-        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1} adjustsFontSizeToFit>Total</Text>
       </View>
-      <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-      <View style={styles.statItem}>
-        <Text style={[styles.statNumber, { color: colors.success }]}>{activeCount}</Text>
-        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Active</Text>
+
+      <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <Text style={[styles.statNumber, { color: isDark ? '#34D399' : '#10B981' }]}>{activeCount}</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1} adjustsFontSizeToFit>Active</Text>
       </View>
-      <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-      <View style={styles.statItem}>
-        <Text style={[styles.statNumber, { color: colors.inactive }]}>{inactiveCount}</Text>
-        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Inactive</Text>
+
+      <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <Text style={[styles.statNumber, { color: colors.textMuted }]}>{inactiveCount}</Text>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1} adjustsFontSizeToFit>Inactive</Text>
       </View>
     </View>
   );
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
-        <Ionicons name="repeat-outline" size={48} color={colors.primary} />
+      <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+        <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name="repeat-outline" size={48} color={colors.primary} />
+        </View>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>No Routines Yet</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+          Create routines to automatically generate recurring tasks.
+        </Text>
+        <TouchableOpacity
+          style={[styles.emptyButton, { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow }]}
+          onPress={openAddModal}
+        >
+          <Ionicons name="add" size={20} color="#FFFFFF" />
+          <Text style={styles.emptyButtonText}>Add Routine</Text>
+        </TouchableOpacity>
       </View>
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>No Routines Yet</Text>
-      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
-        Create routines to automatically generate recurring tasks
-      </Text>
-      <TouchableOpacity
-        style={[styles.emptyButton, { backgroundColor: colors.primary }]}
-        onPress={openAddModal}
-      >
-        <Ionicons name="add" size={20} color="#FFFFFF" />
-        <Text style={styles.emptyButtonText}>Add Routine</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -607,16 +549,21 @@ export default function RoutinesScreen() {
       onRequestClose={closeModal}
     >
       <KeyboardAvoidingView
-        style={styles.modalOverlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={[styles.modalOverlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.75)' : 'rgba(15,23,42,0.45)' }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-          <View style={styles.modalHeader}>
+        <View style={[styles.sheet, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          {/* Grab handle */}
+          <View style={styles.handleContainer}>
+            <View style={[styles.handle, { backgroundColor: colors.cardBorder }]} />
+          </View>
+
+          <View style={[styles.modalHeader, { borderBottomColor: colors.cardBorder }]}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
               {editingRoutine ? 'Edit Routine' : 'Add Routine'}
             </Text>
-            <TouchableOpacity onPress={closeModal}>
-              <Ionicons name="close" size={24} color={colors.textSecondary} />
+            <TouchableOpacity onPress={closeModal} hitSlop={8}>
+              <Ionicons name="close" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -627,10 +574,10 @@ export default function RoutinesScreen() {
               <TextInput
                 style={[
                   styles.textInput,
-                  { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.text },
+                  { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text },
                 ]}
                 placeholder="Enter routine title"
-                placeholderTextColor={colors.placeholder}
+                placeholderTextColor={colors.textMuted}
                 value={title}
                 onChangeText={setTitle}
               />
@@ -639,7 +586,7 @@ export default function RoutinesScreen() {
             {/* Routine Type Tabs */}
             <View style={styles.formGroup}>
               <Text style={[styles.formLabel, { color: colors.text }]}>Routine Type *</Text>
-              <View style={[styles.typeTabs, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+              <View style={[styles.typeTabs, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                 {(['weekly', 'monthly', 'yearly'] as RoutineType[]).map((type) => (
                   <TouchableOpacity
                     key={type}
@@ -688,7 +635,7 @@ export default function RoutinesScreen() {
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.key}
-                        style={[styles.quickSelectButton, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
+                        style={[styles.quickSelectButton, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}
                         onPress={() => handleQuickSelect(item.key as any)}
                       >
                         <Text style={[styles.quickSelectText, { color: colors.textSecondary }]}>
@@ -703,7 +650,7 @@ export default function RoutinesScreen() {
                         key={day}
                         style={[
                           styles.dayButton,
-                          { backgroundColor: colors.inputBg, borderColor: colors.border },
+                          { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
                           selectedDays.includes(day) && { backgroundColor: colors.primary, borderColor: colors.primary },
                         ]}
                         onPress={() => handleDayToggle(day)}
@@ -729,7 +676,7 @@ export default function RoutinesScreen() {
                       key={day}
                       style={[
                         styles.monthDayButton,
-                        { backgroundColor: colors.inputBg, borderColor: colors.border },
+                        { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
                         selectedDays.includes(day) && { backgroundColor: colors.primary, borderColor: colors.primary },
                       ]}
                       onPress={() => handleDayToggle(day)}
@@ -752,17 +699,17 @@ export default function RoutinesScreen() {
                   <TextInput
                     style={[
                       styles.textInput,
-                      { backgroundColor: colors.inputBg, borderColor: yearlyError ? colors.error : colors.border, color: colors.text },
+                      { backgroundColor: colors.inputBg, borderColor: yearlyError ? '#EF4444' : colors.inputBorder, color: colors.text },
                     ]}
                     placeholder="e.g., 12-25, 01-01, 06-15"
-                    placeholderTextColor={colors.placeholder}
+                    placeholderTextColor={colors.textMuted}
                     value={yearlyInput}
                     onChangeText={handleYearlyChange}
                   />
                   {yearlyError ? (
-                    <Text style={[styles.errorText, { color: colors.error }]}>{yearlyError}</Text>
+                    <Text style={styles.errorText}>{yearlyError}</Text>
                   ) : (
-                    <Text style={[styles.hintText, { color: colors.textSecondary }]}>
+                    <Text style={[styles.hintText, { color: colors.textMuted }]}>
                       Format: MM-DD (e.g., 12-25 for Christmas)
                     </Text>
                   )}
@@ -776,7 +723,7 @@ export default function RoutinesScreen() {
               <TouchableOpacity
                 style={[
                   styles.categoryButton,
-                  { backgroundColor: colors.inputBg, borderColor: colors.border },
+                  { backgroundColor: colors.inputBg, borderColor: colors.inputBorder },
                 ]}
                 onPress={() => setShowCategoryPicker(!showCategoryPicker)}
               >
@@ -788,19 +735,19 @@ export default function RoutinesScreen() {
                 </Text>
                 <Ionicons
                   name={showCategoryPicker ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={colors.placeholder}
+                  size={18}
+                  color={colors.textMuted}
                 />
               </TouchableOpacity>
 
               {showCategoryPicker && (
-                <View style={[styles.categoryDropdown, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+                <View style={[styles.categoryDropdown, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder }]}>
                   {PRESET_CATEGORIES.map((cat) => (
                     <TouchableOpacity
                       key={cat}
                       style={[
                         styles.categoryOption,
-                        { borderBottomColor: colors.border },
+                        { borderBottomColor: colors.cardBorder },
                         selectedCategory === cat && { backgroundColor: colors.primaryLight },
                       ]}
                       onPress={() => {
@@ -840,32 +787,32 @@ export default function RoutinesScreen() {
                 <TextInput
                   style={[
                     styles.textInput,
-                    { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.text, marginTop: 8 },
+                    { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text, marginTop: 8 },
                   ]}
                   value={customCategory}
                   onChangeText={setCustomCategory}
                   placeholder="Enter custom category"
-                  placeholderTextColor={colors.placeholder}
+                  placeholderTextColor={colors.textMuted}
                 />
               )}
             </View>
 
             {formError ? (
-              <View style={[styles.errorBox, { backgroundColor: colors.errorBg }]}>
-                <Text style={[styles.errorBoxText, { color: colors.error }]}>{formError}</Text>
+              <View style={[styles.errorBox, { backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : '#FEF2F2' }]}>
+                <Text style={styles.errorBoxText}>{formError}</Text>
               </View>
             ) : null}
           </ScrollView>
 
-          <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+          <View style={[styles.modalFooter, { borderTopColor: colors.cardBorder }]}>
             <TouchableOpacity
-              style={[styles.cancelButton, { borderColor: colors.border }]}
+              style={[styles.cancelModalButton, { borderColor: colors.cardBorder }]}
               onPress={closeModal}
             >
-              <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>Cancel</Text>
+              <Text style={[styles.cancelModalButtonText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.submitButton, { backgroundColor: colors.primary }]}
+              style={[styles.submitButton, { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow }]}
               onPress={handleSubmit}
               disabled={formLoading}
             >
@@ -884,32 +831,35 @@ export default function RoutinesScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={StyleSheet.flatten([styles.container, { backgroundColor: colors.background }])} edges={['top']}>
       <View style={styles.header}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: colors.text }]}>Routines</Text>
-          {user?.username && (
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
-              Recurring task templates
-            </Text>
-          )}
+          <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+            Recurring task templates
+          </Text>
         </View>
         <View style={styles.headerButtons}>
           <TouchableOpacity 
-            style={[styles.applyButton, { backgroundColor: colors.success }]} 
+            style={[styles.applyButton, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : '#ECFDF5', borderColor: '#10B981' }]} 
             onPress={handleApplyRoutines}
             disabled={applyLoading}
+            activeOpacity={0.7}
           >
             {applyLoading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color="#10B981" />
             ) : (
               <>
-                <Ionicons name="refresh" size={18} color="#FFFFFF" />
-                <Text style={styles.applyButtonText}>Apply</Text>
+                <Ionicons name="refresh" size={16} color={isDark ? '#34D399' : '#10B981'} />
+                <Text style={[styles.applyButtonText, { color: isDark ? '#34D399' : '#10B981' }]}>Apply</Text>
               </>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.primary }]} onPress={openAddModal}>
+          <TouchableOpacity 
+            style={[styles.addButton, { backgroundColor: colors.primary, shadowColor: colors.addButtonShadow }]} 
+            onPress={openAddModal}
+            activeOpacity={0.85}
+          >
             <Ionicons name="add" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -955,22 +905,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
+    letterSpacing: -0.5,
   },
   greeting: {
     fontSize: 14,
     marginTop: 2,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   headerButtons: {
     flexDirection: 'row',
@@ -981,56 +926,71 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 22,
+    paddingVertical: 9,
+    borderRadius: 14,
+    borderWidth: 1,
     gap: 6,
   },
   applyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  addButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   statsContainer: {
     flexDirection: 'row',
-    marginHorizontal: 16,
-    marginBottom: 12,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 10,
   },
-  statItem: {
+  statCard: {
     flex: 1,
     alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
     marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    marginVertical: 4,
+    letterSpacing: 0.4,
   },
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 100,
+    paddingTop: 4,
   },
   routineCard: {
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    marginBottom: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   routineHeader: {
     flexDirection: 'row',
@@ -1043,8 +1003,9 @@ const styles = StyleSheet.create({
   },
   routineTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: 6,
+    letterSpacing: -0.2,
   },
   routineMeta: {
     flexDirection: 'row',
@@ -1054,16 +1015,17 @@ const styles = StyleSheet.create({
   },
   typeBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   typeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     textTransform: 'capitalize',
   },
   datesText: {
     fontSize: 12,
+    fontWeight: '500',
   },
   routineActions: {
     flexDirection: 'row',
@@ -1071,16 +1033,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   deleteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1090,96 +1052,132 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    paddingVertical: 32,
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 60,
+    justifyContent: 'center',
+  },
+  emptyCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   emptyIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     marginBottom: 8,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 24,
+    lineHeight: 20,
   },
   emptyButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingHorizontal: 22,
+    paddingVertical: 14,
+    borderRadius: 14,
     gap: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   emptyButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
-  // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
+  sheet: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1,
+    maxHeight: '88%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  handleContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   modalBody: {
-    paddingHorizontal: 16,
+    padding: 20,
   },
   formGroup: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   formLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: 8,
   },
   textInput: {
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderRadius: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 16,
+    fontSize: 15,
   },
   typeTabs: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 14,
     overflow: 'hidden',
+    padding: 3,
   },
   typeTab: {
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
+    borderRadius: 11,
   },
   typeTabText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   quickSelectRow: {
     flexDirection: 'row',
@@ -1188,13 +1186,13 @@ const styles = StyleSheet.create({
   },
   quickSelectButton: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingVertical: 7,
+    borderRadius: 10,
     borderWidth: 1,
   },
   quickSelectText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   daysGrid: {
     flexDirection: 'row',
@@ -1202,14 +1200,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dayButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
   },
   dayButtonText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   monthlyGrid: {
     flexDirection: 'row',
@@ -1217,16 +1215,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   monthDayButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   monthDayText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   hintText: {
     fontSize: 12,
@@ -1234,73 +1232,84 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 12,
+    color: '#EF4444',
     marginTop: 6,
+    fontWeight: '600',
   },
   errorBox: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 18,
   },
   errorBoxText: {
     fontSize: 14,
+    color: '#EF4444',
     textAlign: 'center',
+    fontWeight: '600',
   },
   modalFooter: {
     flexDirection: 'row',
-    padding: 16,
+    padding: 20,
     gap: 12,
     borderTopWidth: 1,
   },
-  cancelButton: {
+  cancelModalButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  cancelButtonText: {
-    fontSize: 16,
+  cancelModalButtonText: {
+    fontSize: 15,
     fontWeight: '600',
   },
   submitButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
   categoryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
     gap: 10,
   },
   categoryButtonText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
   },
   categoryDropdown: {
     marginTop: 8,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 14,
     overflow: 'hidden',
   },
   categoryOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
   categoryOptionText: {
     fontSize: 15,
+    fontWeight: '500',
   },
 });
