@@ -5,15 +5,15 @@ import UpdateTask from './UpdateTask';
 import DetailsModal from './DetailsModal';
 import DateComponent from "./DateComponent";
 
-/* ─── colour palette per category ─── */
+/* ─── category styles with rich color tokens ─── */
 const CATEGORY_STYLES = {
-  study:    { border: "border-blue-400",   bg: "bg-blue-50",   badge: "bg-blue-100  text-blue-700  border-blue-200",   icon: "📚" },
-  work:     { border: "border-amber-400",  bg: "bg-amber-50",  badge: "bg-amber-100 text-amber-700 border-amber-200",  icon: "💼" },
-  personal: { border: "border-pink-400",   bg: "bg-pink-50",   badge: "bg-pink-100  text-pink-700  border-pink-200",   icon: "🏠" },
-  health:   { border: "border-green-400",  bg: "bg-green-50",  badge: "bg-green-100 text-green-700 border-green-200",  icon: "💪" },
-  finance:  { border: "border-emerald-400",bg: "bg-emerald-50",badge: "bg-emerald-100 text-emerald-700 border-emerald-200", icon: "💰" },
-  general:  { border: "border-gray-300",   bg: "bg-gray-50",   badge: "bg-gray-100  text-gray-600  border-gray-200",   icon: "📋" },
-  other:    { border: "border-purple-400", bg: "bg-purple-50", badge: "bg-purple-100 text-purple-700 border-purple-200", icon: "🔖" },
+  study:    { border: "border-blue-500",    bg: "bg-blue-500/10 dark:bg-blue-500/15",    badge: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",    icon: "📚" },
+  work:     { border: "border-amber-500",   bg: "bg-amber-500/10 dark:bg-amber-500/15",   badge: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",   icon: "💼" },
+  personal: { border: "border-pink-500",    bg: "bg-pink-500/10 dark:bg-pink-500/15",    badge: "bg-pink-500/15 text-pink-600 dark:text-pink-400 border-pink-500/30",    icon: "🏠" },
+  health:   { border: "border-emerald-500", bg: "bg-emerald-500/10 dark:bg-emerald-500/15", badge: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30", icon: "💪" },
+  finance:  { border: "border-cyan-500",    bg: "bg-cyan-500/10 dark:bg-cyan-500/15",    badge: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/30",    icon: "💰" },
+  general:  { border: "border-indigo-500",  bg: "bg-indigo-500/10 dark:bg-indigo-500/15",  badge: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30", icon: "📋" },
+  other:    { border: "border-purple-500",  bg: "bg-purple-500/10 dark:bg-purple-500/15",  badge: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",  icon: "🔖" },
 };
 
 const getStyle = (cat) => CATEGORY_STYLES[cat] || CATEGORY_STYLES.general;
@@ -25,41 +25,43 @@ const formatCategoryName = (cat) => {
 /* ─── Collapsible category header ─── */
 const CategoryHeader = ({ category, pendingCount, doneCount, isOpen, onToggle, isDoneGroup = false }) => {
   const s = isDoneGroup ? getStyle("general") : getStyle(category);
-  const title = isDoneGroup ? "Done" : category;
+  const title = isDoneGroup ? "Completed Tasks" : category;
   return (
     <button
       type="button"
       onClick={onToggle}
-      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-l-4 ${s.border} ${s.bg} dark:bg-slate-800 transition-colors hover:brightness-95 focus:outline-none`}
+      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-l-4 ${s.border} ${s.bg} border border-slate-200/50 dark:border-white/5 shadow-sm transition-all duration-200 hover:brightness-105 focus:outline-none`}
     >
-      <div className="flex items-center gap-2">
-        <span className="text-lg">{s.icon}</span>
-        <h3 className="text-sm font-semibold capitalize text-gray-800 dark:text-gray-100">{title}</h3>
+      <div className="flex items-center gap-2.5">
+        <span className="text-xl">{s.icon}</span>
+        <h3 className="text-sm font-bold capitalize text-slate-800 dark:text-slate-100">{title}</h3>
         {!isDoneGroup && (
-          <span className={`ml-1 text-xs px-2 py-0.5 rounded-full border ${s.badge}`}>
+          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${s.badge}`}>
             {pendingCount} pending
           </span>
         )}
         {(isDoneGroup || doneCount > 0) && (
-          <span className="text-xs px-2 py-0.5 rounded-full border bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-300 border-gray-200 dark:border-slate-600">
-            {isDoneGroup ? doneCount : `${doneCount} done`}
+          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700">
+            {isDoneGroup ? `${doneCount} completed` : `${doneCount} done`}
           </span>
         )}
       </div>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className={`h-4 w-4 text-gray-500 dark:text-slate-300 transition-transform ${isOpen ? "rotate-180" : ""}`}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-      </svg>
+      <div className="w-7 h-7 rounded-lg bg-white/50 dark:bg-slate-800/50 flex items-center justify-center text-slate-500 dark:text-slate-400">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
     </button>
   );
 };
 
-/* ─── single task row (unchanged logic) ─── */
+/* ─── Task Row ─── */
 const TaskRow = ({
   task,
   url_call,
@@ -73,82 +75,77 @@ const TaskRow = ({
 }) => {
   return (
     <li
-      key={task.id}
-      className={`p-4 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all ${task.status ? "bg-gray-50 dark:bg-slate-800/70" : ""} flex items-center`}
+      className={`p-3.5 my-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800/70 transition-all duration-200 ${
+        task.status 
+          ? "bg-slate-50/50 dark:bg-slate-900/40 opacity-75" 
+          : "bg-white/90 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:shadow-md hover:border-indigo-500/20"
+      } flex items-center justify-between gap-3 group`}
     >
-      {/* Unified row for checkbox + complete toggle + title */}
-      <div className="flex items-center flex-1">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <input
           type="checkbox"
           checked={isSelected}
           onChange={() => onToggleSelect(task.id)}
-          className="h-5 w-5 mr-3 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 align-middle"
+          className="h-4.5 w-4.5 text-indigo-600 rounded border-slate-300 dark:border-slate-700 focus:ring-indigo-500 cursor-pointer"
         />
+
         <TaskCompleteButton
           task={task}
           url_call={url_call}
           onCompleteTask={onCompleteTask}
         />
-        <div>
+
+        <div className="min-w-0 flex-1">
           <p
             onClick={() => onOpenDetails(task)}
-            className={`font-medium text-gray-800 dark:text-gray-100 cursor-pointer hover:underline ${
-              task.status ? "line-through text-gray-500 dark:text-slate-400" : ""
+            className={`font-semibold text-sm text-slate-800 dark:text-slate-100 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate ${
+              task.status ? "line-through text-slate-400 dark:text-slate-500 font-normal" : ""
             }`}
           >
             {task.task_title}
           </p>
-          {task.transaction_id && (
-            <div className="mt-1 inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900">
-              <span className="mr-1">
+
+          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+            {task.transaction_id && (
+              <span className="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 {task.transaction_status || 'Transaction'}
               </span>
-        
-            </div>
-          )}
-          {showDoneCategory && task.status && (
-            <div className="mt-1 inline-flex items-center rounded-full bg-gray-100 dark:bg-slate-700 px-2 py-0.5 text-xs text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-600">
-              {formatCategoryName(task.task_category)}
-            </div>
-          )}
+            )}
+            {showDoneCategory && task.status && (
+              <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                {formatCategoryName(task.task_category)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
-      {/* Right side (date + actions) */}
-      <div className="flex items-center">
+
+      <div className="flex items-center gap-2 flex-shrink-0">
         <DateComponent task={task} />
-        <div className="flex space-x-2">
-            <button
-              onClick={() => onOpenUpdate(task)}
-              className="p-1.5 text-blue-500 hover:bg-blue-100 rounded transition-colors"
-              title="Edit"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                />
-              </svg>
-            </button>
-            <TaskDeleteButton
-              taskId={task.id}
-              url_call={url_call}
-              onDeleteTask={onDeleteTask}
-            />
+        
+        <div className="flex items-center space-x-1 opacity-90 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => onOpenUpdate(task)}
+            className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+            title="Edit task"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+          
+          <TaskDeleteButton
+            taskId={task.id}
+            url_call={url_call}
+            onDeleteTask={onDeleteTask}
+          />
         </div>
       </div>
     </li>
   );
 };
 
-/* ─── main component ─── */
+/* ─── Main Component ─── */
 const TasksData = ({
   tasks = [],
   loading,
@@ -157,11 +154,9 @@ const TasksData = ({
   onDeleteTask,
   onOpenAdd,
   onUpdateTask,
-  // new props
   selectedIds = [],
   onToggleSelect,
-  onSelectAll
-  ,
+  onSelectAll,
   consolidateDone = false
 }) => {
   const [detailsTask, setDetailsTask] = useState(null);
@@ -173,7 +168,6 @@ const TasksData = ({
     [tasks, selectedIds]
   );
 
-  /* Group tasks by category or consolidate done tasks (today page). */
   const groupedTasks = useMemo(() => {
     const categoryOrderSort = (a, b) => {
       if (a === "study") return -1;
@@ -256,51 +250,35 @@ const TasksData = ({
   };
 
   if (loading) {
-    return <div className="p-6 text-center text-gray-700 dark:text-slate-300">Loading...</div>;
+    return (
+      <div className="p-6 space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 skeleton-shimmer w-full rounded-2xl"></div>
+        ))}
+      </div>
+    );
   }
 
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="p-8 text-center">
-        <div className="inline-flex rounded-full bg-yellow-100 dark:bg-yellow-900/30 p-4">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8 text-yellow-600 dark:text-yellow-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
+      <div className="p-12 text-center flex flex-col items-center justify-center">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 shadow-inner">
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
-          No tasks for today
+        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          No tasks scheduled
         </h3>
-        <p className="mt-2 text-gray-500 dark:text-slate-300">
-          You don't have any tasks scheduled for today. Enjoy your free time or
-          create a new task!
+        <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+          You're all caught up! Create a new task to organize your work effectively.
         </p>
         <button
           onClick={onOpenAdd}
-          className="mt-4 inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+          className="mt-5 glass-button"
         >
-          {/* Plus icon */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
+          <svg className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
           Create New Task
         </button>
@@ -310,37 +288,37 @@ const TasksData = ({
 
   return (
     <>
-      {/* Select All Bar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
+      {/* List Toolbar */}
+      <div className="flex items-center justify-between px-5 py-3 bg-slate-50/80 dark:bg-slate-950/50 border-b border-slate-200/70 dark:border-white/10">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => onSelectAll(allSelected)}
-            className="text-xs bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 px-3 py-1.5 rounded shadow-sm hover:bg-gray-100 dark:hover:bg-slate-600 transition text-gray-700 dark:text-gray-100"
+            className="text-xs font-semibold glass-button-secondary py-1.5 px-3"
           >
             {allSelected ? 'Clear All' : 'Select All'}
           </button>
           {selectedIds.length > 0 && (
-            <span className="text-xs text-gray-600 dark:text-slate-300">
-              {selectedIds.length} selected
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+              {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''} selected
             </span>
           )}
         </div>
         <button
           type="button"
           onClick={() => onOpenAdd()}
-          className="hidden md:inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs"
+          className="glass-button text-xs py-1.5 px-3"
         >
-          + New Task
+          + Add Task
         </button>
       </div>
 
-      {/* Category-grouped task list */}
-      <div className="divide-y divide-gray-200 dark:divide-slate-700">
+      {/* Accordion grouped task list */}
+      <div className="p-4 space-y-3">
         {groupedTasks.map(({ category, tasks: catTasks, pendingCount, doneCount, isDoneGroup }) => {
           const isOpen = !collapsedCategories[category];
           return (
-            <div key={category} className="py-2 px-3">
+            <div key={category} className="space-y-1">
               <CategoryHeader
                 category={category}
                 pendingCount={pendingCount}
@@ -351,7 +329,7 @@ const TasksData = ({
               />
 
               {isOpen && (
-                <ul className="mt-1 divide-y divide-gray-100 dark:divide-slate-700">
+                <ul className="pl-1 pr-1">
                   {catTasks.map((task) => (
                     <TaskRow
                       key={task.id}
@@ -379,9 +357,9 @@ const TasksData = ({
       {updateTask && (
         <UpdateTask
           task={updateTask}
-            onClose={() => setUpdateTask(null)}
-            onUpdate={handleUpdate}
-            url_call={url_call}
+          onClose={() => setUpdateTask(null)}
+          onUpdate={handleUpdate}
+          url_call={url_call}
         />
       )}
     </>
@@ -389,3 +367,4 @@ const TasksData = ({
 };
 
 export default TasksData;
+

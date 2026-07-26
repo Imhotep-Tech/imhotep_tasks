@@ -1,119 +1,189 @@
 import React, { useState } from 'react';
 
 const TasksInfo = ({
-  pendingCount,
-  completedCount,
-  totalTasks,
-  // new props
+  pendingCount = 0,
+  completedCount = 0,
+  totalTasks = 0,
   selectedCount = 0,
-  onBulkAction,        // (action, date?) => void
+  onBulkAction,
   bulkLoading = false
 }) => {
-  // local state for dropdown + date
   const [action, setAction] = useState('');
   const [dateValue, setDateValue] = useState('');
-  const [categoryValue, setCategoryValue] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('general');
+  const [customCategory, setCustomCategory] = useState('');
+
+  const completionPercentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+
+  const targetCategoryValue = selectedCategory === '__other__' ? customCategory.trim().toLowerCase() : selectedCategory;
 
   const handleApply = () => {
     if (!action) return;
     if (action === 'update_date' && !dateValue) return;
-    if (action === 'update_category' && !categoryValue.trim()) return;
-    const value = action === 'update_date' ? dateValue : action === 'update_category' ? categoryValue : '';
+    if (action === 'update_category' && !targetCategoryValue) return;
+    const value = action === 'update_date' ? dateValue : action === 'update_category' ? targetCategoryValue : '';
     onBulkAction && onBulkAction(action, value);
     setAction('');
     setDateValue('');
-    setCategoryValue('');
+    setSelectedCategory('general');
+    setCustomCategory('');
   };
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border-l-4 border-indigo-500 border border-transparent dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-indigo-100 text-indigo-500 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-500 dark:text-slate-400 text-sm">Total Tasks</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{totalTasks}</p>
-              </div>
+      {/* Metrics Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        
+        {/* Total Tasks Card */}
+        <div className="glass-card p-5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Total Tasks
+              </p>
+              <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
+                {totalTasks}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
             </div>
           </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border-l-4 border-green-500 border border-transparent dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-green-100 text-green-500 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-500 dark:text-slate-400 text-sm">Completed</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{completedCount}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border-l-4 border-yellow-500 border border-transparent dark:border-slate-700">
-            <div className="flex items-center">
-              <div className="p-3 rounded-full bg-yellow-100 text-yellow-500 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-500 dark:text-slate-400 text-sm">Pending</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{pendingCount}</p>
-              </div>
-            </div>
+          <div className="mt-4 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-indigo-500 h-full rounded-full" style={{ width: '100%' }}></div>
           </div>
         </div>
 
-      {/* Bulk actions section */}
-      <div className="mb-8">
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-4 border border-transparent dark:border-slate-700">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        {/* Completed Tasks Card */}
+        <div className="glass-card p-5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-slate-300">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Completed
+              </p>
+              <div className="flex items-baseline space-x-2 mt-1">
+                <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                  {completedCount}
+                </h3>
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  ({completionPercentage}%)
+                </span>
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-4 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div 
+              className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+              style={{ width: `${completionPercentage}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Pending Tasks Card */}
+        <div className="glass-card p-5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all"></div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Pending
+              </p>
+              <h3 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">
+                {pendingCount}
+              </h3>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-sm">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-4 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div 
+              className="bg-amber-500 h-full rounded-full transition-all duration-500" 
+              style={{ width: `${totalTasks > 0 ? (pendingCount / totalTasks) * 100 : 0}%` }}
+            ></div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Bulk Action Controls */}
+      <div className="mb-6">
+        <div className="glass-panel rounded-2xl p-4 border border-slate-200/70 dark:border-white/10 shadow-lg">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            
+            <div className="flex items-center space-x-2">
+              <div className={`w-2.5 h-2.5 rounded-full ${selectedCount > 0 ? 'bg-indigo-500 animate-ping' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 {selectedCount > 0
-                  ? `${selectedCount} task${selectedCount > 1 ? 's' : ''} selected`
-                  : 'Select tasks to enable bulk actions'}
+                  ? `${selectedCount} task${selectedCount > 1 ? 's' : ''} selected for bulk editing`
+                  : 'Select checkboxes to enable bulk actions'}
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+
+            <div className="flex flex-wrap items-center gap-2.5">
               <select
                 value={action}
                 onChange={(e) => setAction(e.target.value)}
-                className="border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100"
+                className="glass-input text-xs py-2 px-3 focus:ring-1"
                 disabled={selectedCount === 0 || bulkLoading}
               >
-                <option value="">Bulk Action</option>
+                <option value="">Choose Action...</option>
                 <option value="complete_toggle">Toggle Complete</option>
-                <option value="delete">Delete</option>
-                <option value="update_date">Change Due Date</option>
-                <option value="update_category">Change Category</option>
+                <option value="delete">Delete Selected</option>
+                <option value="update_date">Set Due Date</option>
+                <option value="update_category">Set Category</option>
               </select>
+
               {action === 'update_date' && (
                 <input
                   type="date"
                   value={dateValue}
                   onChange={(e) => setDateValue(e.target.value)}
-                  className="border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100"
+                  className="glass-input text-xs py-2 px-3"
                   disabled={bulkLoading}
                 />
               )}
+
               {action === 'update_category' && (
-                <input
-                  type="text"
-                  value={categoryValue}
-                  onChange={(e) => setCategoryValue(e.target.value)}
-                  placeholder="New category"
-                  className="border border-gray-300 dark:border-slate-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-slate-400"
-                  disabled={bulkLoading}
-                />
+                <>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="glass-input text-xs py-2 px-3"
+                    disabled={bulkLoading}
+                  >
+                    <option value="general">📋 General</option>
+                    <option value="study">📚 Study</option>
+                    <option value="work">💼 Work</option>
+                    <option value="personal">🏠 Personal</option>
+                    <option value="health">💪 Health</option>
+                    <option value="finance">💰 Finance</option>
+                    <option value="__other__">🔖 Custom...</option>
+                  </select>
+
+                  {selectedCategory === '__other__' && (
+                    <input
+                      type="text"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder="Enter custom category..."
+                      className="glass-input text-xs py-2 px-3"
+                      disabled={bulkLoading}
+                    />
+                  )}
+                </>
               )}
+
               <button
                 type="button"
                 onClick={handleApply}
@@ -122,13 +192,14 @@ const TasksInfo = ({
                   !action ||
                   bulkLoading ||
                   (action === 'update_date' && !dateValue) ||
-                  (action === 'update_category' && !categoryValue.trim())
+                  (action === 'update_category' && !targetCategoryValue)
                 }
-                className="bg-indigo-600 disabled:opacity-50 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm shadow transition-colors"
+                className="glass-button text-xs py-2 px-4 whitespace-nowrap"
               >
-                {bulkLoading ? 'Applying...' : 'Apply'}
+                {bulkLoading ? 'Applying...' : 'Apply Action'}
               </button>
             </div>
+
           </div>
         </div>
       </div>

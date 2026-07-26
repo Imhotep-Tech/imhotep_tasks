@@ -84,7 +84,6 @@ const Profile = () => {
     try {
       const response = await axios.put('/api/profile/update/', profileData);
       
-      // Check if email verification is required
       if (response.data.email_verification_required) {
         setPendingNewEmail(response.data.pending_new_email);
         setShowOtpModal(true);
@@ -93,7 +92,6 @@ const Profile = () => {
         setSuccess(response.data.message);
       }
       
-      // Update user context with new data
       if (response.data.user) {
         updateUser(response.data.user);
       }
@@ -116,7 +114,7 @@ const Profile = () => {
     setOtpError('');
 
     try {
-      const response = await axios.post('/api/profile/verify-email-change/', 
+      await axios.post('/api/profile/verify-email-change/', 
         { otp },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -125,7 +123,6 @@ const Profile = () => {
       setOtp('');
       setSuccess('Email changed successfully! Please log in again with your new email.');
       
-      // Log out user after email change
       setTimeout(() => {
         logout();
         navigate('/login');
@@ -141,7 +138,6 @@ const Profile = () => {
     setShowOtpModal(false);
     setOtp('');
     setOtpError('');
-    // Reset email to current value since verification was cancelled
     setProfileData(prev => ({ ...prev, email: user.email }));
   };
 
@@ -191,393 +187,330 @@ const Profile = () => {
   };
 
   return (
-    <>
-      <section className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
-        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden md:max-w-2xl border border-transparent dark:border-slate-700">
-          <div className="md:flex">
-            <div className="p-8 w-full">
-              <div className="flex justify-end mb-4">
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="inline-flex items-center justify-center p-2 rounded-md font-medium border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                  aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
-                  {isDark ? (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                    </svg>
-                  )}
-                </button>
+    <div className="min-h-screen flex flex-col justify-between relative overflow-hidden bg-slate-50 dark:bg-[#080C14]">
+      
+      {/* Background Ambient Glows */}
+      <div className="absolute top-20 left-1/3 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-8 max-w-2xl relative z-10 my-4">
+        
+        <div className="glass-panel rounded-3xl shadow-2xl p-6 sm:p-9 border border-slate-200/80 dark:border-white/10 relative overflow-hidden">
+          
+          <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-200/70 dark:border-white/10">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-extrabold text-lg shadow-inner">
+                {user?.username ? user.username[0].toUpperCase() : 'U'}
               </div>
-              <div className="flex justify-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 dark:bg-slate-800">
-                  {/* small logo */}
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              </div>
-
-              <h1 className="mt-4 text-3xl font-extrabold text-center text-gray-900 dark:text-gray-100">My Profile</h1>
-              <p className="mt-2 text-center text-sm text-gray-600 dark:text-slate-300">Manage your account and preferences</p>
-
-              <div className="mt-6">
-                {/* Tabs */}
-                <div className="rounded-md bg-gray-50 dark:bg-slate-800 p-1 grid grid-cols-2 gap-2">
-                  <button
-                    className={`py-2 px-3 rounded-md text-sm font-medium transition ${activeTab === 'profile' ? 'bg-white dark:bg-slate-700 shadow text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-700'}`}
-                    onClick={() => setActiveTab('profile')}
-                  >
-                    Profile Information
-                  </button>
-                  <button
-                    className={`py-2 px-3 rounded-md text-sm font-medium transition ${activeTab === 'password' ? 'bg-white dark:bg-slate-700 shadow text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-700'}`}
-                    onClick={() => setActiveTab('password')}
-                  >
-                    Change Password
-                  </button>
-                </div>
-
-                {/* Messages */}
-                <div className="mt-4">
-                  {error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded text-sm mb-4">
-                      {Array.isArray(error) ? error.join(', ') : error}
-                    </div>
-                  )}
-                  {success && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded text-sm mb-4">
-                      {Array.isArray(success) ? success.join(', ') : success}
-                    </div>
-                  )}
-                </div>
-
-                {/* Profile Form */}
-                {activeTab === 'profile' && (
-                  <form onSubmit={handleProfileSubmit} className="mt-4 space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">First Name</label>
-                        <div className="mt-1 relative rounded-md shadow-sm">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          </div>
-                          <input
-                            id="first_name"
-                            type="text"
-                            name="first_name"
-                            value={profileData.first_name}
-                            onChange={handleProfileChange}
-                            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md transition-all duration-150"
-                            placeholder="First name"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">Last Name</label>
-                        <div className="mt-1 relative rounded-md shadow-sm">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          </div>
-                          <input
-                            id="last_name"
-                            type="text"
-                            name="last_name"
-                            value={profileData.last_name}
-                            onChange={handleProfileChange}
-                            className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md transition-all duration-150"
-                            placeholder="Last name"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username <span className="text-red-500">*</span></label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
-                          </svg>
-                        </div>
-                        <input
-                          id="username"
-                          type="text"
-                          name="username"
-                          value={profileData.username}
-                          onChange={handleProfileChange}
-                          required
-                          className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md transition-all duration-150"
-                          placeholder="Username"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9" />
-                          </svg>
-                        </div>
-                        <input
-                          id="email"
-                          type="email"
-                          name="email"
-                          value={profileData.email}
-                          onChange={handleProfileChange}
-                          required
-                          className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md transition-all duration-150"
-                          placeholder="you@example.com"
-                        />
-                      </div>
-                      {!user?.email_verify && (
-                        <p className="mt-2 text-sm text-amber-600 flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
-                          Email not verified. Please check your email.
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-1`}
-                      >
-                        {loading ? 'Updating...' : 'Update Profile'}
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Password Form */}
-                {activeTab === 'password' && (
-                  <form onSubmit={handlePasswordSubmit} className="mt-4 space-y-4">
-                    <div>
-                      <label htmlFor="current_password" className="block text-sm font-medium text-gray-700">Current Password <span className="text-red-500">*</span></label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                        </div>
-                        <input
-                          id="current_password"
-                          type={showPasswords.current ? 'text' : 'password'}
-                          name="current_password"
-                          value={passwordData.current_password}
-                          onChange={handlePasswordChange}
-                          required
-                          className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md transition-all duration-150"
-                          placeholder="Current password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => togglePasswordVisibility('current')}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          aria-label="Toggle password visibility"
-                        >
-                          <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            {showPasswords.current ? (
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
-                            ) : (
-                              <>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </>
-                            )}
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="new_password" className="block text-sm font-medium text-gray-700">New Password <span className="text-red-500">*</span></label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                        </div>
-                        <input
-                          id="new_password"
-                          type={showPasswords.new ? 'text' : 'password'}
-                          name="new_password"
-                          value={passwordData.new_password}
-                          onChange={handlePasswordChange}
-                          required
-                          minLength={8}
-                          className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md transition-all duration-150"
-                          placeholder="New password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => togglePasswordVisibility('new')}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          aria-label="Toggle password visibility"
-                        >
-                          <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            {showPasswords.new ? (
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
-                            ) : (
-                              <>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </>
-                            )}
-                          </svg>
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">Password must be at least 8 characters long</p>
-                    </div>
-
-                    <div>
-                      <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-700">Confirm New Password <span className="text-red-500">*</span></label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                        </div>
-                        <input
-                          id="confirm_password"
-                          type={showPasswords.confirm ? 'text' : 'password'}
-                          name="confirm_password"
-                          value={passwordData.confirm_password}
-                          onChange={handlePasswordChange}
-                          required
-                          minLength={8}
-                          className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md transition-all duration-150"
-                          placeholder="Confirm new password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => togglePasswordVisibility('confirm')}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          aria-label="Toggle password visibility"
-                        >
-                          <svg className="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            {showPasswords.confirm ? (
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
-                            ) : (
-                              <>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </>
-                            )}
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-1`}
-                      >
-                        {loading ? 'Changing...' : 'Change Password'}
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                <p className="mt-6 text-center text-sm text-gray-600 dark:text-slate-300">
-                  <Link to="/today-tasks" className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">Back to Today Tasks</Link>
-                </p>
-                <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={handleRefreshApp}
-                    disabled={refreshingApp}
-                    className={`flex-1 py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white ${refreshingApp ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} transition-all`}
-                  >
-                    {refreshingApp ? 'Refreshing...' : 'Update App & Clear Cache'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={logout}
-                    className="flex-1 py-3 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-all"
-                  >
-                    Logout
-                  </button>
-                  <button
-                    type="button"
-                    onClick={toggleTheme}
-                    className="flex-1 py-3 px-4 rounded-md shadow-sm font-medium border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-100 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center"
-                    aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                  >
-                    {isDark ? (
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
+              <div>
+                <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Account Settings</h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Manage security & personal credentials</p>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDark ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                </svg>
+              )}
+            </button>
           </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex bg-slate-100 dark:bg-slate-900/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 mb-6">
+            <button
+              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'profile' 
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              onClick={() => setActiveTab('profile')}
+            >
+              Profile Info
+            </button>
+            <button
+              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'password' 
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+              onClick={() => setActiveTab('password')}
+            >
+              Security & Password
+            </button>
+          </div>
+
+          {/* Status Messages */}
+          {error && (
+            <div className="p-3.5 bg-red-500/10 border border-red-500/20 rounded-2xl text-xs text-red-600 dark:text-red-400 mb-5">
+              {Array.isArray(error) ? error.join(', ') : error}
+            </div>
+          )}
+          {success && (
+            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-600 dark:text-emerald-400 mb-5">
+              {Array.isArray(success) ? success.join(', ') : success}
+            </div>
+          )}
+
+          {/* Profile Details Form */}
+          {activeTab === 'profile' && (
+            <form onSubmit={handleProfileSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="first_name" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    First Name
+                  </label>
+                  <input
+                    id="first_name"
+                    type="text"
+                    name="first_name"
+                    value={profileData.first_name}
+                    onChange={handleProfileChange}
+                    className="glass-input text-sm"
+                    placeholder="John"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="last_name" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    Last Name
+                  </label>
+                  <input
+                    id="last_name"
+                    type="text"
+                    name="last_name"
+                    value={profileData.last_name}
+                    onChange={handleProfileChange}
+                    className="glass-input text-sm"
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="username" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Username <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  name="username"
+                  value={profileData.username}
+                  onChange={handleProfileChange}
+                  required
+                  className="glass-input text-sm"
+                  placeholder="username"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={profileData.email}
+                  onChange={handleProfileChange}
+                  required
+                  className="glass-input text-sm"
+                  placeholder="name@example.com"
+                />
+                {!user?.email_verify && (
+                  <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center font-medium">
+                    <svg className="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                    </svg>
+                    Email not verified. Please check your inbox for verification email.
+                  </p>
+                )}
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="glass-button w-full py-3 text-xs uppercase tracking-wider"
+                >
+                  {loading ? 'Saving Changes...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Password Form */}
+          {activeTab === 'password' && (
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="current_password" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Current Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="current_password"
+                    type={showPasswords.current ? 'text' : 'password'}
+                    name="current_password"
+                    value={passwordData.current_password}
+                    onChange={handlePasswordChange}
+                    required
+                    className="glass-input pr-10 text-sm"
+                    placeholder="Current password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('current')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      {showPasswords.current ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      )}
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="new_password" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  New Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="new_password"
+                    type={showPasswords.new ? 'text' : 'password'}
+                    name="new_password"
+                    value={passwordData.new_password}
+                    onChange={handlePasswordChange}
+                    required
+                    minLength={8}
+                    className="glass-input pr-10 text-sm"
+                    placeholder="Minimum 8 characters"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('new')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      {showPasswords.new ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      )}
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="confirm_password" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                  Confirm New Password <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirm_password"
+                    type={showPasswords.confirm ? 'text' : 'password'}
+                    name="confirm_password"
+                    value={passwordData.confirm_password}
+                    onChange={handlePasswordChange}
+                    required
+                    minLength={8}
+                    className="glass-input pr-10 text-sm"
+                    placeholder="Repeat new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('confirm')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      {showPasswords.confirm ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      )}
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="glass-button w-full py-3 text-xs uppercase tracking-wider"
+                >
+                  {loading ? 'Updating Password...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Quick Actions Footer */}
+          <div className="mt-8 pt-6 border-t border-slate-200/70 dark:border-white/10 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={handleRefreshApp}
+              disabled={refreshingApp}
+              className="glass-button-secondary text-xs flex-1 py-2.5"
+            >
+              {refreshingApp ? 'Clearing Cache...' : 'Update App & Clear Cache'}
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              className="px-4 py-2.5 rounded-xl font-bold text-xs bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all flex-1"
+            >
+              Sign Out
+            </button>
+          </div>
+
         </div>
-      </section>
+      </main>
 
       {/* OTP Verification Modal */}
       {showOtpModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative animate-fade-in">
-            {/* Close button */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
+          <div className="glass-panel w-full max-w-md rounded-3xl shadow-2xl p-6 border border-slate-200/80 dark:border-white/10 relative">
             <button
               onClick={closeOtpModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Close modal"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              ✕
             </button>
 
-            {/* Modal header */}
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto mb-3">
+                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Verify Your New Email</h3>
-              <p className="text-sm text-gray-600 mt-2">
-                We've sent a 6-digit verification code to <span className="font-medium text-blue-600">{pendingNewEmail}</span>
+              <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">Verify Email Change</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Enter the 6-digit code sent to <span className="font-semibold text-slate-800 dark:text-slate-200">{pendingNewEmail}</span>
               </p>
-              <p className="text-xs text-gray-500 mt-1">The code expires in 10 minutes</p>
             </div>
 
-            {/* OTP Form */}
             <form onSubmit={handleOtpSubmit} className="space-y-4">
               {otpError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700 flex items-center">
-                  <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-                  </svg>
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-600 dark:text-red-400">
                   {otpError}
                 </div>
               )}
 
               <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">Enter Verification Code</label>
                 <input
                   id="otp"
                   type="text"
@@ -591,33 +524,25 @@ const Profile = () => {
                   }}
                   required
                   autoFocus
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full px-4 py-4 border border-gray-300 rounded-lg text-center text-2xl tracking-[0.5em] font-mono"
+                  className="glass-input text-center text-2xl tracking-[0.4em] font-mono py-3"
                   placeholder="000000"
                 />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex space-x-3 pt-2">
                 <button
                   type="button"
                   onClick={closeOtpModal}
-                  className="flex-1 py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
+                  className="glass-button-secondary text-xs flex-1 py-2.5"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={otpLoading || otp.length !== 6}
-                  className="flex-1 py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="glass-button text-xs flex-1 py-2.5 disabled:opacity-50"
                 >
-                  {otpLoading ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                      </svg>
-                      Verifying...
-                    </span>
-                  ) : 'Verify Email'}
+                  {otpLoading ? 'Verifying...' : 'Confirm Email'}
                 </button>
               </div>
             </form>
@@ -626,8 +551,9 @@ const Profile = () => {
       )}
 
       <Footer />
-    </>
+    </div>
   );
 };
 
 export default Profile;
+

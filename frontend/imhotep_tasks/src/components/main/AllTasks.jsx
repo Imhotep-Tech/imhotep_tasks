@@ -114,22 +114,39 @@ const AllTasks = () => {
   };
 
   return (
-    <>
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-center">
+    <div className="min-h-screen flex flex-col justify-between relative overflow-hidden bg-slate-50 dark:bg-[#080C14]">
+      
+      {/* Background Ambient Glows */}
+      <div className="absolute top-10 right-10 w-96 h-96 bg-violet-500/10 dark:bg-violet-500/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-20 left-10 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-5xl relative z-10">
+        
+        {/* Page Header */}
+        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">All Tasks</h1>
-            <p className="text-gray-600 dark:text-slate-300 mt-1">Hello, {user?.username || 'User'}!</p>
+            <div className="flex items-center space-x-2">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
+                Complete Task Repository
+              </span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1 tracking-tight">
+              All Tasks Archive
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Browse, filter, and manage all your historical and active tasks.
+            </p>
           </div>
-          <div className="mt-4 md:mt-0">
+
+          <div>
             <button
               onClick={() => setShowAdd(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-all"
+              className="glass-button flex items-center shadow-violet-500/20"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
               </svg>
-              Add New Task
+              <span>Add Task</span>
             </button>
           </div>
         </div>
@@ -143,9 +160,15 @@ const AllTasks = () => {
           bulkLoading={bulkLoading}
         />
 
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md overflow-hidden border border-transparent dark:border-slate-700">
-          <div className="p-4 bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">All Tasks</h2>
+        <div className="glass-panel rounded-3xl overflow-hidden shadow-2xl border border-slate-200/70 dark:border-white/10">
+          <div className="px-6 py-4 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200/70 dark:border-white/10 flex items-center justify-between">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-violet-500"></span>
+              All Tasks Overview
+            </h2>
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Page {page} of {numPages}
+            </span>
           </div>
 
           <TasksData
@@ -171,9 +194,11 @@ const AllTasks = () => {
 
         {showAdd && <AddTask onClose={() => setShowAdd(false)} onCreate={handleCreate} url_call="all" />}
       </div>
+
       <Footer />
-    </>
+    </div>
   );
 };
 
 export default AllTasks;
+
